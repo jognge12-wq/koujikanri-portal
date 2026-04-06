@@ -154,7 +154,7 @@ const STORAGE_KEY = 'payment_gas_url_v1';
 function goToDashboard() {
   const href = window.location.href;
   const base = href.substring(0, href.lastIndexOf('/') + 1);
-  window.location.replace('../ダッシュボード.html?tab=tools');
+  window.location.replace('../dashboard.html?tab=tools');
 }
 // ネイティブ戻るボタン（スワイプ含む）もダッシュボードへ
 history.pushState(null, '', window.location.href);
