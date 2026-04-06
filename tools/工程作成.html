@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>工程作成</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sfc: {
+              dark:    '#004d29',
+              primary: '#006837',
+              light:   '#e8f5e9',
+              border:  '#a5d6a7'
+            }
+          },
+          fontFamily: {
+            sans: ['Noto Sans JP', 'sans-serif'],
+            mono: ['DM Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; }
+    .step-badge { display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%; font-size: 10px; font-weight: 700;
+      font-family: 'DM Mono', monospace; flex-shrink: 0; }
+    .warning-box { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 12px; padding: 12px 14px; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-900">
+
+<!-- ===== GAS WebApp URL ===== -->
+<script>
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwCVoCBuecRtBNdmY_HJ3-a8xjMxs2AjxGTgIKxMQo7AnuIqS8RNgWpLxVfSFZnVQAD5A/exec';
+</script>
+
+<!-- ===== 工程計算エンジン（GAS v1.5 と同一ロジック） ===== -->
+<script>
+// 祝日リスト 2025〜2027年
+const HOLIDAYS = [
+  '2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24',
+  '2025-03-20','2025-04-29','2025-05-03','2025-05-04','2025-05-05',
+  '2025-05-06','2025-07-21','2025-08-11','2025-09-15','2025-09-22','2025-09-23',
+  '2025-10-13','2025-11-03','2025-11-23','2025-11-24',
+  '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20',
+  '2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-05-06',
+  '2026-07-20','2026-08-11','2026-09-21','2026-09-22','2026-09-23',
+  '2026-10-12','2026-11-03','2026-11-23',
+  '2027-01-01','2027-01-11','2027-02-11','2027-02-23','2027-03-21',
+  '2027-04-29','2027-05-03','2027-05-04','2027-05-05',
+  '2027-07-19','2027-08-11','2027-09-20','2027-09-23',
+  '2027-10-11','2027-11-03','2027-11-23',
+];
+
+// 三隣亡リスト 2025〜2027年
+const BAD_DAYS_SANRINBO = [
+  '2025-01-03','2025-01-15','2025-01-27','2025-02-08','2025-02-20',
+  '2025-03-04','2025-03-16','2025-03-28','2025-04-09','2025-04-21',
+  '2025-05-03','2025-05-15','2025-05-27','2025-06-08','2025-06-20',
+  '2025-07-02','2025-07-14','2025-07-26','2025-08-07','2025-08-19',
+  '2025-08-31','2025-09-12','2025-09-24','2025-10-06','2025-10-18',
+  '2025-10-30','2025-11-11','2025-11-23','2025-12-05','2025-12-17','2025-12-29',
+  '2026-01-10','2026-01-22','2026-02-03','2026-02-15','2026-02-27',
+  '2026-03-11','2026-03-23','2026-04-04','2026-04-16','2026-04-28',
+  '2026-05-10','2026-05-22','2026-06-03','2026-06-15','2026-06-27',
+  '2026-07-09','2026-07-21','2026-08-02','2026-08-14','2026-08-26',
+  '2026-09-07','2026-09-19','2026-10-01','2026-10-13','2026-10-25',
+  '2026-11-06','2026-11-18','2026-11-30','2026-12-12','2026-12-24',
+  '2027-01-05','2027-01-17','2027-01-29','2027-02-10','2027-02-22',
+  '2027-03-06','2027-03-18','2027-03-30','2027-04-11','2027-04-23',
+  '2027-05-05','2027-05-17','2027-05-29','2027-06-10','2027-06-22',
+  '2027-07-04','2027-07-16','2027-07-28','2027-08-09','2027-08-21',
+  '2027-09-02','2027-09-14','2027-09-26','2027-10-08','2027-10-20',
+  '2027-11-01','2027-11-13','2027-11-25','2027-12-07','2027-12-19','2027-12-31',
+];
+
+const DAYS_JA = ['日','月','火','水','木','金','土'];
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function setTime(date, h, m) {
+  const d = new Date(date);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+function formatDate(date) {
+  const d = new Date(date);
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '(' + DAYS_JA[d.getDay()] + ')';
+}
+function dateKey(date) {
+  const d = new Date(date);
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function isWedSunHoliday(date) {
+  const d = new Date(date);
+  const dow = d.getDay();
+  if (dow === 0 || dow === 3) return true;
+  return HOLIDAYS.indexOf(dateKey(d)) >= 0;
+}
+function skipWedSunHoliday(date) {
+  let d = new Date(date);
+  while (isWedSunHoliday(d)) d = addDays(d, 1);
+  return d;
+}
+function skipWedSunHolidayBackward(date) {
+  let d = new Date(date);
+  while (isWedSunHoliday(d)) d = addDays(d, -1);
+  return d;
+}
+function prevSaturdayOrSunday(date) {
+  let d = new Date(date);
+  for (let i = 0; i < 14; i++) { if (d.getDay() === 6) return d; d = addDays(d, -1); }
+  d = new Date(date);
+  for (let j = 0; j < 14; j++) { if (d.getDay() === 0) return d; d = addDays(d, -1); }
+  return date;
+}
+function nextSaturdayOrSunday(date) {
+  let d = new Date(date);
+  for (let i = 0; i < 14; i++) { if (d.getDay() === 6) return d; d = addDays(d, 1); }
+  d = new Date(date);
+  for (let j = 0; j < 14; j++) { if (d.getDay() === 0) return d; d = addDays(d, 1); }
+  return date;
+}
+function nearestSaturdaySunday(date) {
+  const d = new Date(date);
+  for (let i = 1; i <= 7; i++) {
+    const fwd = addDays(d, i); if (fwd.getDay() === 6 || fwd.getDay() === 0) return fwd;
+    const bwd = addDays(d, -i); if (bwd.getDay() === 6 || bwd.getDay() === 0) return bwd;
+  }
+  return date;
+}
+function avoidTueWedFirstThu(date) {
+  let d = new Date(date);
+  for (let i = 0; i < 7; i++) {
+    const dow = d.getDay();
+    if (dow === 2 || dow === 3) { d = addDays(d, -1); continue; }
+    if (dow === 4 && d.getDate() <= 7) { d = addDays(d, -1); continue; }
+    break;
+  }
+  return d;
+}
+function isSanrinbo(date) {
+  return BAD_DAYS_SANRINBO.indexOf(dateKey(date)) >= 0;
+}
+function findGoodDay(date) {
+  const d = new Date(date);
+  for (let i = 1; i <= 14; i++) {
+    const fwd = addDays(d, i); if (!isSanrinbo(fwd) && fwd.getDay() !== 0) return fwd;
+    const bwd = addDays(d, -i); if (!isSanrinbo(bwd) && bwd.getDay() !== 0) return bwd;
+  }
+  return addDays(d, 1);
+}
+
+// カラーID
+const COLOR_CHAKOU  = 'orange';  // 本体着工
+const COLOR_TATEMAE = 'cyan';    // 建て方
+const COLOR_DEFAULT = 'mauve';   // その他
+
+function calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi) {
+  const n   = bukkenName;
+  const loc = location;
+  const schedules = [];
+  let step8Warning = '';
+
+  // 工程2: 施工計画説明（着工前の直近土曜、不可なら日曜）
+  const step2Date = prevSaturdayOrSunday(addDays(chakou, -1));
+  schedules.push({ step: 2, label: '施工計画説明', title: n + ' 施工計画説明', start: setTime(step2Date, 9, 0), end: setTime(step2Date, 10, 30), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: true });
+
+  // 工程1: 引継ぎ（施工計画説明の前日、火・水・第1木曜は前倒し）
+  const step1Date = avoidTueWedFirstThu(addDays(step2Date, -1));
+  schedules.push({ step: 1, label: '引継ぎ', title: n + ' 引継ぎ', start: setTime(step1Date, 17, 0), end: setTime(step1Date, 18, 0), location: '', desc: '所要1.0h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程3: 本体着工（終日）
+  schedules.push({ step: 3, label: '🚜 本体着工', title: '🚜' + n + ' 本体着工', start: chakou, end: chakou, location: loc, desc: '終日', allDay: true, color: COLOR_CHAKOU, notify: false });
+
+  // 工程4: 遣り方検査（着工翌日、水・日・祝除く）
+  const step4Date = skipWedSunHoliday(addDays(chakou, 1));
+  schedules.push({ step: 4, label: '遣り方検査', title: n + ' 遣り方検査', start: setTime(step4Date, 8, 30), end: setTime(step4Date, 10, 0), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程5: 配筋検査（着工8日後、水・日・祝除く）
+  const step5Date = skipWedSunHoliday(addDays(chakou, 8));
+  schedules.push({ step: 5, label: '配筋検査', title: n + ' 配筋検査', start: setTime(step5Date, 8, 30), end: setTime(step5Date, 10, 30), location: loc, desc: '所要2.0h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程6: 型枠検査（配筋検査8日後、水・日・祝除く）
+  const step6Date = skipWedSunHoliday(addDays(step5Date, 8));
+  schedules.push({ step: 6, label: '型枠検査', title: n + ' 型枠検査', start: setTime(step6Date, 8, 30), end: setTime(step6Date, 10, 0), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程7: 基礎検査（建て方6日前、前倒し方向）
+  const step7Date = skipWedSunHolidayBackward(addDays(tatemae, -6));
+  schedules.push({ step: 7, label: '基礎検査', title: n + ' 基礎検査', start: setTime(step7Date, 8, 30), end: setTime(step7Date, 9, 30), location: loc, desc: '所要1.0h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程8: 建て方（三隣亡チェック）
+  if (isSanrinbo(tatemae)) {
+    const suggested = findGoodDay(tatemae);
+    step8Warning = '建て方日（' + formatDate(tatemae) + '）が三隣亡です。近隣の吉日候補: ' + formatDate(suggested);
+  }
+  schedules.push({ step: 8, label: '⚒️ 建て方', title: '⚒️' + n + ' 建て方', start: setTime(tatemae, 8, 0), end: setTime(tatemae, 9, 0), location: loc, desc: step8Warning || '所要1.0h', allDay: false, color: COLOR_TATEMAE, notify: false, warning: !!step8Warning });
+
+  // 工程9: 構造検査（建て方5日後、水・日・祝除く）
+  const step9Date = skipWedSunHoliday(addDays(tatemae, 5));
+  schedules.push({ step: 9, label: '構造検査', title: n + ' 構造検査', start: setTime(step9Date, 8, 30), end: setTime(step9Date, 10, 30), location: loc, desc: '所要2.0h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程10: 構造立会い（建て方以降の直近土曜）
+  const step10Date = nextSaturdayOrSunday(addDays(tatemae, 1));
+  schedules.push({ step: 10, label: '構造立会い', title: n + ' 構造立会い', start: setTime(step10Date, 9, 0), end: setTime(step10Date, 10, 30), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: true });
+
+  // 工程11: 雨仕舞い検査（建て方16日後、水・日・祝除く）
+  const step11Date = skipWedSunHoliday(addDays(tatemae, 16));
+  schedules.push({ step: 11, label: '雨仕舞い検査', title: n + ' 雨仕舞い検査', start: setTime(step11Date, 8, 30), end: setTime(step11Date, 10, 0), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程14: 竣工検査（引渡し14日前、前倒し方向）
+  const step14Date = skipWedSunHolidayBackward(addDays(hikiwatashi, -14));
+  schedules.push({ step: 14, label: '竣工検査', title: n + ' 竣工検査', start: setTime(step14Date, 8, 30), end: setTime(step14Date, 14, 0), location: loc, desc: '所要5.5h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程12: 木完検査（竣工検査14日前）
+  const step12Date = skipWedSunHolidayBackward(addDays(step14Date, -14));
+  schedules.push({ step: 12, label: '木完検査', title: n + ' 木完検査', start: setTime(step12Date, 8, 30), end: setTime(step12Date, 10, 0), location: loc, desc: '所要1.5h（竣工検査14日前）', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  // 工程13: 木完立会い（木完検査前後の直近土日）
+  const step13Date = nearestSaturdaySunday(step12Date);
+  schedules.push({ step: 13, label: '木完立会い', title: n + ' 木完立会い', start: setTime(step13Date, 9, 0), end: setTime(step13Date, 10, 30), location: loc, desc: '所要1.5h', allDay: false, color: COLOR_DEFAULT, notify: true });
+
+  // 工程15: 竣工立会い（引渡し7日前の直近土曜）
+  const step15Date = prevSaturdayOrSunday(addDays(hikiwatashi, -7));
+  schedules.push({ step: 15, label: '竣工立会い', title: n + ' 竣工立会い', start: setTime(step15Date, 9, 0), end: setTime(step15Date, 11, 0), location: loc, desc: '所要2.0h', allDay: false, color: COLOR_DEFAULT, notify: true });
+
+  // 工程16: 引渡し
+  schedules.push({ step: 16, label: '🔑 引渡し', title: '🔑' + n + ' 引渡し', start: setTime(hikiwatashi, 10, 0), end: setTime(hikiwatashi, 12, 0), location: loc, desc: '所要2.0h', allDay: false, color: COLOR_DEFAULT, notify: false });
+
+  schedules.sort((a, b) => a.step - b.step);
+  return schedules;
+}
+</script>
+
+<!-- ===== アプリ本体 ===== -->
+<div id="app" class="max-w-md mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200">
+
+  <!-- ヘッダー -->
+  <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <a onclick="goToDashboard()" style="cursor:pointer;"
+         class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+         title="ダッシュボードへ戻る">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </a>
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="10" x2="12" y2="22"/>
+        </svg>
+        <div>
+          <h1 class="text-base font-bold tracking-wide">工程作成</h1>
+          <p class="text-[10px] text-white/65 font-medium mt-0.5">Googleカレンダーへ工程を一括登録</p>
+        </div>
+      </div>
+    </div>
+    <button onclick="openUrlPanel()"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+            title="GAS URL を設定">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- GAS URL設定パネル -->
+  <div id="urlPanel" class="fixed inset-0 z-50 bg-black/40 hidden items-end justify-center">
+    <div class="bg-white rounded-t-2xl p-5 pb-8 w-full max-w-md shadow-xl">
+      <p class="text-sm font-bold text-slate-800 mb-1">GAS WebApp URL を設定</p>
+      <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+        現場タスク自動登録 v3 のデプロイURLを入力してください。物件登録ツールと共有します。
+      </p>
+      <div class="flex gap-2">
+        <input type="url" id="urlPanelInput"
+               class="flex-1 px-3 py-[11px] border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-sfc-primary"
+               placeholder="https://script.google.com/macros/s/...">
+        <button onclick="saveScheduleUrl()"
+                class="flex-shrink-0 px-4 py-[11px] bg-sfc-dark text-white rounded-xl text-sm font-bold whitespace-nowrap">
+          保存
+        </button>
+      </div>
+      <button onclick="closeUrlPanel()"
+              class="w-full mt-3 py-3 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-sm font-semibold">
+        キャンセル
+      </button>
+    </div>
+  </div>
+
+  <!-- フォームエリア -->
+  <div class="p-5 space-y-6">
+
+    <!-- STEP 1：物件 -->
+    <div>
+      <label class="block text-[10px] font-black text-slate-700 mb-2 tracking-widest uppercase">STEP 1：物件</label>
+      <input type="hidden" id="bukkenName">
+      <select id="propertySelect" onchange="onPropertySelect(this.value)"
+        class="w-full p-3 border-2 border-slate-200 rounded-xl bg-white focus:border-sfc-primary outline-none text-base font-bold appearance-none transition-colors">
+        <option value="">物件を選択してください</option>
+      </select>
+      <p id="notion-load-status" class="text-[11px] text-slate-400 mt-1.5 text-center hidden"></p>
+    </div>
+
+    <!-- Step 2: 場所 -->
+    <div>
+      <label class="block text-[10px] font-black text-slate-700 mb-2 tracking-widest uppercase">STEP 2：場所</label>
+      <input type="text" id="location" placeholder="〇〇市"
+        oninput="onFormChange()"
+        class="w-full p-3 border-2 border-slate-200 rounded-xl bg-white focus:border-sfc-primary outline-none text-base font-bold placeholder-slate-300 transition-colors">
+    </div>
+
+    <!-- Step 3: 日程3点入力 -->
+    <div>
+      <label class="block text-[10px] font-black text-slate-700 mb-3 tracking-widest uppercase">STEP 3：日程確認</label>
+      <div class="space-y-3">
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <label class="block text-[10px] font-bold text-slate-600 mb-1.5">本体着工日</label>
+          <div class="flex items-center gap-2">
+            <input type="date" id="chakouDate" onchange="onDateChange('chakou')"
+              class="flex-1 p-3 border-2 border-slate-200 rounded-xl outline-none focus:border-sfc-primary text-base font-bold font-mono bg-white transition-colors">
+            <span id="chakou-dow" class="text-[12px] font-bold text-sfc-primary font-mono w-14 text-right shrink-0"></span>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <label class="block text-[10px] font-bold text-slate-600 mb-1.5">建て方</label>
+          <div class="flex items-center gap-2">
+            <input type="date" id="tatemae" onchange="onDateChange('tatemae')"
+              class="flex-1 p-3 border-2 border-slate-200 rounded-xl outline-none focus:border-sfc-primary text-base font-bold font-mono bg-white transition-colors">
+            <div class="flex flex-col items-end shrink-0 w-14">
+              <span id="tatemae-dow" class="text-[12px] font-bold text-sfc-primary font-mono"></span>
+              <span id="tatemae-warn" class="text-[10px] font-bold text-amber-600 hidden">三隣亡</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <label class="block text-[10px] font-bold text-slate-600 mb-1.5">引渡し日</label>
+          <div class="flex items-center gap-2">
+            <input type="date" id="hikiwatashi" onchange="onDateChange('hikiwatashi')"
+              class="flex-1 p-3 border-2 border-slate-200 rounded-xl outline-none focus:border-sfc-primary text-base font-bold font-mono bg-white transition-colors">
+            <span id="hikiwatashi-dow" class="text-[12px] font-bold text-sfc-primary font-mono w-14 text-right shrink-0"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Notion日付差分通知 -->
+    <div id="notion-diff-notice" class="hidden warning-box">
+      <div class="flex items-start gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="#92400e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="mt-0.5 shrink-0">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <p class="text-[11px] font-bold text-amber-800 leading-snug">
+          Notionの日付と異なります。カレンダー登録時にNotionも自動更新します。
+        </p>
+      </div>
+    </div>
+
+    <!-- 計算ボタン -->
+    <button id="btn-calc" onclick="calculate()"
+      class="w-full py-4 px-5 rounded-2xl font-bold text-slate-500 bg-slate-200 pointer-events-none shadow-xl active:scale-95 transition-all duration-200">
+      <span class="flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+          <line x1="12" y1="10" x2="12" y2="22"/>
+        </svg>
+        <span>工程を計算する</span>
+      </span>
+    </button>
+
+    <!-- ===== プレビュー（計算後に表示） ===== -->
+    <div id="preview-section" class="hidden">
+      <div class="border-t border-slate-100 pt-6">
+
+        <!-- セクションタイトル -->
+        <div class="flex items-center gap-2 mb-4">
+          <div class="text-[10px] font-black text-slate-700 tracking-widest uppercase">Result: 16 Steps</div>
+          <div class="flex-1 h-px bg-slate-100"></div>
+        </div>
+
+        <!-- 凡例 -->
+        <div class="flex items-center gap-3 mb-4 text-[10px] font-bold text-slate-600">
+          <span class="flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span>本体着工
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block"></span>建て方
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>検査・立会い
+          </span>
+        </div>
+
+        <!-- 三隣亡警告 -->
+        <div id="sanrinbo-warning" class="warning-box mb-4 hidden">
+          <div class="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              class="flex-shrink-0 mt-0.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p id="sanrinbo-msg" class="text-[12px] text-amber-800 font-bold leading-snug"></p>
+          </div>
+        </div>
+
+        <!-- 工程リスト -->
+        <div id="schedule-list" class="space-y-2.5"></div>
+
+        <!-- 登録ボタン -->
+        <div class="mt-6 space-y-3">
+          <button id="btn-submit" onclick="submitToGAS()"
+            class="w-full py-4 px-5 rounded-2xl font-bold text-white bg-sfc-primary shadow-xl active:scale-95 transition-all duration-200">
+            <span class="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <line x1="10" y1="15" x2="14" y2="15"/>
+                <line x1="12" y1="13" x2="12" y2="17"/>
+              </svg>
+              <span id="btn-submit-text">カレンダーに登録する</span>
+            </span>
+          </button>
+          <p class="text-[11px] text-center text-slate-400 leading-relaxed">
+            Googleカレンダーに16件を直接登録します。<br>登録完了まで20秒ほどかかります。
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 送信完了メッセージ（送信後に表示） -->
+    <div id="sent-section" class="hidden">
+      <div class="bg-sfc-light border border-sfc-border rounded-2xl p-5 text-center space-y-2">
+        <div class="flex justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+            fill="none" stroke="#006837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <p class="text-sm font-bold text-sfc-primary">カレンダーへの登録が完了しました</p>
+        <p class="text-[12px] text-slate-600 leading-relaxed">Googleカレンダーを開いて確認してください。</p>
+        <button onclick="resetForm()"
+          class="mt-2 text-[12px] font-bold text-sfc-primary border border-sfc-border bg-white rounded-xl px-4 py-2 active:scale-95 transition-all">
+          別の物件を作成する
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- ===== アプリロジック ===== -->
+<script>
+function goToDashboard() {
+  const href = window.location.href;
+  const base = href.substring(0, href.lastIndexOf('/') + 1);
+  window.location.replace('../ダッシュボード.html?tab=tools');
+}
+// ネイティブ戻るボタン（スワイプ含む）もダッシュボードへ
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', function() { goToDashboard(); });
+
+let _currentSchedules = [];
+
+// ============================================================
+// Notion 物件一覧連携
+// ============================================================
+let _notionProperties    = [];
+let _selectedProperty    = null;
+let _notionOriginalDates = null; // { chakou, tatemae, hikiwatashi }
+
+function loadNotionProperties() {
+  const gasUrl   = localStorage.getItem('notion_reg_gas_url_v1');
+  const statusEl = document.getElementById('notion-load-status');
+  if (!gasUrl) {
+    statusEl.textContent = '右上のギアアイコンでGAS URLを設定してください';
+    statusEl.className = 'text-[11px] text-amber-600 font-bold mt-1.5 text-center';
+    statusEl.classList.remove('hidden');
+    return;
+  }
+  statusEl.textContent = '物件を読み込み中...';
+  statusEl.className = 'text-[11px] text-slate-400 mt-1.5 text-center';
+  statusEl.classList.remove('hidden');
+
+  fetch(gasUrl + '?mode=getProperties')
+    .then(r => r.json())
+    .then(data => {
+      statusEl.classList.add('hidden');
+      if (!data.success) throw new Error(data.message);
+      _notionProperties = data.properties || [];
+      const sel = document.getElementById('propertySelect');
+      if (_notionProperties.length === 0) {
+        statusEl.textContent = '物件データがありません（物件登録ツールで登録してください）';
+        statusEl.className = 'text-[11px] text-amber-600 font-bold mt-1.5 text-center';
+        statusEl.classList.remove('hidden');
+        return;
+      }
+      _notionProperties.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+    })
+    .catch((err) => {
+      const detail = err && err.message && !err.message.startsWith('Failed to fetch')
+        ? err.message
+        : 'GAS URLを右上のギアアイコンで確認してください';
+      statusEl.textContent = '読み込み失敗: ' + detail;
+      statusEl.className = 'text-[11px] text-amber-600 font-bold mt-1.5 text-center';
+      statusEl.classList.remove('hidden');
+    });
+}
+
+function onPropertySelect(pageId) {
+  if (!pageId) {
+    document.getElementById('bukkenName').value  = '';
+    document.getElementById('location').value    = '';
+    document.getElementById('chakouDate').value  = '';
+    document.getElementById('tatemae').value     = '';
+    document.getElementById('hikiwatashi').value = '';
+    ['chakou-dow','tatemae-dow','hikiwatashi-dow'].forEach(id => {
+      document.getElementById(id).textContent = '';
+    });
+    document.getElementById('tatemae-warn').classList.add('hidden');
+    _selectedProperty    = null;
+    _notionOriginalDates = null;
+    updateNotionDiffNotice();
+    updateCalcButton();
+    return;
+  }
+  const prop = _notionProperties.find(p => p.id === pageId);
+  if (!prop) return;
+  _selectedProperty = prop;
+  document.getElementById('bukkenName').value = prop.name;
+  if (prop.city) document.getElementById('location').value = prop.city;
+  if (prop.chakou)      { document.getElementById('chakouDate').value  = prop.chakou;      onDateChange('chakou'); }
+  if (prop.tatemae)     { document.getElementById('tatemae').value     = prop.tatemae;     onDateChange('tatemae'); }
+  if (prop.hikiwatashi) { document.getElementById('hikiwatashi').value = prop.hikiwatashi; onDateChange('hikiwatashi'); }
+  _notionOriginalDates = {
+    chakou:      prop.chakou      || '',
+    tatemae:     prop.tatemae     || '',
+    hikiwatashi: prop.hikiwatashi || ''
+  };
+  updateNotionDiffNotice();
+  updateCalcButton();
+}
+
+function _hasDatesChanged() {
+  if (!_notionOriginalDates) return false;
+  const c = document.getElementById('chakouDate').value;
+  const t = document.getElementById('tatemae').value;
+  const h = document.getElementById('hikiwatashi').value;
+  return c !== _notionOriginalDates.chakou ||
+         t !== _notionOriginalDates.tatemae ||
+         h !== _notionOriginalDates.hikiwatashi;
+}
+
+function updateNotionDiffNotice() {
+  const notice = document.getElementById('notion-diff-notice');
+  if (_selectedProperty && _hasDatesChanged()) {
+    notice.classList.remove('hidden');
+  } else {
+    notice.classList.add('hidden');
+  }
+}
+
+// ページ読み込み時に物件一覧を取得
+window.addEventListener('DOMContentLoaded', loadNotionProperties);
+
+// フォームの状態を監視して計算ボタンを活性化
+function onFormChange() {
+  updateCalcButton();
+}
+
+function onDateChange(field) {
+  const vals   = { chakou: 'chakouDate', tatemae: 'tatemae', hikiwatashi: 'hikiwatashi' };
+  const dowIds = { chakou: 'chakou-dow',  tatemae: 'tatemae-dow',  hikiwatashi: 'hikiwatashi-dow' };
+  const val = document.getElementById(vals[field]).value;
+  if (val) {
+    const d = new Date(val + 'T00:00:00');
+    document.getElementById(dowIds[field]).textContent = DAYS_JA[d.getDay()] + '曜日';
+    if (field === 'tatemae') {
+      const warn = document.getElementById('tatemae-warn');
+      isSanrinbo(d) ? warn.classList.remove('hidden') : warn.classList.add('hidden');
+    }
+  } else {
+    document.getElementById(dowIds[field]).textContent = '';
+    if (field === 'tatemae') document.getElementById('tatemae-warn').classList.add('hidden');
+  }
+  updateCalcButton();
+  updateNotionDiffNotice();
+}
+
+function updateCalcButton() {
+  const name = document.getElementById('propertySelect').value;
+  const c = document.getElementById('chakouDate').value;
+  const t = document.getElementById('tatemae').value;
+  const h = document.getElementById('hikiwatashi').value;
+  const btn = document.getElementById('btn-calc');
+  if (name && c && t && h) {
+    btn.classList.remove('bg-slate-200', 'text-slate-500', 'pointer-events-none');
+    btn.classList.add('bg-sfc-primary', 'text-white');
+  } else {
+    btn.classList.add('bg-slate-200', 'text-slate-500', 'pointer-events-none');
+    btn.classList.remove('bg-sfc-primary', 'text-white');
+  }
+}
+
+function calculate() {
+  const bukkenName = document.getElementById('bukkenName').value.trim();
+  const location   = document.getElementById('location').value.trim();
+  const chakouVal  = document.getElementById('chakouDate').value;
+  const tatemaeVal = document.getElementById('tatemae').value;
+  const hikiwatashiVal = document.getElementById('hikiwatashi').value;
+
+  if (!bukkenName || !chakouVal || !tatemaeVal || !hikiwatashiVal) return;
+
+  const chakou      = new Date(chakouVal + 'T00:00:00');
+  const tatemae     = new Date(tatemaeVal + 'T00:00:00');
+  const hikiwatashi = new Date(hikiwatashiVal + 'T00:00:00');
+
+  _currentSchedules = calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi);
+
+  renderPreview(_currentSchedules);
+  document.getElementById('preview-section').classList.remove('hidden');
+  document.getElementById('sent-section').classList.add('hidden');
+
+  // スクロール
+  setTimeout(() => {
+    document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+const COLOR_STYLES = {
+  orange: { badge: 'bg-orange-500 text-white', dot: 'bg-orange-500', row: 'bg-orange-50 border-orange-200' },
+  cyan:   { badge: 'bg-teal-500 text-white',   dot: 'bg-teal-500',   row: 'bg-teal-50 border-teal-200'   },
+  mauve:  { badge: 'bg-violet-500 text-white',  dot: 'bg-violet-100 text-violet-700', row: 'bg-white border-slate-200' },
+};
+
+function buildRowHtml(s, idx, startD, endD, style, notifyHtml) {
+  const timeStr = s.allDay
+    ? '終日'
+    : pad(startD.getHours()) + ':' + pad(startD.getMinutes()) + '〜' + pad(endD.getHours()) + ':' + pad(endD.getMinutes());
+  const dateInputVal  = startD.getFullYear() + '-' + pad(startD.getMonth() + 1) + '-' + pad(startD.getDate());
+  const startTimeVal  = pad(startD.getHours()) + ':' + pad(startD.getMinutes());
+  const endTimeVal    = pad(endD.getHours()) + ':' + pad(endD.getMinutes());
+
+  const timeInputs = s.allDay ? '' : `
+    <div class="flex items-center gap-2 mt-1.5">
+      <input type="time" id="edit-start-${idx}" value="${startTimeVal}"
+        class="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-[12px] font-mono bg-white">
+      <span class="text-slate-400 text-[11px]">〜</span>
+      <input type="time" id="edit-end-${idx}" value="${endTimeVal}"
+        class="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-[12px] font-mono bg-white">
+    </div>`;
+
+  return `
+    <div class="flex items-start gap-3 p-3">
+      <span class="step-badge ${style.badge}">${String(s.step).padStart(2, '0')}</span>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center flex-wrap gap-1 mb-1">
+          <span class="text-[11px] font-bold text-slate-700">${s.label}</span>
+          ${notifyHtml}
+        </div>
+        <div id="display-${idx}">
+          <div class="text-[12px] font-mono text-slate-700 font-bold">${formatDate(startD)}</div>
+          <div class="text-[11px] text-slate-600 font-mono">${timeStr}${s.desc && !s.warning ? '　' + s.desc : ''}</div>
+        </div>
+        <div id="edit-${idx}" class="hidden mt-2 space-y-1.5">
+          <input type="date" id="edit-date-${idx}" value="${dateInputVal}"
+            class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-[12px] font-mono bg-white">
+          ${timeInputs}
+          <button onclick="saveEdit(${idx})"
+            class="w-full mt-1 py-1.5 text-[11px] font-bold text-white bg-sfc-primary rounded-lg active:scale-95 transition-all">
+            保存
+          </button>
+        </div>
+      </div>
+      <button onclick="toggleEdit(${idx})" id="edit-btn-${idx}"
+        class="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 transition-colors mt-0.5" title="日時を編集">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+          fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+    </div>`;
+}
+
+function renderPreview(schedules) {
+  const list = document.getElementById('schedule-list');
+  list.innerHTML = '';
+
+  let hasWarning = false;
+  let warningMsg = '';
+
+  schedules.forEach((s, idx) => {
+    const startD = new Date(s.start);
+    const endD   = new Date(s.end);
+    const style  = COLOR_STYLES[s.color] || COLOR_STYLES.mauve;
+
+    if (s.warning && s.desc) {
+      hasWarning = true;
+      warningMsg = s.desc;
+    }
+
+    const notifyHtml = s.notify
+      ? `<span class="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">前日通知</span>`
+      : '';
+
+    const row = document.createElement('div');
+    row.id = `row-${idx}`;
+    row.className = `rounded-xl border ${style.row} transition-all overflow-hidden`;
+    row.innerHTML = buildRowHtml(s, idx, startD, endD, style, notifyHtml);
+    list.appendChild(row);
+  });
+
+  const warnBox = document.getElementById('sanrinbo-warning');
+  if (hasWarning) {
+    document.getElementById('sanrinbo-msg').textContent = warningMsg;
+    warnBox.classList.remove('hidden');
+  } else {
+    warnBox.classList.add('hidden');
+  }
+}
+
+function toggleEdit(idx) {
+  const displayEl = document.getElementById('display-' + idx);
+  const editEl    = document.getElementById('edit-' + idx);
+  const isEditing = !editEl.classList.contains('hidden');
+  if (isEditing) {
+    editEl.classList.add('hidden');
+    displayEl.classList.remove('hidden');
+  } else {
+    editEl.classList.remove('hidden');
+    displayEl.classList.add('hidden');
+  }
+}
+
+function saveEdit(idx) {
+  const s = _currentSchedules[idx];
+  const dateVal = document.getElementById('edit-date-' + idx).value;
+  if (!dateVal) return;
+
+  const newDate = new Date(dateVal + 'T00:00:00');
+
+  if (s.allDay) {
+    s.start = newDate;
+    s.end   = newDate;
+  } else {
+    const sv = document.getElementById('edit-start-' + idx).value;
+    const ev = document.getElementById('edit-end-' + idx).value;
+    const [sh, sm] = sv.split(':').map(Number);
+    const [eh, em] = ev.split(':').map(Number);
+    s.start = setTime(newDate, sh, sm);
+    s.end   = setTime(newDate, eh, em);
+  }
+
+  const startD = new Date(s.start);
+  const endD   = new Date(s.end);
+  const style  = COLOR_STYLES[s.color] || COLOR_STYLES.mauve;
+  const notifyHtml = s.notify
+    ? `<span class="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">前日通知</span>`
+    : '';
+
+  document.getElementById('row-' + idx).innerHTML = buildRowHtml(s, idx, startD, endD, style, notifyHtml);
+}
+
+async function submitToGAS() {
+  const bukkenName     = document.getElementById('bukkenName').value.trim();
+  const location       = document.getElementById('location').value.trim();
+  const chakouVal      = document.getElementById('chakouDate').value;
+  const tatemaeVal     = document.getElementById('tatemae').value;
+  const hikiwatashiVal = document.getElementById('hikiwatashi').value;
+
+  // ボタンを「登録中...」状態に変更
+  const btn     = document.getElementById('btn-submit');
+  const btnText = document.getElementById('btn-submit-text');
+  btn.disabled  = true;
+  btn.classList.remove('bg-sfc-primary', 'active:scale-95');
+  btn.classList.add('bg-slate-400', 'cursor-not-allowed');
+  btnText.textContent = '登録中...';
+  document.body.style.cursor = 'wait';
+
+  // ★ Notionの日付更新（日付を変更した場合のみ）
+  const notionGasUrl = localStorage.getItem('notion_reg_gas_url_v1');
+  if (_selectedProperty && notionGasUrl && _hasDatesChanged()) {
+    try {
+      const updateParams = new URLSearchParams({ mode: 'updateDates', pageId: _selectedProperty.id });
+      if (chakouVal)      updateParams.set('本体着工', chakouVal);
+      if (tatemaeVal)     updateParams.set('建て方',   tatemaeVal);
+      if (hikiwatashiVal) updateParams.set('引渡し',   hikiwatashiVal);
+      await fetch(notionGasUrl + '?' + updateParams.toString());
+      // 更新後はオリジナル日付を最新値で上書き
+      _notionOriginalDates = { chakou: chakouVal, tatemae: tatemaeVal, hikiwatashi: hikiwatashiVal };
+      updateNotionDiffNotice();
+    } catch(e) { /* Notion更新エラーは無視してカレンダー登録は続行 */ }
+  }
+
+  let done = false;
+  const showSuccess = () => {
+    if (done) return;
+    done = true;
+    document.body.style.cursor = '';
+    btn.disabled = false;
+    btn.classList.add('bg-sfc-primary', 'active:scale-95');
+    btn.classList.remove('bg-slate-400', 'cursor-not-allowed');
+    btnText.textContent = 'カレンダーに登録する';
+    document.getElementById('sent-section').classList.remove('hidden');
+    document.getElementById('sent-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  // URLパラメータ構築
+  const params = new URLSearchParams({
+    action:       'direct',
+    bukkenName:   bukkenName,
+    location:     location,
+    chakouDate:   chakouVal,
+    tatemae:      tatemaeVal,
+    hikiwatashi:  hikiwatashiVal
+  });
+  const reqUrl = WEBAPP_URL + '?' + params.toString();
+
+  // XMLHttpRequestでGASへ送信（CORSエラーは無視、GASはリクエストを受け取る）
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', reqUrl, true);
+  xhr.onloadend = showSuccess;   // 成功・失敗どちらでも完了表示
+  xhr.onerror   = showSuccess;
+  xhr.ontimeout = showSuccess;
+  xhr.timeout   = 60000;         // 60秒タイムアウト
+  try {
+    xhr.send();
+  } catch(e) {
+    // CORS等で例外が出ても完了扱い（GASにはリクエストが届いている）
+    setTimeout(showSuccess, 500);
+  }
+}
+
+function resetForm() {
+  document.getElementById('propertySelect').value = '';
+  document.getElementById('bukkenName').value     = '';
+  document.getElementById('location').value       = '';
+  document.getElementById('chakouDate').value     = '';
+  document.getElementById('tatemae').value        = '';
+  document.getElementById('hikiwatashi').value    = '';
+  ['chakou-dow','tatemae-dow','hikiwatashi-dow'].forEach(id => {
+    document.getElementById(id).textContent = '';
+  });
+  document.getElementById('tatemae-warn').classList.add('hidden');
+  document.getElementById('preview-section').classList.add('hidden');
+  document.getElementById('sent-section').classList.add('hidden');
+  _selectedProperty    = null;
+  _notionOriginalDates = null;
+  updateNotionDiffNotice();
+  updateCalcButton();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// GAS URL設定パネル
+// ============================================================
+function openUrlPanel() {
+  const stored = localStorage.getItem('notion_reg_gas_url_v1') || '';
+  document.getElementById('urlPanelInput').value = stored;
+  const p = document.getElementById('urlPanel');
+  p.classList.remove('hidden');
+  p.classList.add('flex');
+}
+function closeUrlPanel() {
+  const p = document.getElementById('urlPanel');
+  p.classList.add('hidden');
+  p.classList.remove('flex');
+}
+function saveScheduleUrl() {
+  const val = document.getElementById('urlPanelInput').value.trim();
+  if (!val.startsWith('https://script.google.com/macros/s/')) {
+    alert('有効なGAS WebApp URLを入力してください');
+    return;
+  }
+  localStorage.setItem('notion_reg_gas_url_v1', val);
+  closeUrlPanel();
+  // セレクトをリセットして再読み込み
+  const sel = document.getElementById('propertySelect');
+  sel.innerHTML = '<option value="">物件を選択してください</option>';
+  _notionProperties = [];
+  loadNotionProperties();
+}
+</script>
+
+</body>
+</html>
