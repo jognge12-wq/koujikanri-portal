@@ -1620,11 +1620,13 @@
 
             .greeting-top {
                 flex: 1;
+                min-width: 0;
                 margin-bottom: 0;
             }
 
             .greeting-bottom {
                 flex: 1;
+                min-width: 0;
                 border-top: none;
                 padding-top: 0;
                 gap: 5px;
@@ -1663,6 +1665,10 @@
                 font-size: 11px;
                 color: rgba(255,255,255,0.95);
                 text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
             }
 
             .greeting-badge {
@@ -1744,12 +1750,13 @@
                 padding: 12px;
             }
 
+            /* グリーティング2カラム内は12pxに統一（18/16pxの上書きを解除） */
             .date-main {
-                font-size: 18px;
+                font-size: 12px;
             }
 
             .clock-mini {
-                font-size: 16px;
+                font-size: 12px;
             }
 
             .card-title {
