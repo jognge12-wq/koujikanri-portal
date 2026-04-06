@@ -1,0 +1,4006 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="施工管理">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <title>施工管理ポータル</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #006837;
+            --primary-l: #e8f5e9;
+            --primary-m: #81c784;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --surface2: #f8f9fb;
+            --border: #e8eaed;
+            --border2: #d1d5db;
+            --text1: #111827;
+            --text2: #374151;
+            --text3: #4b5563;
+            --green: #059669;
+            --green-l: #ecfdf5;
+            --amber: #d97706;
+            --amber-l: #fffbeb;
+            --red: #dc2626;
+            --red-l: #fef2f2;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg);
+            color: var(--text1);
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100vh;
+            background-color: var(--surface);
+            border-right: 1px solid var(--border);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            z-index: 100;
+        }
+
+        .sidebar-item {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: background-color 0.15s ease;
+            color: var(--text2);
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--surface2);
+        }
+
+        .sidebar-item.active {
+            color: var(--primary);
+            background-color: var(--primary-l);
+        }
+
+        .sidebar-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sidebar-separator {
+            width: 28px;
+            height: 1px;
+            background-color: var(--border);
+            margin: 8px 0;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--text1);
+            color: var(--surface);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.12s ease;
+            margin-left: 8px;
+            z-index: 200;
+        }
+
+        .sidebar-item:hover .tooltip {
+            opacity: 1;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 52px;
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 99;
+        }
+
+        .top-bar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text1);
+        }
+
+        .hamburger {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px;
+            background-color: var(--text1);
+            transition: all 0.12s ease;
+        }
+
+        .hamburger.open span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .hamburger.open span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.open span:nth-child(3) {
+            transform: rotate(-45deg) translate(8px, -8px);
+        }
+
+        .drawer {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--surface);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+            transition: left 0.2s ease;
+            z-index: 98;
+            padding: 16px 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open {
+            left: 0;
+        }
+
+        .drawer-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background-color 0.12s ease;
+            color: var(--text1);
+            text-decoration: none;
+        }
+
+        .drawer-item:hover {
+            background-color: var(--surface2);
+        }
+
+        .drawer-item.active {
+            background-color: var(--primary-l);
+            color: var(--primary);
+        }
+
+        .drawer-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .drawer-separator {
+            height: 1px;
+            background-color: var(--border);
+            margin: 8px 0;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 99;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            color: var(--text3);
+            transition: color 0.12s ease;
+            flex: 1;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+
+        .bottom-nav-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .bottom-nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 52px;
+            margin-bottom: 60px;
+            padding: 16px;
+            max-width: 1000px;
+            transition: margin-left 0.2s ease;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .page-header.show {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text1);
+        }
+
+        .page-date {
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .grid-full {
+            margin-bottom: 16px;
+        }
+
+        /* プルダウン式カード（スマホ用、PCでは常に開いた状態） */
+        .collapsible-card .card-toggle {
+            cursor: default;
+        }
+        .collapsible-card .card-chevron {
+            display: none;
+            transition: transform 0.2s ease;
+        }
+        .collapsible-card .card-body {
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+            overflow: hidden;
+        }
+        .collapsible-card .card-count {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .card-action-bottom {
+            display: block;
+            text-align: center;
+            padding: 10px 0 2px;
+            font-size: 11px;
+            color: var(--primary);
+            text-decoration: none;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+            transition: opacity 0.15s;
+        }
+        .card-action-bottom:hover { opacity: 0.7; }
+
+        .card-sub-link {
+            display: block;
+            font-size: 11px;
+            color: var(--primary);
+            text-decoration: none;
+            margin-top: -8px;
+            margin-bottom: 10px;
+            transition: opacity 0.15s;
+        }
+        .card-sub-link:hover { opacity: 0.7; }
+        .card-sub-link svg { vertical-align: -1px; }
+
+        /* ドラッグ&ドロップ */
+        .draggable-section { transition: transform 0.2s ease; }
+        .draggable-section.dragging { opacity: 0.5; z-index: 100; }
+        .draggable-section.drag-over { border-top: 3px solid var(--primary); }
+        .drag-handle {
+            display: none;
+            width: 18px;
+            height: 18px;
+            cursor: grab;
+            color: var(--border);
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+        .drag-handle:hover { color: var(--text3); }
+        .drag-handle:active { cursor: grabbing; }
+
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: box-shadow 0.15s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            padding: 11px 0 11px 10px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            gap: 6px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text1);
+            flex: 1;
+            letter-spacing: 0.2px;
+        }
+
+        .card-action {
+            font-size: 11px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: opacity 0.12s ease;
+        }
+
+        .card-action:hover {
+            opacity: 0.8;
+        }
+
+        .greeting-card {
+            background-image: url('assets/treeing.png');
+            background-size: cover;
+            background-position: center 8%;
+            position: relative;
+            overflow: hidden;
+            color: var(--surface);
+            margin-bottom: 16px;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        /* 右寄りテキストエリアを暗くするグラデーションオーバーレイ */
+        .greeting-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            /* 左40%は顔/画像をクリアに、右35%に向けて濃く */
+            background: linear-gradient(
+                to left,
+                rgba(0, 0, 0, 0.68) 0%,
+                rgba(0, 0, 0, 0.60) 22%,
+                rgba(0, 0, 0, 0.28) 42%,
+                rgba(0, 0, 0, 0.00) 62%
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .greeting-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            padding-left: 65%;
+        }
+
+        .greeting-top {
+            margin-bottom: 14px;
+        }
+
+        .date-area {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .date-main-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .date-main {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+        }
+
+        .date-rokuyo {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .rokuyo-tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 5px;
+            background-color: rgba(255,255,255,0.82);
+            color: #006837;
+            letter-spacing: 0.5px;
+            text-shadow: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .rokuyo-tag.caution {
+            background-color: rgba(220, 38, 38, 0.9);
+            color: #ffffff;
+        }
+
+        .clock-mini {
+            font-family: 'DM Mono', monospace;
+            font-size: 22px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.92);
+            letter-spacing: 0px;
+            line-height: 1;
+            padding-top: 4px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+        }
+
+        .greeting-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.18);
+            padding-top: 12px;
+        }
+
+        .greeting-badge-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .greeting-comment {
+            font-size: 12.5px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.95);
+            line-height: 1.5;
+            flex: 1;
+            min-width: 0;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+        }
+
+        .greeting-badge {
+            background-color: rgba(255, 255, 255, 0.88);
+            color: #006837;
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .greeting-badge .badge-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .schedule-section {
+            margin-bottom: 12px;
+        }
+
+        .schedule-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text1);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .schedule-day-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 4px;
+            letter-spacing: 0;
+        }
+
+        .schedule-day-tag.today {
+            background-color: var(--primary);
+            color: #fff;
+        }
+
+        .schedule-day-tag.tomorrow {
+            background-color: var(--border);
+            color: var(--text2);
+        }
+
+        .schedule-day-tag.yesterday {
+            background-color: var(--border);
+            color: var(--text3);
+            font-weight: 500;
+        }
+
+        .schedule-section.past-day {
+            opacity: 0.45;
+        }
+
+        .sched-item {
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 0 8px 8px 0;
+            padding: 10px 10px 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .sched-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sched-time {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--text2);
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .sched-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text1);
+            margin-bottom: 2px;
+        }
+
+        .sched-meta {
+            font-size: 11px;
+            color: var(--text2);
+        }
+
+        .sched-all-day {
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-left: 5px solid #d50000;
+            border-radius: 0 8px 8px 0;
+            padding: 8px 10px 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text1);
+        }
+
+        .property-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background-color 0.12s ease;
+            border-left: 3px solid;
+        }
+
+        .property-item.compact {
+            padding: 8px 10px;
+        }
+
+        .property-name-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 3px;
+        }
+
+        .property-compact-meta {
+            font-size: 11px;
+            color: var(--text3);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .property-compact-meta strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .property-compact-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 3px;
+        }
+
+        .property-compact-pct {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text3);
+            white-space: nowrap;
+        }
+
+        .property-compact-sub {
+            font-size: 10px;
+            color: var(--text3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .property-item:hover {
+            background-color: #fafbfc;
+        }
+
+        .property-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .property-name {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text1);
+            margin-bottom: 3px;
+        }
+
+        .property-location-inline {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text2);
+            margin-left: 4px;
+        }
+
+        .property-stage-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .property-stage-badge.green {
+            background-color: var(--green-l);
+            color: var(--green);
+        }
+
+        .property-stage-badge.amber {
+            background-color: var(--amber-l);
+            color: var(--amber);
+        }
+
+        .property-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-progress-bar {
+            flex: 1;
+            height: 3px;
+            background-color: var(--border);
+            border-radius: 1.5px;
+            overflow: hidden;
+        }
+
+        .property-progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .property-progress-label {
+            font-size: 10px;
+            color: var(--text2);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-card {
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .status-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-card-header.collapsible {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .status-card.has-list .status-card-header {
+            margin-bottom: 0;
+        }
+
+        .status-card.has-list.open .status-card-header {
+            margin-bottom: 6px;
+        }
+
+        .status-card-toggle {
+            width: 16px;
+            height: 16px;
+            color: var(--text2);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-left: 6px;
+        }
+
+        .status-card.open .status-card-toggle {
+            transform: rotate(180deg);
+        }
+
+        .status-card-list {
+            display: none;
+            padding-top: 6px;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-card.open .status-card-list {
+            display: block;
+        }
+
+        .status-card-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text2);
+        }
+
+        .status-card-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .status-card-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .status-card-item + .status-card-item {
+            border-top: 1px solid var(--border);
+        }
+
+        .status-card-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text1);
+        }
+
+        .status-card-date {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text2);
+        }
+
+        .status-card-item.done {
+            opacity: 0.55;
+        }
+        .status-done-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-left: 2px;
+        }
+        .status-card-empty {
+            font-size: 10px;
+            color: var(--text2);
+            padding: 2px 0;
+        }
+
+        .schedule-chart-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .schedule-chart-legend {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 2px;
+        }
+        .schedule-chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text2);
+        }
+        .schedule-chart-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+        .schedule-chart-row-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text2);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .schedule-chart-row-total {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text1);
+        }
+
+        .month-table {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+        }
+
+        .month-cell {
+            text-align: center;
+            padding: 3px 1px;
+            border-radius: 4px;
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+        }
+
+        .month-cell.past {
+            background-color: var(--primary-l);
+            border-color: var(--primary-m);
+        }
+
+        .month-cell.current {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .month-cell.current .month-cell-label,
+        .month-cell.current .month-cell-count {
+            color: #fff;
+        }
+
+        .month-cell.start-row .month-cell.past {
+            background-color: #eff6ff;
+            border-color: #93c5fd;
+        }
+
+        .month-cell-label {
+            font-size: 8px;
+            color: var(--text2);
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .month-cell-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text1);
+            line-height: 1.3;
+        }
+
+        .section-divider {
+            height: 1px;
+            background-color: var(--border);
+            margin: 12px 0;
+        }
+
+        .delivery-date {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: var(--text2);
+            float: right;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            scroll-behavior: smooth;
+        }
+
+        .filter-tabs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .filter-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .filter-tabs::-webkit-scrollbar-thumb {
+            background-color: var(--border);
+            border-radius: 2px;
+        }
+
+        .filter-tab {
+            padding: 6px 10px;
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.12s ease;
+            color: var(--text2);
+        }
+
+        .filter-tab:hover {
+            background-color: #f3f4f6;
+        }
+
+        .filter-tab.active {
+            background-color: var(--primary);
+            color: var(--surface);
+            border-color: var(--primary);
+        }
+        .tab-count {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .filter-tab.active .tab-count {
+            color: var(--surface);
+        }
+
+        .task-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .task-item.hidden {
+            display: none;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text1);
+            margin-bottom: 2px;
+        }
+
+        .task-property {
+            font-size: 10px;
+            color: var(--text2);
+        }
+        /* Google Tasks */
+        .gtask-group-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text2);
+            padding: 8px 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .gtask-group-label .gtask-count {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .gtask-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+        .gtask-item.overdue {
+            border-left: 3px solid var(--red);
+        }
+        .gtask-item.this-week {
+            border-left: 3px solid var(--amber);
+        }
+        .gtask-item.later {
+            border-left: 3px solid var(--primary-m);
+        }
+        .gtask-item.no-date {
+            border-left: 3px solid var(--border2);
+        }
+        .gtask-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text1);
+            margin-bottom: 2px;
+        }
+        .gtask-due {
+            font-size: 10px;
+            color: var(--text2);
+        }
+        .gtask-due.overdue-text {
+            color: var(--red);
+            font-weight: 500;
+        }
+        .gtask-later-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            padding: 8px 0 4px;
+        }
+        .gtask-later-toggle .gtask-chevron {
+            width: 14px;
+            height: 14px;
+            color: var(--text2);
+            transition: transform 0.2s ease;
+        }
+        .gtask-later-body {
+            display: none;
+        }
+        .gtask-later-body.open {
+            display: block;
+        }
+        .gtask-later-toggle.open .gtask-chevron {
+            transform: rotate(180deg);
+        }
+
+        .show-all-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 0;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 4px;
+        }
+        .show-all-btn:hover {
+            background: var(--primary-l);
+        }
+
+        .sync-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .sync-btn:hover {
+            background: var(--surface2);
+        }
+        .sync-btn:hover svg {
+            stroke: var(--primary);
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        .data-alert {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .data-alert-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 6px;
+        }
+        .data-alert-item {
+            font-size: 10px;
+            color: #78350f;
+            padding: 2px 0 2px 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background-color: var(--surface);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+            animation: slideIn 0.15s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 24px;
+            height: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text2);
+            transition: color 0.12s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text1);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            padding-right: 36px;
+        }
+
+        .modal-subtitle {
+            font-size: 12px;
+            color: var(--text2);
+            margin-bottom: 16px;
+        }
+
+        .modal-notion-link {
+            text-align: center;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            margin-top: 12px;
+        }
+        .notion-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(0, 104, 55, 0.06);
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .notion-link:hover {
+            background: rgba(0, 104, 55, 0.12);
+        }
+
+        .modal-section {
+            margin-bottom: 16px;
+        }
+
+        .modal-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .modal-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .modal-date {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            background-color: var(--surface2);
+            border-radius: 6px;
+        }
+
+        .modal-date-label {
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        .modal-date-value {
+            color: var(--text1);
+            font-weight: 600;
+        }
+
+        /* チェックリスト（トグルスイッチ） */
+        .check-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .check-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text2);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 32px;
+            height: 18px;
+            border-radius: 9px;
+            background-color: var(--border);
+            cursor: default;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.on {
+            background-color: var(--primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+        }
+
+        .toggle-switch.on::after {
+            transform: translateX(14px);
+        }
+
+        /* 工程別タスク一覧 */
+        .stage-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stage-group {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .stage-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.12s ease;
+        }
+
+        .stage-group-header:hover {
+            opacity: 0.85;
+        }
+
+        .stage-group-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stage-group-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .stage-group-name {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .stage-group-count {
+            font-size: 9px;
+            color: var(--text3);
+            font-weight: 500;
+        }
+
+        .stage-group-chevron {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text3);
+            fill: none;
+            stroke-width: 2;
+            transition: transform 0.2s ease;
+        }
+
+        .stage-group.open .stage-group-chevron {
+            transform: rotate(180deg);
+        }
+
+        .stage-group-body {
+            display: none;
+            border-top: 1px solid var(--border);
+        }
+
+        .stage-group.open .stage-group-body {
+            display: block;
+        }
+
+        .stage-group.all-done .stage-group-header {
+            background-color: var(--surface2);
+        }
+
+        .stage-group.all-done .stage-group-name {
+            color: var(--text3);
+        }
+
+        .task-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.12s ease;
+        }
+
+        .task-row:last-child {
+            border-bottom: none;
+        }
+
+        .task-row.done {
+            background-color: var(--surface2);
+        }
+
+        .task-row.done .task-row-name {
+            color: var(--text3);
+            text-decoration: line-through;
+        }
+
+        .task-row-cb {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1.5px solid var(--border2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+
+        .task-row-cb.checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .task-row-cb.checked::after {
+            content: '';
+            width: 8px;
+            height: 5px;
+            border-left: 2px solid white;
+            border-bottom: 2px solid white;
+            transform: rotate(-45deg);
+            margin-top: -1px;
+        }
+
+        .task-row-name {
+            font-size: 11px;
+            color: var(--text1);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-row-priority {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+            opacity: 0.3;
+            transition: opacity 0.15s ease;
+        }
+
+        .task-row-priority.on {
+            opacity: 1;
+        }
+
+        /* 進捗バー+日付 */
+        .progress-bar-dates {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .progress-date-label {
+            font-size: 9px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text2);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .progress-days {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        .progress-days-left {
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        /* PC: グリーティングカードの高さ */
+        @media (min-width: 769px) {
+            .greeting-card {
+                min-height: 260px;
+                max-height: 300px;
+                background-position: center 8%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 12px;
+            }
+
+            /* スマホ: グリーティングカードは内容で高さが決まる、最低限だけ確保 */
+            .greeting-card {
+                min-height: 170px;
+            }
+
+            /* スマホ: 右寄せ・顔エリアを避ける */
+            .greeting-content {
+                padding-left: 46%;
+            }
+
+            /* スマホ: 日付・時計コンパクト */
+            .greeting-top {
+                margin-bottom: 8px;
+            }
+
+            .date-main {
+                font-size: 17px;
+                letter-spacing: 0px;
+            }
+
+            .clock-mini {
+                font-size: 17px;
+            }
+
+            .rokuyo-tag {
+                font-size: 11px;
+                padding: 3px 9px;
+            }
+
+            .greeting-comment {
+                font-size: 11px;
+            }
+
+            .greeting-bottom {
+                gap: 7px;
+                padding-top: 8px;
+            }
+
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+
+            /* スマホ: セクション順を変更（着工前→仕掛り） */
+            #preconCard { order: 1; }
+            #shikakariCard { order: 2; }
+
+            /* スマホ: タスクグリッド順（Google Tasks→優先タスク） */
+            #gtaskCard { order: 1; }
+            #priorityTaskCard { order: 2; }
+
+            /* スマホ: プルダウン式 */
+            .collapsible-card .card-toggle {
+                cursor: pointer;
+            }
+            .collapsible-card .card-chevron {
+                display: block;
+                transform: rotate(0deg);
+            }
+            .collapsible-card:not(.collapsed) .card-chevron {
+                transform: rotate(180deg);
+            }
+            .collapsible-card.collapsed .card-body {
+                max-height: 0;
+                opacity: 0;
+                margin: 0;
+            }
+            .collapsible-card.collapsed .card-action-bottom {
+                display: none;
+            }
+
+            /* スマホ: ドラッグハンドル表示 */
+            .drag-handle { display: block; margin-right: 4px; }
+
+            .modal {
+                width: 95%;
+                padding: 16px;
+            }
+
+            .month-table {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 2px;
+            }
+
+            .month-cell {
+                padding: 2px 1px;
+            }
+
+            .month-cell-count {
+                font-size: 10px;
+            }
+
+            .month-cell-label {
+                font-size: 7px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 12px;
+            }
+
+            .card {
+                padding: 12px;
+            }
+
+            .date-main {
+                font-size: 18px;
+            }
+
+            .clock-mini {
+                font-size: 16px;
+            }
+
+            .card-title {
+                font-size: 12px;
+            }
+        }
+
+        /* ===== タブシステム ===== */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== 新ボトムナビ（5タブ、アクティブインジケーター付き） ===== */
+        .bottom-nav { height: 64px; }
+        .main-content { margin-bottom: 64px; }
+        .bottom-nav-item { position: relative; }
+        .bottom-nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 20px; height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 2px 2px;
+        }
+        .bottom-nav-item svg { width: 22px; height: 22px; }
+        .bottom-nav-label { font-size: 10px; font-weight: 500; }
+
+        /* ===== ドロワーオーバーレイ ===== */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 97;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        /* ===== 新ドロワー構造 ===== */
+        .drawer { z-index: 98; }
+        .drawer-header {
+            padding: 20px 16px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .drawer-header-title {
+            font-size: 13px; font-weight: 700; color: var(--primary);
+        }
+        .drawer-header-sub {
+            font-size: 11px; color: var(--text3); margin-top: 2px;
+        }
+        .drawer-section-label {
+            font-size: 10px; font-weight: 700; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 14px 16px 6px;
+        }
+        .drawer-badge {
+            font-size: 9px; font-family: 'DM Mono', monospace;
+            background: var(--primary); color: white;
+            padding: 1px 6px; border-radius: 8px; margin-left: auto;
+        }
+        .drawer-ext {
+            width: 12px; height: 12px;
+            stroke: currentColor; fill: none; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round;
+            opacity: 0.35; margin-left: auto; flex-shrink: 0;
+        }
+
+        /* ===== タブ別コンテンツ共通 ===== */
+        .tab-pane {
+            margin-top: 52px;
+            margin-bottom: 64px;
+            padding: 16px;
+        }
+
+        /* ===== 物件タブ ===== */
+        .prop-date-row {
+            display: flex; gap: 16px;
+            margin-top: 8px; padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+        .prop-date-col { flex: 1; }
+        .prop-date-label-sm {
+            font-size: 9px; font-weight: 700; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .prop-date-val {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px; color: var(--text1); margin-top: 2px;
+        }
+        .prop-date-dow { font-size: 10px; color: var(--text3); }
+
+        /* ===== タスクタブ ===== */
+        .tab-section-title {
+            font-size: 14px; font-weight: 700; color: var(--text1);
+            margin-bottom: 12px;
+        }
+        .tab-section { margin-bottom: 24px; }
+
+        /* ===== ツールタブ ===== */
+        .tool-grid-2 {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+        .tool-card-new {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px 16px;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 10px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tool-card-new:active, .tool-card-new:hover {
+            border-color: var(--primary);
+            background: var(--primary-l);
+        }
+        .tool-icon-wrap {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tool-icon-wrap svg {
+            width: 26px; height: 26px; stroke: white; fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .tool-card-name {
+            font-size: 12px; font-weight: 600; color: var(--text1); text-align: center;
+        }
+        .tool-card-desc {
+            font-size: 10px; color: var(--text3); text-align: center; line-height: 1.4;
+        }
+
+        /* ===== ツール詳細シート ===== */
+        .tool-sheet-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.22s;
+        }
+        .tool-sheet-overlay.open { opacity: 1; pointer-events: all; }
+        .tool-sheet {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--surface); border-radius: 20px 20px 0 0;
+            padding: 20px 20px 48px; max-height: 82vh; overflow-y: auto;
+            transform: translateY(100%); transition: transform 0.28s cubic-bezier(.32,.72,0,1);
+            z-index: 201;
+        }
+        .tool-sheet.open { transform: translateY(0); }
+        .tool-sheet-handle {
+            width: 36px; height: 4px; background: var(--border2);
+            border-radius: 2px; margin: 0 auto 20px;
+        }
+        .tool-sheet-header {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+        }
+        .tool-sheet-icon {
+            width: 54px; height: 54px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .tool-sheet-icon svg {
+            width: 28px; height: 28px; stroke: white; fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .tool-sheet-name { font-size: 18px; font-weight: 700; color: var(--text1); }
+        .tool-sheet-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+        .tool-sheet-desc {
+            font-size: 13px; color: var(--text2); line-height: 1.75;
+            margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+        }
+        .tool-sheet-features { list-style: none; padding: 0; margin: 0 0 24px; }
+        .tool-sheet-features li {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: 13px; color: var(--text2); padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .tool-sheet-features li:last-child { border-bottom: none; }
+        .tool-sheet-features li svg {
+            width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px;
+        }
+        .tool-sheet-btn {
+            display: block; width: 100%; padding: 14px;
+            border-radius: 10px; font-size: 14px; font-weight: 700;
+            cursor: pointer; text-align: center; text-decoration: none;
+            border: none; box-sizing: border-box;
+        }
+        .tool-sheet-btn-open {
+            background: var(--primary); color: white;
+        }
+        .tool-sheet-btn-open:active { opacity: 0.85; }
+        .tool-sheet-btn-disabled {
+            background: var(--border); color: var(--text3); cursor: not-allowed;
+        }
+
+        /* ===== 週間タブ ===== */
+        .week-day-strip {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+            margin-bottom: 16px;
+        }
+        .week-day-cell {
+            text-align: center; padding: 8px 2px; border-radius: 8px;
+        }
+        .week-day-cell.today { background: var(--primary); }
+        .week-day-cell .wdc-dow {
+            font-size: 10px; color: var(--text3); font-weight: 500;
+        }
+        .week-day-cell.today .wdc-dow { color: rgba(255,255,255,0.8); }
+        .week-day-cell .wdc-num {
+            font-size: 15px; font-weight: 700;
+            font-family: 'DM Mono', monospace; color: var(--text1); margin-top: 4px;
+        }
+        .week-day-cell.today .wdc-num { color: white; }
+        .week-day-cell.sun .wdc-dow, .week-day-cell.sun .wdc-num { color: #dc2626; }
+        .week-day-cell.sat .wdc-dow, .week-day-cell.sat .wdc-num { color: #2563eb; }
+        .week-day-cell.today.sun .wdc-dow, .week-day-cell.today.sun .wdc-num,
+        .week-day-cell.today.sat .wdc-dow, .week-day-cell.today.sat .wdc-num { color: white; }
+
+        .week-section-hd {
+            font-size: 11px; font-weight: 700; color: var(--text2);
+            margin: 16px 0 8px; display: flex; align-items: center; gap: 6px;
+        }
+
+
+        /* ===== パスワード保護オーバーレイ ===== */
+        #pw-overlay {
+            position: fixed;
+            inset: 0;
+            background: #f4f6f9;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #pw-overlay.hidden { display: none; }
+        .pw-box {
+            background: #ffffff;
+            border: 1px solid #e8eaed;
+            border-radius: 16px;
+            padding: 40px 32px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .pw-logo {
+            width: 48px;
+            height: 48px;
+            background: #006837;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .pw-logo svg { width: 26px; height: 26px; fill: #ffffff; }
+        .pw-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+        .pw-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+        .pw-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 6px;
+            text-align: center;
+            border: 1.5px solid #e8eaed;
+            border-radius: 10px;
+            outline: none;
+            color: #111827;
+            background: #f8f9fb;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .pw-input:focus { border-color: #006837; background: #fff; }
+        .pw-input.error { border-color: #dc2626; background: #fef2f2; }
+        .pw-btn {
+            width: 100%;
+            padding: 12px;
+            background: #006837;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .pw-btn:hover { background: #005a2f; }
+        .pw-error {
+            font-size: 12px;
+            color: #dc2626;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== パスワードオーバーレイ ===== -->
+    <div id="pw-overlay">
+        <div class="pw-box">
+            <div class="pw-logo">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            </div>
+            <div class="pw-title">施工管理ポータル</div>
+            <div class="pw-sub">パスワードを入力してください</div>
+            <input type="password" id="pw-input" class="pw-input" placeholder="····" maxlength="20" inputmode="numeric" />
+            <button class="pw-btn" onclick="checkPassword()">ログイン</button>
+            <div class="pw-error" id="pw-error"></div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            if (sessionStorage.getItem('portal_auth') === 'ok') {
+                document.getElementById('pw-overlay').classList.add('hidden');
+            }
+            document.getElementById('pw-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') checkPassword();
+                document.getElementById('pw-input').classList.remove('error');
+                document.getElementById('pw-error').textContent = '';
+            });
+        })();
+        function checkPassword() {
+            const input = document.getElementById('pw-input').value;
+            if (input === '4022') {
+                sessionStorage.setItem('portal_auth', 'ok');
+                document.getElementById('pw-overlay').classList.add('hidden');
+            } else {
+                const el = document.getElementById('pw-input');
+                el.classList.add('error');
+                el.value = '';
+                document.getElementById('pw-error').textContent = 'パスワードが違います';
+                el.focus();
+            }
+        }
+    </script>
+    <nav class="sidebar">
+        <div class="sidebar-item active" data-nav="dashboard">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <div class="tooltip">ダッシュボード</div>
+        </div>
+        <div class="sidebar-item" data-nav="schedule">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="14" x2="9" y2="18"/><line x1="15" y1="14" x2="15" y2="18"/></svg>
+            <div class="tooltip">スケジュール</div>
+        </div>
+        <div class="sidebar-item" data-nav="properties">
+            <svg viewBox="0 0 24 24"><path d="M5 3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5zm0 2h14v6H5V5zm0 8h14v6H5v-6z"/></svg>
+            <div class="tooltip">物件一覧</div>
+        </div>
+        <div class="sidebar-item" data-nav="tasks">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/><path d="M3 3h18v2H3V3zm0 8h18v2H3v-2z"/></svg>
+            <div class="tooltip">タスク</div>
+        </div>
+        <div class="sidebar-separator"></div>
+        <div class="sidebar-item" data-nav="notion">
+            <svg viewBox="0 0 24 24"><path d="M5 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V3z"/><path d="M17 3V5H7V3m0 9a3 3 0 1 0 6 0 3 3 0 0 0-6 0z"/></svg>
+            <div class="tooltip">Notion物件登録</div>
+        </div>
+        <div class="sidebar-item" data-nav="payment">
+            <svg viewBox="0 0 24 24"><path d="M3 6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6zm2 0v3h14V6H5zm0 5v7h14v-7H5zm5 3c0 .55.45 1 1 1h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1z"/></svg>
+            <div class="tooltip">支払い管理</div>
+        </div>
+        <div class="sidebar-separator"></div>
+        <div class="sidebar-bottom">
+            <div class="sidebar-item" data-nav="settings">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1a11 11 0 0 0-9 5.55A11 11 0 0 0 12 23a11 11 0 0 0 9-5.55A11 11 0 0 0 12 1zm0 2a9 9 0 0 1 7.07 14.93A9 9 0 0 1 12 21a9 9 0 0 1-7.07-2.07A9 9 0 0 1 12 3z"/></svg>
+                <div class="tooltip">設定</div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="top-bar">
+        <button class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <span class="top-bar-title" id="topBarTitle">ダッシュボード</span>
+        <div style="width: 24px;"></div>
+    </div>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <nav class="drawer" id="drawer">
+        <div class="drawer-header">
+            <div class="drawer-header-title">施工管理ポータル</div>
+            <div class="drawer-header-sub">masaさんの現場管理ハブ</div>
+        </div>
+        <div class="drawer-section-label">メイン</div>
+        <div class="drawer-item active" data-tab="home" onclick="switchTab('home')">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span>ホーム</span>
+        </div>
+        <div class="drawer-item" data-tab="week" onclick="switchTab('week')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
+            <span>週間ビュー</span>
+        </div>
+        <div class="drawer-item" data-tab="properties" onclick="switchTab('properties')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>物件ボード</span>
+        </div>
+        <div class="drawer-item" data-tab="tasks" onclick="switchTab('tasks')">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <span>タスク</span>
+        </div>
+        <div class="drawer-item" data-tab="tools" onclick="switchTab('tools')">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            <span>ツール</span>
+        </div>
+        <div class="drawer-separator"></div>
+        <div class="drawer-section-label">Cowork ツール</div>
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/検査依頼.html')">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>検査依頼</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/工程作成.html')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="10" x2="12" y2="22"/></svg>
+            <span>工程作成</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer()">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Notion物件登録</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/支払い管理.html')">
+            <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+            <span>支払い管理</span>
+        </div>
+        <div class="drawer-separator"></div>
+        <div class="drawer-section-label">外部サービス</div>
+        <div class="drawer-item" onclick="window.open('https://calendar.google.com','_blank')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
+            <span>Google カレンダー</span>
+            <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="drawer-item" onclick="window.open('https://notion.so','_blank')">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Notion</span>
+            <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="drawer-item" onclick="window.open('https://tasks.google.com','_blank')">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <span>Google Tasks</span>
+            <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="drawer-separator"></div>
+        <div class="drawer-item" onclick="closeDrawer()" style="padding-bottom: 20px;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <span>設定</span>
+        </div>
+    </nav>
+
+    <nav class="bottom-nav">
+        <div class="bottom-nav-item active" data-tab="home" onclick="switchTab('home')">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span class="bottom-nav-label">ホーム</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="week" onclick="switchTab('week')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
+            <span class="bottom-nav-label">週間</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="properties" onclick="switchTab('properties')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="bottom-nav-label">物件</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <span class="bottom-nav-label">タスク</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="tools" onclick="switchTab('tools')">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            <span class="bottom-nav-label">ツール</span>
+        </div>
+    </nav>
+
+    <div class="tab-content active" id="tab-home">
+    <main class="main-content mobile" id="mainContent">
+
+        <div class="card greeting-card">
+            <div class="greeting-content">
+                <div class="greeting-top">
+                    <div class="date-area">
+                        <div class="date-main-row">
+                            <div class="date-main" id="dateMain">2026年4月4日（土）</div>
+                            <div class="clock-mini" id="clockMini">00:00</div>
+                        </div>
+                        <div class="date-rokuyo" id="dateRokuyo"></div>
+                    </div>
+                </div>
+                <div class="greeting-bottom">
+                    <div class="greeting-comment" id="greetingComment"></div>
+                    <div class="greeting-badge-row" id="greetingBadgeRow"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:9px;color:var(--text3);" id="globalSyncTime"></span>
+            <button class="sync-btn" onclick="manualSync()" title="全セクションを一括更新" style="border:1px solid var(--border);border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                一括更新
+            </button>
+        </div>
+
+        <div class="grid-full">
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Googleカレンダー</div>
+                    <a href="https://calendar.google.com" target="_blank" rel="noopener" style="font-size:11px;color:var(--primary);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:3px;">Googleカレンダーを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                </div>
+                <div class="schedule-section">
+                    <div class="schedule-label">4月5日 日 <span class="schedule-day-tag today">今日</span></div>
+                    <div class="sched-item sched-all-day" style="border-left-color: #D50000;">
+                        <div class="sched-content">
+                            <div class="sched-title">法定休日</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="schedule-section">
+                    <div class="schedule-label">4月6日 月 <span class="schedule-day-tag tomorrow">明日</span></div>
+                    <div class="sched-item sched-all-day" style="border-left-color: #D50000;">
+                        <div class="sched-content">
+                            <div class="sched-title">4/19振休</div>
+                        </div>
+                    </div>
+                    <div class="sched-item sched-all-day" style="border-left-color: #fad165;">
+                        <div class="sched-content">
+                            <div class="sched-title">野尻様邸先行外構</div>
+                            <div class="sched-meta">岐阜市, 日本、岐阜県岐阜市</div>
+                        </div>
+                    </div>
+                    <div class="sched-item" style="border-left-color: #c2c2c2;">
+                        <div class="sched-content">
+                            <div class="sched-time">09:45 - 11:40</div>
+                            <div class="sched-title">永佳高校入学式</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2col draggable-section" data-section="tasks" id="tasksGrid">
+            <div class="card" id="gtaskCard">
+                <div class="card-head" style="flex-wrap:wrap;row-gap:0;">
+                    <div class="card-title">Google Tasks</div>
+                    <a href="https://tasks.google.com" target="_blank" style="margin-left:auto;font-size:11px;color:var(--primary);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:3px;">Google Tasksを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                </div>
+                <div id="gtaskList"></div>
+            </div>
+
+            <div class="card" id="priorityTaskCard">
+                <div class="card-head" style="flex-wrap:wrap;row-gap:0;">
+                    <div class="card-title">優先タスク</div>
+                    <span class="card-count" id="priorityTaskCount" style="margin-left:auto;"></span>
+                </div>
+                <a href="https://www.notion.so/2f76ad84622180008770f5b476df4dc4?v=2f76ad846221803bbb6d000c182e1549" target="_blank" class="card-sub-link">Notionで編集 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                <div class="filter-tabs" id="filterTabs"></div>
+                <div id="taskListToggle" style="cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;padding:0 0 8px;">
+                    <svg id="taskListChevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text2)" stroke-width="2" style="transition:transform 0.2s ease;"><polyline points="6 9 12 15 18 9"/></svg>
+                    <span style="font-size:10px;color:var(--text3);" id="taskListToggleLabel">タスクを表示</span>
+                </div>
+                <div id="taskList" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="grid-2col draggable-section" data-section="properties" id="mainGrid">
+            <div class="card collapsible-card" id="shikakariCard">
+                <div class="card-head card-toggle" data-target="propertyList">
+                    <div class="card-title">仕掛り物件</div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="card-count" id="shikakariCount"></span>
+                        <svg class="card-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </div>
+                <a href="https://www.notion.so/2f56ad84622180a9891bef7e5514fa78" target="_blank" class="card-sub-link">Notionを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                <div class="card-body" id="propertyList"></div>
+            </div>
+
+            <div class="card collapsible-card" id="preconCard">
+                <div class="card-head card-toggle" data-target="preconList">
+                    <div class="card-title">着工前物件</div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="card-count" id="preconCount"></span>
+                        <svg class="card-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </div>
+                <a href="https://www.notion.so/2f56ad84622180a9891bef7e5514fa78" target="_blank" class="card-sub-link">Notionを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                <div class="card-body" id="preconList"></div>
+            </div>
+        </div>
+
+        <div class="grid-full draggable-section" data-section="handover">
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title" id="handoverTitle"></div>
+                </div>
+                <div id="statusCards"></div>
+                <div class="section-divider"></div>
+                <div class="schedule-chart-area" id="scheduleChart"></div>
+            </div>
+        </div>
+    </main>
+    </div><!-- /tab-home -->
+
+    <!-- ===== 週間タブ ===== -->
+    <div class="tab-content" id="tab-week"></div>
+
+    <!-- ===== 物件タブ ===== -->
+    <div class="tab-content" id="tab-properties"></div>
+
+    <!-- ===== タスクタブ ===== -->
+    <div class="tab-content" id="tab-tasks"></div>
+
+    <!-- ===== ツールタブ ===== -->
+    <div class="tab-content" id="tab-tools"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <button class="modal-close" id="modalClose">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 工事進捗の定義順（全現場共通タスクDBのstatus順）
+        const stageOrder = [
+            '図面FB', '現場FB', '地鎮祭', '地縄立会い', '生産移管', '施工計画説明',
+            '遣り方検査', '配筋検査', '型枠検査', '基礎検査', '建て方',
+            '構造検査', '構造立会い', '雨仕舞い検査', '木完検査', '木完立会い',
+            '竣工検査', '竣工立会い', '引渡し'
+        ];
+
+        // Notionステータスグループ→色マッピング
+        const stageColors = {
+            '図面FB': '#9ca3af', '現場FB': '#9ca3af', '地鎮祭': '#f59e0b', '地縄立会い': '#f59e0b',
+            '生産移管': '#9ca3af', '施工計画説明': '#9ca3af',
+            '遣り方検査': '#3b82f6', '配筋検査': '#3b82f6', '型枠検査': '#3b82f6', '基礎検査': '#3b82f6',
+            '建て方': '#3b82f6', '構造検査': '#3b82f6', '構造立会い': '#3b82f6',
+            '雨仕舞い検査': '#3b82f6', '木完検査': '#3b82f6', '木完立会い': '#3b82f6',
+            '竣工検査': '#059669', '竣工立会い': '#059669', '引渡し': '#d97706'
+        };
+
+        // 日付を曜日付きでフォーマット (2026/3/2 → 3/2(月))
+        function formatDateWithDay(dateStr) {
+            const weeks = ['日','月','火','水','木','金','土'];
+            const d = new Date(dateStr);
+            return `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
+        }
+
+        // 進捗計算
+        function calcProgress(startStr, endStr) {
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const now = new Date();
+            const total = end - start;
+            if (total <= 0) return {pct: 100, elapsed: 0, remaining: 0};
+            const elapsed = now - start;
+            const pct = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+            const elapsedDays = Math.max(0, Math.floor(elapsed / 86400000));
+            const remainingDays = Math.max(0, Math.ceil((end - now) / 86400000));
+            return {pct, elapsed: elapsedDays, remaining: remainingDays};
+        }
+
+        let properties = [
+            {id: 1, name: '箕浦Y様', location: '大垣市', shinchoku: '竣工',
+             notionId: '2f86ad84622180dface2e782fee9d04d',
+             dates: {着工: '2025/12/03', 建方: '2026/01/22', 引渡: '2026/04/13'},
+             checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
+            {id: 2, name: '藤本A様', location: '本巣市', shinchoku: '工事中',
+             notionId: '2f86ad84622180ebabfedab3c920dcdb',
+             dates: {着工: '2026/03/06', 建方: '2026/04/15', 引渡: '2026/07/04'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 3, name: '髙橋T・A様', location: '本巣市', shinchoku: '工事中',
+             notionId: '2f86ad84622180f6a1ebd584c21a03d0',
+             dates: {着工: '2026/03/09', 建方: '2026/04/13', 引渡: '2026/07/27'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
+            {id: 4, name: '野田H様', location: '関市', shinchoku: '工事中',
+             notionId: '2f86ad8462218055955afea896a7ec1c',
+             dates: {着工: '2025/12/20', 建方: '2026/02/17', 引渡: '2026/05/30'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
+            {id: 5, name: '入野E様', location: '羽島市', shinchoku: '引渡し',
+             notionId: '2f86ad84622180dd9807d88c1e9934c2',
+             dates: {着工: '2025/10/18', 建方: '2025/11/18', 引渡: '2026/02/14'},
+             checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
+            {id: 6, name: '野尻K様', location: '岐阜市', shinchoku: '竣工',
+             notionId: '2f86ad846221804f9467ce44c37ef610',
+             dates: {着工: '2025/11/01', 建方: '2026/01/16', 引渡: '2026/05/02'},
+             checks: {棟札: true, 改良: true, 外構: true, 先外: false, 鎮物: false}},
+            {id: 7, name: '竹中I様', location: '大垣市', shinchoku: '引渡し',
+             notionId: '2f86ad84622180af82acd1483f0bdee4',
+             dates: {着工: '2025/11/01', 建方: '2025/12/18', 引渡: '2026/03/29'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}},
+            {id: 8, name: '柴田S・S様', location: '岐阜市', shinchoku: '竣工',
+             notionId: '2f86ad84622180bdb338d025d925e96f',
+             dates: {着工: '2025/12/11', 建方: '2026/01/24', 引渡: '2026/04/25'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 9, name: '小林Y・T様', location: '瑞穂市', shinchoku: '竣工',
+             notionId: '2f86ad846221809f83d6cd52ea6259f6',
+             dates: {着工: '2025/11/21', 建方: '2026/01/15', 引渡: '2026/05/23'},
+             checks: {棟札: true, 改良: true, 外構: true, 先外: true, 鎮物: true}},
+            {id: 10, name: '木股C様', location: '養老町', shinchoku: '工事中',
+             notionId: '2f86ad846221806e9ab7fe484a153fa0',
+             dates: {着工: '2026/01/21', 建方: '2026/02/27', 引渡: '2026/06/20'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
+            {id: 11, name: '北角O様', location: '池田町', shinchoku: '引渡し',
+             notionId: '2f86ad8462218018bb0dc152838eda87',
+             dates: {着工: '2025/10/27', 建方: '2025/12/05', 引渡: '2026/02/21'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 12, name: '山田H様', location: '瑞穂市', shinchoku: '工事中',
+             notionId: '2f86ad84622180dd98c1f4de9ae7019c',
+             dates: {着工: '2026/03/16', 建方: '2026/05/09', 引渡: '2026/07/25'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
+            {id: 13, name: '森瀬S・M様', location: '各務原市', shinchoku: '工事中',
+             notionId: '2f86ad846221802cb583ff2d9851900d',
+             dates: {着工: '2026/01/05', 建方: '2026/02/13', 引渡: '2026/05/31'},
+             checks: {棟札: false, 改良: false, 外構: true, 先外: true, 鎮物: false}}
+        ];
+
+        // 着工前物件データ
+        let preconProperties = [
+            {id: 101, name: '瓜田N様', location: '岐阜市', shinchoku: '着工前',
+             notionId: '2fd6ad846221802e81defa915614561e',
+             dates: {着工: '2026/06/29', 建方: '2026/09/01', 引渡: '2026/11/25'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 102, name: '三谷T様', location: '大垣市', shinchoku: '着工前',
+             notionId: '31e6ad8462218047b1c7d3944f09b224',
+             dates: {着工: '2026/08/01', 建方: '2026/09/08', 引渡: '2027/04/03'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 103, name: '藤本S様用', location: '大垣市', shinchoku: '着工前',
+             notionId: '31e6ad84622180e19007dc9c226a7ad1',
+             dates: {着工: '2026/06/01', 建方: '2026/07/28', 引渡: '2027/04/03'},
+             checks: {棟札: false, 改良: true, 外構: true, 先外: true, 鎮物: false}},
+            {id: 104, name: '伊藤N様', location: '輪之内町', shinchoku: '着工前',
+             notionId: '2f86ad84622180f2a902f7df85f591c5',
+             dates: {着工: '2026/05/22', 建方: '2026/07/09', 引渡: '2026/09/29'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 105, name: '浅野H様', location: '輪之内町', shinchoku: '着工前',
+             notionId: '31e6ad846221808d95e0ede31bec557b',
+             dates: {着工: '2026/10/21', 建方: '2026/12/01', 引渡: '2027/03/13'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
+            {id: 106, name: '浅井T様', location: '大垣市', shinchoku: '着工前',
+             notionId: '31e6ad84622180779085db1278392672',
+             dates: {着工: '2026/08/01', 建方: '2026/09/24', 引渡: '2026/12/20'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
+            {id: 107, name: '加藤S様', location: '岐阜市', shinchoku: '着工前',
+             notionId: '31e6ad84622180c3b537c8396c7b4c9c',
+             dates: {着工: '2026/05/21', 建方: '2026/08/06', 引渡: '2026/11/07'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
+            {id: 108, name: '柳瀬S・M様', location: '垂井町', shinchoku: '着工前',
+             notionId: '31e6ad846221804dbb67fe34629ffb79',
+             dates: {着工: '2026/06/01', 建方: '2026/07/09', 引渡: '2026/10/31'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 109, name: '長澤K様', location: '関ヶ原町', shinchoku: '着工前',
+             notionId: '2f86ad846221805a8fb5ed0d20874e3e',
+             dates: {着工: '2026/05/13', 建方: '2026/06/25', 引渡: '2026/09/25'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
+            {id: 110, name: '佐藤Y様', location: '養老町', shinchoku: '着工前',
+             notionId: '3006ad8462218021b8fee65422781533',
+             dates: {着工: '2026/05/15', 建方: '2026/06/30', 引渡: '2026/09/25'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}}
+        ];
+
+        // 優先タスク（Notionビュー「全現場共通タスクのビュー」から取得）
+        // フィルタ: 優先=YES, 完了=NO / 物件名でグループ化
+        // priorityTasksUpdatedAt と priorityTasks は scheduled task "sync-priority-tasks" が自動更新する
+        let priorityTasksUpdatedAt = '2026-04-06 19:13';
+        let priorityTasks = [
+            // 箕浦Y様（竣工立会い）引渡し2026-04-13まで7日→red
+            {id: 1, notionPageId: '2f86ad84622181879d1cf11782ba4721', title: '災害用スリーブの説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 2, notionPageId: '2f86ad8462218131be74c97b45b2cb6a', title: '引渡しの実印持参の案内', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 3, notionPageId: '2f86ad84622181c98973d9214e57521d', title: '汚水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 4, notionPageId: '2f86ad846221814fa43be5540e0ac084', title: '雨水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 5, notionPageId: '2f86ad84622181fa8336e11809ae47f6', title: '立会い完了の報告', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            // 髙橋T・A様（工事中：基礎検査）建て方2026-04-13まで7日→red
+            {id: 6, notionPageId: '2f86ad8462218104a16bef3108028b55', title: '建て方の近隣挨拶分の作成・持参', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 7, notionPageId: '2f86ad846221812295a7d1ff7cd818c4', title: '防蟻パイプの本数計測・記録', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 8, notionPageId: '2f86ad8462218190806dd7e55d745597', title: '基礎精算の依頼', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 9, notionPageId: '2f86ad84622181cba791c2d6127f3757', title: '構造検査・構造立会いのスケジュール共有', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            // 藤本A様（工事中：基礎検査）建て方2026-04-15まで9日→amber
+            {id: 10, notionPageId: '2f86ad8462218190ab51cd7055c49706', title: '建て方の近隣挨拶分の作成・持参', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 11, notionPageId: '2f86ad84622181bc879fcbe671f096ac', title: 'スラブ厚の計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 12, notionPageId: '2f86ad8462218139a5a0d04abaf98c9f', title: '防蟻パイプの本数計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 13, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            // 野田H様（工事中：木完検査）引渡し2026-05-30まで54日→green
+            {id: 14, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 15, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 16, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 17, notionPageId: '2f86ad8462218116b63cd0709fcec20d', title: '実績入力：足場解体', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 18, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false}
+        ];
+
+        const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+        // Google Tasks（Google ToDoから取得。ルーティン以外のイレギュラータスク）
+        // googleTasksUpdatedAt と googleTasks は scheduled task で自動更新予定
+        const googleTasksUpdatedAt = '2026-04-05 15:00';
+
+        // Googleカレンダー更新時刻（スケジュールタスクが自動更新）
+        const gcalUpdatedAt = '2026-04-05 14:01';
+        const googleTasks = [
+            {title: '竹山様邸図面チェック', due: '2026-04-04'},
+            {title: '小林様邸宅配ボックス納品連絡', due: '2026-04-10', deadline: '2026-04-18'},
+            {title: '竹中様邸外構追加発注', due: '2026-04-11', deadline: '2026-04-17'},
+            {title: '大山様邸予算依頼', due: '2026-04-16'},
+            {title: '大井様邸予算依頼', due: '2026-04-16'},
+            {title: '北角様邸入居後訪問LINE', due: '2026-04-18'},
+            {title: '浅野様邸図面チェック', due: '2026-04-19'},
+            {title: '大井様邸質疑まとめ', due: '2026-04-23'},
+            {title: '竹中様邸入居後訪問LINE', due: '2026-04-25'},
+            {title: '長屋様邸質疑まとめ', due: '2026-04-26'},
+            {title: '長屋様邸予算依頼', due: '2026-04-27', deadline: '2026-04-28'},
+            {title: '大山様邸質疑まとめ', due: '2026-04-28'},
+            {title: '運転日誌提出', due: '2026-04-28'},
+            {title: '佐藤様邸PCa発注', due: '2026-04-30', deadline: '2026-05-02'},
+            {title: '長澤様邸質疑まとめ', due: '2026-05-07'},
+            {title: '佐藤様邸質疑まとめ', due: '2026-05-12'},
+            {title: '加藤様邸質疑まとめ', due: '2026-05-16'},
+            {title: '伊藤様邸質疑まとめ', due: '2026-05-18'},
+            {title: '柳瀬様邸質疑まとめ', due: '2026-05-28'},
+            {title: '瓜田様邸質疑まとめ', due: '2026-06-24'},
+            {title: '三谷様邸質疑まとめ', due: '2026-07-28'},
+            {title: '浅井様邸質疑まとめ', due: '2026-07-28'},
+            {title: '浅野様邸質疑まとめ', due: '2026-10-20'},
+            {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'},
+            {title: '柴田様邸南面マモラー横の屋根の浮き確認', due: null}
+        ];
+
+        // ===== 着工・引渡しデータ（Googleカレンダーから取得） =====
+        // 着工: 「全日予定」カレンダーの「〜様邸本体着工」イベント
+        // 引渡し: 「時間指定予定」カレンダーの「🔑〜様邸引渡し」イベント
+        // ※スケジュールタスクで自動更新（最終同期: 2026/4/6）
+        // [自動更新 2026-04-06 16:03] 着工21件・引渡し27件確認済み・差分なし・配列最新
+        // [自動更新 2026-04-06] 着工21件確認・引渡しカレンダー0件（既存27件維持）・着工配列最新
+
+        // 着工済み実績（今日以前の「本体着工」イベント）
+        let startedProperties = [
+            { name: '森瀬様', date: '1/5' },
+            { name: '福田様', date: '1/8' },
+            { name: '木股様', date: '1/21' },
+            { name: '川地様', date: '2/5' },
+            { name: '藤本様', date: '3/6' },
+            { name: '髙橋様', date: '3/9' },
+            { name: '山田様', date: '3/16' }
+        ];
+
+        // 今月着工予定（当月の「本体着工」イベント）
+        let monthlyStarts = [
+            { name: '大山様', date: '4/28' },
+            { name: '大井様', date: '4/28' }
+        ];
+
+        // 引渡し済み実績（今日以前の「引渡し」イベント）
+        let deliveredProperties = [
+            { name: '國枝様', date: '1/23' },
+            { name: '入野様', date: '2/14' },
+            { name: '北角様', date: '2/21' },
+            { name: '竹中様', date: '3/28' }
+        ];
+
+        // 今月引渡し予定（当月の「引渡し」イベント）
+        let monthlyDeliveries = [
+            { name: '箕浦様', date: '4/13' },
+            { name: '柴田様', date: '4/25' }
+        ];
+
+        // 年間着工棟数（Googleカレンダー「本体着工」イベントから月別集計）
+        // 1月:3, 2月:1, 3月:3, 4月:2, 5月:5, 6月:4, 7月:0, 8月:2, 9月:0, 10月:1, 11月:0, 12月:0
+        let yearlyStartCounts = [3, 1, 3, 2, 5, 4, 0, 2, 0, 1, 0, 0];
+
+        // 年間引渡し棟数（Googleカレンダー「引渡し」イベントから月別集計）
+        // 1月:1, 2月:2, 3月:1, 4月:2, 5月:5, 6月:2, 7月:2, 8月:0, 9月:6, 10月:4, 11月:1, 12月:1
+        let yearlyDeliveryCounts = [1, 2, 1, 2, 5, 2, 2, 0, 6, 4, 1, 1];
+
+        function renderGoogleTasks() {
+            const container = document.getElementById('gtaskList');
+            if (!googleTasks || googleTasks.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">タスクはありません</div>';
+                return;
+            }
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const endOfWeek = new Date(today);
+            endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+            const weeks = ['日','月','火','水','木','金','土'];
+
+            function parseDue(t) {
+                const d = t.due ? new Date(t.due) : (t.deadline ? new Date(t.deadline) : null);
+                if (d) d.setHours(0,0,0,0);
+                return d;
+            }
+            function fmtDate(dateStr) {
+                const d = new Date(dateStr);
+                return `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
+            }
+
+            const overdue = [];
+            const thisWeek = [];
+            const later = [];
+            const noDate = [];
+
+            googleTasks.forEach(t => {
+                const d = parseDue(t);
+                if (!d) { noDate.push(t); }
+                else if (d < today) { overdue.push(t); }
+                else if (d <= endOfWeek) { thisWeek.push(t); }
+                else { later.push(t); }
+            });
+
+            function renderItem(t, cls) {
+                let dueText = '';
+                if (t.due) dueText = fmtDate(t.due);
+                if (t.deadline) dueText += (dueText ? ' ' : '') + '(期限: ' + fmtDate(t.deadline) + ')';
+                if (!t.due && !t.deadline) dueText = '期限なし';
+                const isOverdue = cls === 'overdue';
+                return `<div class="gtask-item ${cls}">
+                    <div class="task-content">
+                        <div class="gtask-title">${t.title}</div>
+                        <div class="gtask-due${isOverdue ? ' overdue-text' : ''}">${dueText}</div>
+                    </div>
+                </div>`;
+            }
+            function renderGroup(label, items, cls, icon) {
+                if (items.length === 0) return '';
+                return `<div class="gtask-group-label">${icon} ${label} <span class="gtask-count">${items.length}件</span></div>` +
+                    items.map(t => renderItem(t, cls)).join('');
+            }
+            function renderCollapsibleGroup(label, items, cls, icon) {
+                if (items.length === 0) return '';
+                return `<div class="gtask-later-toggle" id="gtaskLaterToggle">
+                    ${icon} <span style="font-size:10px;font-weight:600;color:var(--text2);">${label}</span> <span class="gtask-count" style="font-size:11px;font-weight:500;color:var(--primary);">${items.length}件</span>
+                    <svg class="gtask-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="gtask-later-body" id="gtaskLaterBody">` +
+                    items.map(t => renderItem(t, cls)).join('') + `</div>`;
+            }
+
+            let html = '';
+            html += renderGroup('期限切れ', overdue, 'overdue', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>');
+            html += renderGroup('今週', thisWeek, 'this-week', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>');
+            html += renderCollapsibleGroup('来週以降', later, 'later', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-m)" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>');
+            html += renderGroup('期限なし', noDate, 'no-date', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>');
+
+            container.innerHTML = html;
+
+            // 来週以降プルダウンのトグル
+            const laterToggle = document.getElementById('gtaskLaterToggle');
+            const laterBody = document.getElementById('gtaskLaterBody');
+            if (laterToggle && laterBody) {
+                laterToggle.addEventListener('click', () => {
+                    laterToggle.classList.toggle('open');
+                    laterBody.classList.toggle('open');
+                });
+            }
+        }
+
+        // データ整合性チェック（Notion物件 vs カレンダーイベントの不一致を検出）
+        function validateData() {
+            const alerts = [];
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            const thisYear = now.getFullYear();
+
+            // 苗字を抽出するヘルパー（Notion形式「藤本A様」→「藤本」、カレンダー形式「藤本様」→「藤本」）
+            function extractSurname(name) {
+                return name.replace(/様$/, '').replace(/[A-Z・]+$/, '').trim();
+            }
+
+            // 苗字ベースで一致判定（Notion名 vs カレンダー名の形式差を吸収）
+            function nameMatch(notionName, calName) {
+                return extractSurname(notionName) === extractSurname(calName);
+            }
+
+            // 着工前物件の着工日が今月なのにmonthlyStartsに含まれていないケースを検出
+            preconProperties.forEach(p => {
+                if (p.dates && p.dates.着工) {
+                    const d = new Date(p.dates.着工);
+                    if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) {
+                        const found = monthlyStarts.some(s => nameMatch(p.name, s.name));
+                        if (!found) {
+                            alerts.push(`${p.name}（着工 ${p.dates.着工}）がカレンダーの今月着工予定に見つかりません`);
+                        }
+                    }
+                }
+            });
+
+            // 仕掛り物件の引渡し日が今月なのにmonthlyDeliveriesに含まれていないケースを検出
+            properties.forEach(p => {
+                if (p.dates && p.dates.引渡) {
+                    const d = new Date(p.dates.引渡);
+                    if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) {
+                        const found = monthlyDeliveries.some(s => nameMatch(p.name, s.name));
+                        if (!found) {
+                            alerts.push(`${p.name}（引渡 ${p.dates.引渡}）がカレンダーの今月引渡し予定に見つかりません`);
+                        }
+                    }
+                }
+            });
+
+            // アラート表示
+            if (alerts.length > 0) {
+                const alertArea = document.createElement('div');
+                alertArea.className = 'data-alert';
+                alertArea.innerHTML = `
+                    <div class="data-alert-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        データ不一致の可能性
+                    </div>
+                    ${alerts.map(a => `<div class="data-alert-item">${a}</div>`).join('')}
+                `;
+                const syncBar = document.querySelector('[id="globalSyncTime"]').parentElement;
+                syncBar.parentElement.insertBefore(alertArea, syncBar.nextSibling);
+            }
+        }
+
+        // ===== ツール画面遷移ヘルパー =====
+        // file:// / http:// どちらの環境でも正しくベースパスを取得して遷移する
+        function navigateTo(filename) {
+            const base = window.location.href.replace(/[^\/]*(\?.*)?$/, '');
+            window.location.href = base + filename;
+        }
+
+        function init() {
+            renderProperties();
+            renderTasks();
+            renderGoogleTasks();
+            renderHandoverTitle();
+            renderMonthTable();
+            renderStatusCards();
+            updateCalendarDateLabels();
+            updateClock();
+            setInterval(updateClock, 1000);
+            setupEventListeners();
+            updateDate();
+            setupResponsive();
+            // URLパラメータで指定されたタブへ切替（ツールから戻る場合など）
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam && ['home','week','properties','tasks','tools'].includes(tabParam)) {
+                switchTab(tabParam);
+            }
+            // URLパラメータをクリア（次回起動時にタブが残らないよう）
+            if (window.location.search) {
+                history.replaceState({}, '', window.location.pathname);
+            }
+            // データ整合性チェック
+            validateData();
+            // 一括更新時刻（全データソースの中で最新の更新時刻を表示）
+            const globalSync = document.getElementById('globalSyncTime');
+            if (globalSync) {
+                const timestamps = [
+                    typeof gcalUpdatedAt !== 'undefined' ? gcalUpdatedAt : null,
+                    typeof googleTasksUpdatedAt !== 'undefined' ? googleTasksUpdatedAt : null,
+                    typeof priorityTasksUpdatedAt !== 'undefined' ? priorityTasksUpdatedAt : null
+                ].filter(Boolean);
+                if (timestamps.length > 0) {
+                    const latest = timestamps.sort().pop();
+                    globalSync.textContent = `最終更新: ${latest}`;
+                } else {
+                    globalSync.textContent = '最終更新: —';
+                }
+            }
+        }
+
+        // ========== 時間帯別コメント（24h x 10パターン = 240種類）==========
+        const greetingComments = {
+            0: ["日付が変わりましたね。そろそろ休みましょう","静かな夜ですね。ゆっくりしてください","今日もよく頑張りました。おやすみなさい","夜中の0時。明日もきっといい日です","新しい一日のスタート。でもまずは睡眠を","こんな時間まで起きてるんですね。無理しないで","深夜のひととき。ちょっとだけ自分を甘やかしましょう","もう日付変わりましたよ。布団が呼んでます","お疲れ様でした。今日の自分にお疲れって言ってあげて","0時か...。まあ、たまにはいいですよね"],
+            1: ["夜更かしさんですね。身体が資本ですよ","この時間まで起きてるの、珍しくないですか？","静かな夜に考え事...でもそろそろ寝ましょう","夜中の1時。明日に響きますよ","夜のアイデアは朝になると変わるもの。メモだけして寝ましょう","がんばり屋さんですね。でも寝ないと","月がきれいな夜かもしれませんね","スマホ置いて、目を閉じましょうか","この静けさ、嫌いじゃないけど...寝ましょう","1時です。充電は自分の身体もね"],
+            2: ["さすがにそろそろ寝ましょうよ","明日の現場に影響出ちゃいますよ","身体を休めるのも大事な仕事です","真夜中ですね。おやすみなさい","2時...。睡眠不足は判断を鈍らせますよ","こんな夜中まで。ちょっと心配です","あったかい布団が待ってますよ","明日のためにも、もう休みましょう","深夜2時のあなたへ。おやすみなさい","寝る前のストレッチ、おすすめですよ"],
+            3: ["もしかして早起き？...にしても早いですね","3時かぁ。どっちにしてもすごいです","草木も眠る時間。あなたも休みましょう","超早起きなのか、超夜更かしなのか...","身体、大事にしてくださいね","朝型にしても早すぎますよ","この時間に起きてるのはパン屋さんくらいですよ","もう少し寝ても大丈夫じゃないですか？","3時の空気って独特ですよね。でも寝ましょう","すごい時間に見てますね。感心します"],
+            4: ["早起きですね。一日を先取りしましょう","もうすぐ夜が明けますね","朝活派ですか？その習慣、素敵です","早朝の静けさ、集中できそうですね","4時起き...意識高いですね。すごい","外はまだ暗いけど、いい朝になりそう","鳥がそろそろ鳴き始める頃ですね","コーヒーでも淹れますか？","この時間に動ける人は、仕事もできる人です","早起きの特権。静かな時間を楽しんで"],
+            5: ["おはようございます。いい朝ですね","早起きは三文の徳。得してますよ","朝日が昇る時間。気持ちいいですね","さあ、新しい一日の始まりです","5時の空気、清々しいですよね","今日も元気にいきましょう","朝のルーティン、大切にしてくださいね","窓を開けて深呼吸。いい一日になりますよ","目覚めのコーヒー、最高の時間ですね","おはようございます。今日はどんな一日になるかな"],
+            6: ["おはようございます。今日の段取り確認しましょうか","いい朝ですね。今日も安全にいきましょう","さあ、エンジンかけていきましょう","おはようございます。朝ごはん食べました？","6時です。ちょうどいい時間に起きましたね","今日の天気、チェックしましたか？","おはようございます。いい一日にしましょうね","朝の準備、焦らずいきましょう","今日やることリスト、頭に浮かんでますか？","いつも朝から偉いですね。尊敬します"],
+            7: ["おはようございます。そろそろ出発ですか？","現場の準備はOKですか？忘れ物チェック","今日の天気、現場に影響なさそうですか？","朝イチの段取り確認、大事ですよね","行ってらっしゃい。気をつけて","7時ですね。通勤ラッシュに負けないで","今日のスケジュール、把握してますか？","おはようございます。今日も丁寧にいきましょう","朝の空気を吸って、さあ出発","今日も現場のみんなが安全でありますように"],
+            8: ["さあ、現場が動き出す時間ですね","午前の作業、スムーズにいきますように","8時。いいスタートを切りましょう","今日のタスク、まずは一つ目から","朝一の確認、何か見落としてませんか？","さあ始まりますね。張り切っていきましょう","今日の重点チェック項目、頭に入ってますか？","まずは一番大事なことから片付けましょう","職人さんたちも動き出してますね","8時。さあ、いい仕事しましょう"],
+            9: ["午前中が勝負ですね。集中していきましょう","現場は順調ですか？","9時。いい流れで進んでますか？","午前の巡回、ポイントを押さえていきましょう","コーヒーブレイクはもうちょっと先かな","リズムに乗ってきた頃ですかね","何か気になることありませんか？","9時、ペースを作る大事な時間帯です","いい感じで進められてるといいな","今日の調子はどうですか？"],
+            10: ["午前も折り返し。いいペースですか？","そろそろ一息入れてもいい頃ですね","10時。ちょっとだけ肩の力抜きましょう","順調に進んでるといいですね","水分補給、忘れてませんか？","ここらで一回、深呼吸しましょうか","午前中もあと少し。いい調子ですね","10時のチェック、異常なしですか？","今日はスムーズに進んでる日だといいな","一つ片付けるたびに、前に進んでますよ"],
+            11: ["もうすぐお昼。午前お疲れ様です","あと少しでランチですね。もうひと頑張り","11時。キリのいいところまでいけそうですか？","午前の作業、いい感じにまとまりそう？","あっという間にもう11時ですね","お昼どうします？たまにはいいもの食べましょう","午前ラスト。集中力切れてませんか？","もうすぐお昼。今日の午前、何点でした？","ランチ前のラストスパートですね","11時か。午前中よく頑張りましたね"],
+            12: ["お昼です。ちゃんと食べてくださいね","ランチタイム。少し休みましょう","午前お疲れ様でした。エネルギー補給を","お昼ごはん、食べ逃さないで","ちゃんと座って食べてますか？","12時。お腹空きましたよね？","お昼は大事。午後のパフォーマンスに直結しますよ","今日のお昼は何ですか？楽しみですね","食べながら一息。午後もぼちぼちいきましょう","ランチ中ですか？ゆっくり味わってくださいね"],
+            13: ["午後の部スタート。眠気に負けないで","食後のこの時間、一番眠いですよね","午後イチ、ゆるっとペース上げていきましょう","コーヒーの力を借りるのもアリですよ","13時。ここからもうひと頑張りです","眠い時間帯...でも大丈夫、乗り越えられます","午後の現場、気持ち切り替えていきましょう","食後の散歩、できたら最高なんですけどね","午後も安全第一で。気を引き締めて","13時。ちょっと眠いけど、やれるやれる"],
+            14: ["午後も順調ですか？","14時。いい調子で進んでますか？","午後の山場、一つずつクリアしていきましょう","この時間帯、意外と集中できますよ","現場の進捗、気になるところありませんか？","14時。眠気は去りましたか？","午後も丁寧に。焦らずいきましょう","今日のゴール、見えてきましたか？","ここからが勝負ですね。頑張って","いい感じのペースで進められてますか？"],
+            15: ["3時です。ちょっと一息つきましょうか","おやつタイム...は冗談で、もうひと踏ん張り","午後も折り返し。いいペースですよ","職人さんたちにも声かけてあげてくださいね","15時の休憩、大事にしてください","水分とってますか？特に暑い日は気をつけて","ここまでくれば今日の後半戦ですね","15時。甘いもの食べたくなる時間ですよね","あと少し。今日もよくやってます","一息ついて、残りを仕上げましょう"],
+            16: ["夕方ですね。今日の締めくくりを意識しましょう","16時。残りのタスク確認してみましょうか","そろそろ片付けの段取りも頭に入れておきましょう","日が傾いてきました。安全に気をつけて","今日中にやりたいこと、あとどれくらいですか？","ラストスパートですね。もう少しです","16時か。今日もあっという間ですね","帰りの渋滞、考えると早めに切り上げたいですね","現場の終わりが見えてきましたかね","夕方の光は好きですか？いい時間帯ですよね"],
+            17: ["お疲れ様です。そろそろ終わりが見えてきましたね","17時。今日の作業は順調でしたか？","今日も一日よく頑張りました","明日の段取り、ちょっとだけ考えておくと楽ですよ","夕方ですね。帰りの支度は大丈夫ですか？","お疲れ様です。今日の自分に拍手","17時。現場も落ち着いてきた頃ですかね","今日の振り返り、ちょっとだけやっておきましょうか","日が沈み始めますね。いい一日でしたか？","明日の準備は明日でもいい。まずはお疲れ様"],
+            18: ["お疲れ様でした。ゆっくり帰りましょう","現場記録、忘れずにつけましたか？","18時。お仕事おしまいの時間です","一日の終わり。よく頑張りましたね","お気をつけてお帰りください","今日も無事に終われたことに感謝ですね","帰り道、好きな音楽でも聴きましょう","18時。おうちが待ってますよ","仕事の頭からプライベートの頭に切り替えましょう","お疲れ様。今日のあなた、頑張ってましたよ"],
+            19: ["お疲れ様でした。ゆっくり休んでくださいね","帰宅の時間ですね。今日もお疲れ様","19時。晩ごはん食べましたか？","仕事モードからオフモードへ。切り替え大事です","夜の時間は自分のために使ってくださいね","お風呂にゆっくり浸かるのもいいですよ","今日できたこと、ちゃんと数えてくださいね","明日の心配は明日にまかせましょう","19時。リラックスタイムですね","ゆっくりご飯食べて、今日を締めくくりましょう"],
+            20: ["今日も一日お疲れ様でした","夜の時間、リラックスできてますか？","20時。自分の時間を大切に","ゆっくりできてますか？休むのも仕事のうちです","いい夜をお過ごしください","明日のために、今は何もしなくていいんですよ","今日頑張った自分を労ってあげてください","テレビ見ながらのんびり...いいじゃないですか","20時。穏やかな夜を過ごしましょう","少しだけ明日のことを考えたら、あとは自由時間です"],
+            21: ["そろそろ休む準備をしましょうか","21時。今日も一日よく頑張りました","明日の天気チェックしましたか？現場に影響あるかも","夜も更けてきましたね。ゆっくりと","一日の振り返りタイム。いい習慣ですよ","もうあとは寝るだけ...のはず","温かい飲み物でもいかがですか","今日やり残したことは、明日やれば大丈夫","21時。そろそろ画面から目を離しましょう","おやすみ前の静かなひととき。大事にしてください"],
+            22: ["おやすみ前のひととき。いい夢を","22時。身体を休める時間ですよ","明日もいい一日になりますように","今日できたこと、自分を褒めてあげましょう","そろそろスマホを置く時間かもしれません","夜遅くまでお疲れ様です","いい夜ですね。ゆっくり休んでください","22時。あとは布団に身を委ねるだけです","明日の自分に期待して、今日はおやすみなさい","寝る前のこの時間、なんか好きなんですよね"],
+            23: ["もう23時です。おやすみなさい","今日もあと少し。いい夢を見てくださいね","明日に備えてそろそろ就寝を","無理しないでくださいね。寝ましょう","23時。今日もよく頑張った一日でした","あと1時間で日付が変わりますよ","おやすみなさい。また明日","今日の終わりに。お疲れ様でした","ぐっすり眠れますように","夜更かしはほどほどに。明日もありますからね"]
+        };
+
+        function getComment(hour, date) {
+            const pool = greetingComments[hour] || greetingComments[12];
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            const idx = (dayOfYear * 7 + hour * 3) % pool.length;
+            return pool[idx];
+        }
+
+        // ========== 六曜計算 ==========
+        const rokuyoNames = ['大安', '赤口', '先勝', '友引', '先負', '仏滅'];
+        const lunarNewMonths2026 = [
+            [2026,2,17,1],[2026,3,19,2],[2026,4,17,3],[2026,5,17,4],
+            [2026,6,15,5],[2026,7,15,6],[2026,8,13,7],[2026,9,12,8],
+            [2026,10,11,9],[2026,11,10,10],[2026,12,9,11],[2027,1,8,12]
+        ];
+
+        function getLunarDate(date) {
+            const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            let lunarMonth = 1, lunarDay = 1;
+            for (let i = lunarNewMonths2026.length - 1; i >= 0; i--) {
+                const e = lunarNewMonths2026[i];
+                const newMoon = new Date(e[0], e[1]-1, e[2]);
+                if (target >= newMoon) { lunarMonth = e[3]; lunarDay = Math.floor((target - newMoon) / 86400000) + 1; break; }
+            }
+            return { month: lunarMonth, day: lunarDay };
+        }
+
+        function getRokuyo(date) {
+            const lunar = getLunarDate(date);
+            return rokuyoNames[(lunar.month + lunar.day) % 6];
+        }
+
+        function getEto12(date) {
+            const base = new Date(2026, 0, 1);
+            const diff = Math.floor((date - base) / 86400000);
+            return ((diff % 12) + 12 + 6) % 12;
+        }
+
+        function isSanrinbo(date) {
+            const lunar = getLunarDate(date);
+            const eto = getEto12(date);
+            const m = lunar.month;
+            if ([1,4,7,10].includes(m) && eto === 11) return true;
+            if ([2,5,8,11].includes(m) && eto === 2) return true;
+            if ([3,6,9,12].includes(m) && eto === 6) return true;
+            return false;
+        }
+
+        function isFujoju(date) {
+            const lunar = getLunarDate(date);
+            const m = lunar.month, d = lunar.day;
+            const patterns = {1:[3,11,19,27],7:[3,11,19,27],2:[2,10,18,26],8:[2,10,18,26],3:[1,9,17,25],9:[1,9,17,25],4:[4,12,20,28],10:[4,12,20,28],5:[5,13,21,29],11:[5,13,21,29],6:[6,14,22,30],12:[6,14,22,30]};
+            return (patterns[m] || []).includes(d);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clockMini').textContent = `${h}:${m}`;
+            document.getElementById('greetingComment').textContent = getComment(now.getHours(), now);
+        }
+
+        function updateDate() {
+            const now = new Date();
+            const weeks = ['日', '月', '火', '水', '木', '金', '土'];
+            document.getElementById('dateMain').textContent =
+                `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${weeks[now.getDay()]}）`;
+
+            const rokuyo = getRokuyo(now);
+            const sanrinbo = isSanrinbo(now);
+            const fujoju = isFujoju(now);
+            let html = '';
+            const isCaution = ['仏滅', '赤口'].includes(rokuyo);
+            html += `<span class="rokuyo-tag${isCaution ? ' caution' : ''}">${rokuyo}</span>`;
+            if (sanrinbo) html += `<span class="rokuyo-tag caution">三隣亡</span>`;
+            if (fujoju) html += `<span class="rokuyo-tag caution">不成就日</span>`;
+            document.getElementById('dateRokuyo').innerHTML = html;
+        }
+
+        // 物件カードHTML生成（仕掛り・着工前共通）
+        function renderPropertyCard(p) {
+            const colorMap = {'工事中': '#d97706', '竣工': '#9ca3af', '着工前': '#3b82f6'};
+            const borderColor = colorMap[p.shinchoku] || '#9ca3af';
+            const now = new Date();
+            const startDate = new Date(p.dates.着工);
+            const isPrecon = p.shinchoku === '着工前';
+
+            if (isPrecon) {
+                // 着工前: 着工までのカウントダウン
+                const daysUntilStart = Math.max(0, Math.ceil((startDate - now) / 86400000));
+                return `
+                <div class="property-item compact" data-property-id="${p.id}" data-source="precon" style="border-left-color: ${borderColor};">
+                    <div class="property-content">
+                        <div class="property-name-row">
+                            <span class="property-name">${p.name}</span>
+                            <span class="property-compact-meta">着工まで<strong>${daysUntilStart}</strong>日</span>
+                        </div>
+                        <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${formatDateWithDay(p.dates.着工)} &nbsp;·&nbsp; 引渡 ${formatDateWithDay(p.dates.引渡)}</div>
+                    </div>
+                </div>`;
+            } else {
+                // 仕掛り（工事中・竣工）
+                const prog = calcProgress(p.dates.着工, p.dates.引渡);
+                return `
+                <div class="property-item compact" data-property-id="${p.id}" data-source="shikakari" style="border-left-color: ${borderColor};">
+                    <div class="property-content">
+                        <div class="property-name-row">
+                            <span class="property-name">${p.name}</span>
+                            <span class="property-compact-meta">あと<strong>${prog.remaining}</strong>日</span>
+                        </div>
+                        <div class="property-compact-bar">
+                            <div class="property-progress-bar" style="flex:1;"><div class="property-progress-fill" style="width:${prog.pct}%;"></div></div>
+                            <span class="property-compact-pct">${prog.pct}%</span>
+                        </div>
+                        <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${formatDateWithDay(p.dates.着工)} &nbsp;·&nbsp; 引渡 ${formatDateWithDay(p.dates.引渡)}</div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function renderProperties() {
+            const LIMIT = 5;
+            // 「引渡し」済みは仕掛かりから除外
+            const activeProperties = properties.filter(p => p.shinchoku !== '引渡し');
+            const sortedShikakari = [...activeProperties].sort((a, b) => new Date(a.dates.引渡) - new Date(b.dates.引渡));
+            const sortedPrecon = [...preconProperties].sort((a, b) => new Date(a.dates.着工) - new Date(b.dates.着工));
+
+            renderPropertyList('propertyList', sortedShikakari, LIMIT);
+            renderPropertyList('preconList', sortedPrecon, LIMIT);
+
+            document.getElementById('shikakariCount').textContent = `${activeProperties.length}件`;
+            document.getElementById('preconCount').textContent = `${preconProperties.length}件`;
+        }
+
+        function renderPropertyList(containerId, sorted, limit) {
+            const el = document.getElementById(containerId);
+            const needsLimit = sorted.length > limit;
+
+            function showLimited() {
+                el.innerHTML = sorted.slice(0, limit).map(p => renderPropertyCard(p)).join('');
+                if (needsLimit) {
+                    el.innerHTML += `<button class="show-all-btn" data-action="expand">全て表示 (${sorted.length}件)</button>`;
+                }
+                bindListButtons(el);
+                bindPropertyClicks();
+            }
+            function showAll() {
+                el.innerHTML = sorted.map(p => renderPropertyCard(p)).join('');
+                el.innerHTML += `<button class="show-all-btn" data-action="collapse">省略表示</button>`;
+                bindListButtons(el);
+                bindPropertyClicks();
+            }
+            function bindListButtons(container) {
+                const btn = container.querySelector('.show-all-btn');
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (btn.dataset.action === 'expand') showAll();
+                        else showLimited();
+                    });
+                }
+            }
+
+            if (needsLimit) showLimited();
+            else {
+                el.innerHTML = sorted.map(p => renderPropertyCard(p)).join('');
+                bindPropertyClicks();
+            }
+        }
+
+        function bindPropertyClicks() {
+            // クリックイベント
+            document.querySelectorAll('.property-item').forEach(e => {
+                e.addEventListener('click', () => {
+                    const id = parseInt(e.dataset.propertyId);
+                    const source = e.dataset.source;
+                    openPropertyModal(id, source);
+                });
+            });
+        }
+
+        // Googleカレンダー「今日/明日/昨日」ラベルを現在日付に基づいて動的補正
+        function updateCalendarDateLabels() {
+            const now         = new Date();
+            const y           = now.getFullYear();
+            const todayMs     = new Date(y, now.getMonth(), now.getDate()).getTime();
+            const tomorrowMs  = todayMs + 86400000;
+            const yesterdayMs = todayMs - 86400000;
+
+            document.querySelectorAll('.schedule-label').forEach(label => {
+                // textContent ではなく firstChild(テキストノード)から日付を取得
+                const rawText = Array.from(label.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent).join('');
+                const m = rawText.match(/(\d+)月(\d+)日/);
+                if (!m) return;
+                const labelMs = new Date(y, parseInt(m[1]) - 1, parseInt(m[2])).getTime();
+
+                // 既存バッジを削除
+                label.querySelectorAll('.schedule-day-tag').forEach(t => t.remove());
+
+                // 親セクションの past-day クラスをリセット
+                const section = label.closest('.schedule-section');
+
+                if (labelMs === todayMs) {
+                    const span = document.createElement('span');
+                    span.className = 'schedule-day-tag today';
+                    span.textContent = '今日';
+                    label.appendChild(span);
+                    if (section) section.classList.remove('past-day');
+                } else if (labelMs === tomorrowMs) {
+                    const span = document.createElement('span');
+                    span.className = 'schedule-day-tag tomorrow';
+                    span.textContent = '明日';
+                    label.appendChild(span);
+                    if (section) section.classList.remove('past-day');
+                } else if (labelMs === yesterdayMs) {
+                    const span = document.createElement('span');
+                    span.className = 'schedule-day-tag yesterday';
+                    span.textContent = '昨日';
+                    label.appendChild(span);
+                    if (section) section.classList.add('past-day');
+                } else if (labelMs < todayMs) {
+                    // それ以前の日付も薄く表示
+                    if (section) section.classList.add('past-day');
+                }
+            });
+        }
+
+        // 手動同期（ページリロードで最新データを反映）
+        function manualSync() {
+            const btn = document.querySelector('.sync-btn');
+            const syncTimeEl = document.getElementById('globalSyncTime');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 更新中...`;
+            }
+            if (syncTimeEl) syncTimeEl.textContent = '通信中...';
+            setTimeout(() => location.reload(), 800);
+        }
+
+        // 自動同期タイマー（1時間ごとにリロード）
+        setInterval(() => location.reload(), 60 * 60 * 1000);
+
+        function renderTasks() {
+            const t = document.getElementById('filterTabs');
+            // 優先タスクがある物件名だけをタブに表示（件数付き）
+            const propNames = [...new Set(priorityTasks.map(pt => pt.property))];
+            const total = priorityTasks.length;
+            const isPC = window.innerWidth > 768;
+            // PC: 物件名タブを先に、「全て」を末尾に / スマホ: 「全て」を先頭に
+            if (isPC && propNames.length > 0) {
+                const firstName = propNames[0];
+                t.innerHTML = propNames.map((name, i) => {
+                    const cnt = priorityTasks.filter(pt => pt.property === name).length;
+                    const cls = i === 0 ? 'filter-tab active' : 'filter-tab';
+                    return `<div class="${cls}" data-filter="${name}">${name} <span class="tab-count">${cnt}</span></div>`;
+                }).join('') + `<div class="filter-tab" data-filter="all">全て <span class="tab-count">${total}</span></div>`;
+                renderTaskItems(firstName);
+            } else {
+                t.innerHTML = `<div class="filter-tab active" data-filter="all">全て <span class="tab-count">${total}</span></div>` +
+                    propNames.map(name => {
+                        const cnt = priorityTasks.filter(pt => pt.property === name).length;
+                        return `<div class="filter-tab" data-filter="${name}">${name} <span class="tab-count">${cnt}</span></div>`;
+                    }).join('');
+                renderTaskItems('all');
+            }
+            t.querySelectorAll('.filter-tab').forEach(tab => tab.addEventListener('click', () => {
+                t.querySelectorAll('.filter-tab').forEach(x => x.classList.remove('active'));
+                tab.classList.add('active');
+                renderTaskItems(tab.dataset.filter);
+            }));
+            // カード件数表示
+            const countEl = document.getElementById('priorityTaskCount');
+            if (countEl) countEl.textContent = `${total}件`;
+            // タスク一覧の開閉
+            const toggle = document.getElementById('taskListToggle');
+            const list = document.getElementById('taskList');
+            const chevron = document.getElementById('taskListChevron');
+            const label = document.getElementById('taskListToggleLabel');
+            // PC: デフォルト開く / スマホ: デフォルト閉じる
+            if (isPC && list) {
+                list.style.display = 'block';
+                chevron.style.transform = 'rotate(180deg)';
+                label.textContent = 'タスクを閉じる';
+            }
+            if (toggle && list) {
+                toggle.addEventListener('click', () => {
+                    const isOpen = list.style.display !== 'none';
+                    list.style.display = isOpen ? 'none' : 'block';
+                    chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                    label.textContent = isOpen ? 'タスクを表示' : 'タスクを閉じる';
+                });
+            }
+        }
+
+        function renderTaskItems(filter) {
+            const l = document.getElementById('taskList');
+            const filtered = filter === 'all' ? priorityTasks : priorityTasks.filter(t => t.property === filter);
+            if (filtered.length === 0) {
+                l.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">優先タスクはありません</div>';
+                return;
+            }
+            l.innerHTML = filtered.map(t => `
+                <div class="task-item" data-task-id="${t.id}">
+                    <div class="task-content">
+                        <div class="task-title">${t.title}</div>
+                        <div class="task-property">${t.property}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getDayOfWeek(dateStr) {
+            const now = new Date();
+            const parts = dateStr.split('/');
+            const d = new Date(now.getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
+            return ['日','月','火','水','木','金','土'][d.getDay()];
+        }
+
+        function renderMonthTable() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const currentMonth = now.getMonth(); // 0-based
+            const startCounts = yearlyStartCounts;
+            const deliveryCounts = yearlyDeliveryCounts;
+            const startTotal = startCounts.reduce((a, b) => a + b, 0);
+            const deliveryTotal = deliveryCounts.reduce((a, b) => a + b, 0);
+            const c = document.getElementById('scheduleChart');
+
+            function buildRow(data, colorPast, colorCurrent) {
+                return `<div class="month-table">${data.map((cnt, i) => {
+                    const isPast = i < currentMonth;
+                    const isCurr = i === currentMonth;
+                    const cls = isCurr ? 'current' : isPast ? 'past' : '';
+                    const style = isCurr ? `background-color:${colorCurrent};border-color:${colorCurrent};`
+                        : isPast ? `background-color:${colorPast};border-color:${colorPast === '#eff6ff' ? '#93c5fd' : 'var(--primary-m)'};` : '';
+                    return `<div class="month-cell ${cls}" ${style ? `style="${style}"` : ''}>
+                        <div class="month-cell-label">${monthLabels[i]}</div>
+                        <div class="month-cell-count">${cnt}</div>
+                    </div>`;
+                }).join('')}</div>`;
+            }
+
+            c.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <div class="schedule-chart-row-label">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="15" rx="2"/><path d="M2 10h20"/><path d="M12 6V2"/><path d="M6 6V2"/><path d="M18 6V2"/></svg>
+                            着工
+                            <span class="schedule-chart-row-total">${startTotal}棟</span>
+                        </div>
+                        ${buildRow(startCounts, '#eff6ff', '#2563eb')}
+                    </div>
+                    <div>
+                        <div class="schedule-chart-row-label">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            引渡し
+                            <span class="schedule-chart-row-total">${deliveryTotal}棟</span>
+                        </div>
+                        ${buildRow(deliveryCounts, 'var(--primary-l)', 'var(--primary)')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHandoverTitle() {
+            const year = new Date().getFullYear();
+            document.getElementById('handoverTitle').textContent = `${year}年 着工・引渡しスケジュール`;
+        }
+
+        function renderStatusCards() {
+            // 挨拶バッジ（下段に件数タグを複数表示）
+            const badgeRow = document.getElementById('greetingBadgeRow');
+            if (badgeRow) {
+                const activeShi = properties.filter(p => p.shinchoku !== '引渡し').length;
+                const preconCnt = preconProperties.length;
+                // 今月引渡し件数
+                const now = new Date();
+                const thisMonthDeliveries = deliveredProperties
+                    ? deliveredProperties.filter(d => {
+                        if (!d.date) return false;
+                        const parts = d.date.split('/');
+                        return parseInt(parts[0]) === now.getMonth() + 1;
+                      }).length
+                    : 0;
+                badgeRow.innerHTML = `
+                    <span class="greeting-badge">
+                        仕掛り <span class="badge-num">${activeShi}</span>件
+                    </span>
+                    <span class="greeting-badge">
+                        着工前 <span class="badge-num">${preconCnt}</span>件
+                    </span>
+                    ${thisMonthDeliveries > 0 ? `<span class="greeting-badge" style="background:rgba(255,200,0,0.9);color:#7c4500;">今月引渡 <span class="badge-num" style="color:#7c4500;">${thisMonthDeliveries}</span>件</span>` : ''}
+                `;
+            }
+
+            const chevronSvg = '<svg class="status-card-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+
+            function buildListHtml(items, emptyText, markDone) {
+                if (items.length === 0) return `<div class="status-card-empty">${emptyText}</div>`;
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                return items.map(d => {
+                    const parts = d.date.split('/');
+                    const itemDate = new Date(now.getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                    const isPast = markDone && itemDate < today;
+                    return `
+                        <div class="status-card-item${isPast ? ' done' : ''}">
+                            <span class="status-card-name">${d.name}${isPast ? ' <span class="status-done-badge">済</span>' : ''}</span>
+                            <span class="status-card-date">${d.date}（${getDayOfWeek(d.date)}）</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('statusCards').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="status-card has-list" id="startedCard">
+                        <div class="status-card-header collapsible" id="startedToggle">
+                            <span class="status-card-title">着工済み</span>
+                            <span style="display:flex;align-items:center;">
+                                <span class="status-card-count">${startedProperties.length}件</span>
+                                ${chevronSvg}
+                            </span>
+                        </div>
+                        <div class="status-card-list">${buildListHtml(startedProperties, 'まだありません')}</div>
+                    </div>
+                    <div class="status-card has-list" id="deliveredCard">
+                        <div class="status-card-header collapsible" id="deliveredToggle">
+                            <span class="status-card-title">引渡し済み</span>
+                            <span style="display:flex;align-items:center;">
+                                <span class="status-card-count">${deliveredProperties.length}件</span>
+                                ${chevronSvg}
+                            </span>
+                        </div>
+                        <div class="status-card-list">${buildListHtml(deliveredProperties, 'まだありません')}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                    <div class="status-card">
+                        <div class="status-card-header" style="margin-bottom:6px;">
+                            <span class="status-card-title">今月の着工予定</span>
+                            <span class="status-card-count">${monthlyStarts.length}件</span>
+                        </div>
+                        ${buildListHtml(monthlyStarts, '今月の予定なし', true)}
+                    </div>
+                    <div class="status-card">
+                        <div class="status-card-header" style="margin-bottom:6px;">
+                            <span class="status-card-title">今月の引渡し予定</span>
+                            <span class="status-card-count">${monthlyDeliveries.length}件</span>
+                        </div>
+                        ${buildListHtml(monthlyDeliveries, '今月の予定なし', true)}
+                    </div>
+                </div>
+            `;
+
+            // プルダウン開閉
+            document.getElementById('startedToggle').addEventListener('click', () => {
+                document.getElementById('startedCard').classList.toggle('open');
+            });
+            document.getElementById('deliveredToggle').addEventListener('click', () => {
+                document.getElementById('deliveredCard').classList.toggle('open');
+            });
+        }
+
+        function openPropertyModal(id, source) {
+            const allProps = source === 'precon' ? preconProperties : properties;
+            const p = allProps.find(x => x.id === id);
+            if (!p) return;
+            const prog = calcProgress(p.dates.着工, p.dates.引渡);
+            const isPrecon = p.shinchoku === '着工前';
+            const now = new Date();
+            const daysUntilStart = Math.max(0, Math.ceil((new Date(p.dates.着工) - now) / 86400000));
+            // チェックリスト（トグルスイッチ横並び）
+            const checksHtml = Object.entries(p.checks).map(([label, val]) => `
+                <div class="check-row">
+                    <div class="toggle-switch ${val ? 'on' : ''}"></div>
+                    <span class="check-label">${label}</span>
+                </div>
+            `).join('');
+
+
+            const notionLink = p.notionId ? `<a href="https://www.notion.so/${p.notionId}" target="_blank" rel="noopener" class="notion-link">Notionへ移動 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>` : '';
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="modal-title">${p.name}</div>
+                <div class="modal-subtitle">${p.location}</div>
+                <div class="modal-section">
+                    <div class="progress-bar-dates" style="margin-top: 4px;">
+                        <span class="progress-date-label">${formatDateWithDay(p.dates.着工)}</span>
+                        <div class="property-progress" style="flex:1;">
+                            <div class="property-progress-bar"><div class="property-progress-fill" style="width: ${isPrecon ? 0 : prog.pct}%;"></div></div>
+                        </div>
+                        <span class="progress-date-label">${formatDateWithDay(p.dates.引渡)}</span>
+                    </div>
+                    <div class="progress-days">
+                        <span>${isPrecon ? `着工まであと${daysUntilStart}日` : `着工から${prog.elapsed}日経過`}</span>
+                        <span class="progress-days-left">引渡しまであと${prog.remaining}日</span>
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">重要日程</div>
+                    <div class="modal-dates">${Object.entries(p.dates).map(([l, d]) => `<div class="modal-date"><span class="modal-date-label">${l}</span><span class="modal-date-value">${d}</span></div>`).join('')}</div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">チェックリスト</div>
+                    <div class="check-list">${checksHtml}</div>
+                </div>
+                <div class="modal-notion-link">${notionLink}</div>
+            `;
+
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        // ===== タブ切替 =====
+        function switchTab(tab) {
+            // コンテンツ切替
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            // ボトムナビ
+            document.querySelectorAll('.bottom-nav-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tab);
+            });
+            // ドロワー
+            document.querySelectorAll('.drawer-item[data-tab]').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tab);
+            });
+            // タイトル更新
+            const titles = {home:'ホーム', week:'週間ビュー', properties:'物件ボード', tasks:'タスク', tools:'ツール'};
+            document.getElementById('topBarTitle').textContent = titles[tab] || 'ホーム';
+            closeDrawer();
+            window.scrollTo(0, 0);
+            // 初回レンダリング
+            if (tab === 'week' && !document.getElementById('tab-week').dataset.rendered) {
+                renderWeekTab();
+                document.getElementById('tab-week').dataset.rendered = '1';
+            }
+            if (tab === 'properties' && !document.getElementById('tab-properties').dataset.rendered) {
+                renderPropertiesTab();
+                document.getElementById('tab-properties').dataset.rendered = '1';
+            }
+            if (tab === 'tasks' && !document.getElementById('tab-tasks').dataset.rendered) {
+                renderTasksTab();
+                document.getElementById('tab-tasks').dataset.rendered = '1';
+            }
+            if (tab === 'tools' && !document.getElementById('tab-tools').dataset.rendered) {
+                renderToolsTab();
+                document.getElementById('tab-tools').dataset.rendered = '1';
+            }
+        }
+
+        function closeDrawer() {
+            const h = document.getElementById('hamburger');
+            const d = document.getElementById('drawer');
+            const ov = document.getElementById('drawerOverlay');
+            h.classList.remove('open');
+            d.classList.remove('open');
+            if (ov) ov.classList.remove('open');
+        }
+
+        // ===== 週間タブ =====
+        // ホームのスケジュールセクションから指定日の予定HTMLを取得
+        function getCalendarEventsForDate(targetDateMs) {
+            const sections = document.querySelectorAll('#tab-home .schedule-section');
+            for (const sec of sections) {
+                const label = sec.querySelector('.schedule-label');
+                if (!label) continue;
+                const rawText = Array.from(label.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent).join('');
+                const m = rawText.match(/(\d+)月(\d+)日/);
+                if (!m) continue;
+                const y = new Date().getFullYear();
+                const sectionDateMs = new Date(y, parseInt(m[1]) - 1, parseInt(m[2])).getTime();
+                if (sectionDateMs === targetDateMs) {
+                    // その日のイベントアイテムだけ抽出してクローン
+                    const items = sec.querySelectorAll('.sched-item, .sched-all-day');
+                    if (items.length === 0) return null;
+                    const frag = document.createDocumentFragment();
+                    items.forEach(item => frag.appendChild(item.cloneNode(true)));
+                    const wrapper = document.createElement('div');
+                    wrapper.appendChild(frag);
+                    return wrapper.innerHTML;
+                }
+            }
+            return null;
+        }
+
+        function renderWeekTab() {
+            const now = new Date();
+            const weeks = ['日','月','火','水','木','金','土'];
+            // 今週の日曜日起点
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay());
+            // 日付ストリップ（タップ可能・data-date属性付き）
+            let stripHtml = '<div class="week-day-strip">';
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startOfWeek);
+                d.setDate(startOfWeek.getDate() + i);
+                const isToday = d.toDateString() === now.toDateString();
+                const isSun = i === 0, isSat = i === 6;
+                const cls = [isToday?'today':'', isSun?'sun':'', isSat?'sat':''].filter(Boolean).join(' ');
+                const dateMs = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+                stripHtml += `<div class="week-day-cell ${cls}" data-datems="${dateMs}" data-label="${d.getMonth()+1}月${d.getDate()}日（${weeks[d.getDay()]}）" style="cursor:pointer;">
+                    <div class="wdc-dow">${weeks[d.getDay()]}</div>
+                    <div class="wdc-num">${d.getDate()}</div>
+                </div>`;
+            }
+            stripHtml += '</div>';
+
+            const el = document.getElementById('tab-week');
+            el.innerHTML = `<div class="tab-pane">
+                ${stripHtml}
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-head">
+                        <div class="card-title" id="weekDayTitle">今日の予定</div>
+                        <a href="https://calendar.google.com" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">カレンダーを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                    </div>
+                    <div id="weekTodayEvents"></div>
+                </div>
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-head">
+                        <div class="card-title">今週のタスク</div>
+                        <a href="https://tasks.google.com" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">Tasksを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                    </div>
+                    <div id="weekTaskList"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">今週の引渡し・着工</div>
+                    </div>
+                    <div id="weekPropertyEvents"></div>
+                </div>
+            </div>`;
+
+            // 指定日の予定を表示する関数
+            function showDayEvents(dateMs, label) {
+                const titleEl = document.getElementById('weekDayTitle');
+                const evEl = document.getElementById('weekTodayEvents');
+                if (titleEl) titleEl.textContent = label + ' の予定';
+                // アクティブセルを更新
+                el.querySelectorAll('.week-day-cell').forEach(c => {
+                    c.style.outline = parseInt(c.dataset.datems) === dateMs
+                        ? '2px solid var(--primary)' : 'none';
+                    c.style.borderRadius = '6px';
+                });
+                const html = getCalendarEventsForDate(dateMs);
+                if (html) {
+                    evEl.innerHTML = html;
+                } else {
+                    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                    const msg = dateMs === todayMs
+                        ? '今日の予定はありません'
+                        : 'この日の予定データがありません（次回更新時に反映されます）';
+                    evEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">${msg}</div>`;
+                }
+            }
+
+            // 日付セルのタップイベント
+            el.querySelectorAll('.week-day-cell[data-datems]').forEach(cell => {
+                cell.addEventListener('click', () => {
+                    showDayEvents(parseInt(cell.dataset.datems), cell.dataset.label);
+                });
+            });
+
+            // 初期表示: 今日の予定
+            const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            showDayEvents(todayMs, '今日');
+
+            // 今週のタスク（Google Tasks から今週分を抽出）
+            const weekTaskEl = document.getElementById('weekTaskList');
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            const thisWeekTasks = googleTasks.filter(t => {
+                if (!t.due) return false;
+                const d = new Date(t.due);
+                return d >= startOfWeek && d <= endOfWeek;
+            });
+            if (thisWeekTasks.length === 0) {
+                weekTaskEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">今週の期限タスクなし</div>';
+            } else {
+                weekTaskEl.innerHTML = thisWeekTasks.map(t => {
+                    const d = new Date(t.due);
+                    const cls = d < now ? 'overdue' : 'this-week';
+                    return `<div class="gtask-item ${cls}">
+                        <div class="task-content">
+                            <div class="gtask-title">${t.title}</div>
+                            <div class="gtask-due">${(d.getMonth()+1)}/${d.getDate()}(${weeks[d.getDay()]})</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // 今週の着工・引渡し物件
+            const propEvEl = document.getElementById('weekPropertyEvents');
+            const allDates = [];
+            [...properties, ...preconProperties].forEach(p => {
+                if (p.dates.着工) {
+                    const d = new Date(p.dates.着工);
+                    if (d >= startOfWeek && d <= endOfWeek) allDates.push({name: p.name, date: d, type: '着工', color: '#2563eb'});
+                }
+                if (p.dates.引渡) {
+                    const d = new Date(p.dates.引渡);
+                    if (d >= startOfWeek && d <= endOfWeek) allDates.push({name: p.name, date: d, type: '引渡し', color: 'var(--primary)'});
+                }
+            });
+            if (allDates.length === 0) {
+                propEvEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">今週の着工・引渡しなし</div>';
+            } else {
+                propEvEl.innerHTML = allDates.sort((a,b) => a.date - b.date).map(ev => {
+                    const d = ev.date;
+                    return `<div class="sched-all-day" style="border-left-color:${ev.color};margin-bottom:6px;">
+                        <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);">${(d.getMonth()+1)}/${d.getDate()}(${weeks[d.getDay()]}) </span>
+                        <strong>${ev.name}</strong> ${ev.type}
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // ===== 物件タブ =====
+        function renderPropertiesTab() {
+            const el = document.getElementById('tab-properties');
+            const activeShikakari = properties.filter(p => p.shinchoku !== '引渡し');
+            const totalCount = activeShikakari.length + preconProperties.length;
+
+            el.innerHTML = `<div class="tab-pane">
+                <div class="filter-tabs" id="propFilterTabs">
+                    <div class="filter-tab active" data-pfilter="shikakari">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
+                    <div class="filter-tab" data-pfilter="precon">着工前 <span class="tab-count">${preconProperties.length}</span></div>
+                    <div class="filter-tab" data-pfilter="all">全て <span class="tab-count">${totalCount}</span></div>
+                    <!-- 引渡し済みは非表示（引渡し済みは deliveredProperties で管理） -->
+                </div>
+                <div id="propTabList"></div>
+            </div>`;
+
+            function renderPropList(filter) {
+                let list = [];
+                if (filter === 'shikakari') list.push(...[...activeShikakari].sort((a,b) => new Date(a.dates.引渡) - new Date(b.dates.引渡)));
+                else if (filter === 'precon') list.push(...[...preconProperties].sort((a,b) => new Date(a.dates.着工) - new Date(b.dates.着工)));
+                else if (filter === 'all') {
+                    list.push(...activeShikakari, ...preconProperties);
+                    list.sort((a,b) => a.name.localeCompare(b.name, 'ja'));
+                }
+                const listEl = document.getElementById('propTabList');
+                if (!listEl) return;
+                listEl.innerHTML = list.map(p => {
+                    const colorMap = {'工事中': '#d97706', '竣工': '#9ca3af', '着工前': '#3b82f6'};
+                    const bc = colorMap[p.shinchoku] || '#9ca3af';
+                    const koujiDate = p.dates.着工 ? formatDateWithDay(p.dates.着工) : '—';
+                    const hiwatashiDate = p.dates.引渡 ? formatDateWithDay(p.dates.引渡) : '—';
+                    return `<div class="property-item compact" data-property-id="${p.id}" data-source="${p.shinchoku === '着工前' ? 'precon' : 'shikakari'}" style="border-left-color:${bc};">
+                        <div class="property-content">
+                            <div class="property-name-row">
+                                <span class="property-name">${p.name}</span>
+                                <span class="property-compact-meta" style="font-size:10px;">${p.shinchoku}</span>
+                            </div>
+                            <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${koujiDate} &nbsp;·&nbsp; 引渡 ${hiwatashiDate}</div>
+                        </div>
+                    </div>`;
+                }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">物件なし</div>';
+                bindPropertyClicks();
+            }
+
+            renderPropList('shikakari');
+
+            document.getElementById('propFilterTabs').addEventListener('click', e => {
+                const tab = e.target.closest('.filter-tab');
+                if (!tab) return;
+                document.querySelectorAll('#propFilterTabs .filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderPropList(tab.dataset.pfilter);
+            });
+        }
+
+        // ===== タスクタブ (チェックボックスなし) =====
+        function renderTasksTab() {
+            const el = document.getElementById('tab-tasks');
+            const today = new Date(); today.setHours(0,0,0,0);
+            const endOfWeek = new Date(today);
+            endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+            const weeks = ['日','月','火','水','木','金','土'];
+            function fmtDate(s) { const d = new Date(s); return `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`; }
+            function parseDue(t) { const d = t.due ? new Date(t.due) : (t.deadline ? new Date(t.deadline) : null); if(d) d.setHours(0,0,0,0); return d; }
+
+            const overdue=[], thisWeek=[], later=[], noDate=[];
+            googleTasks.forEach(t => {
+                const d = parseDue(t);
+                if(!d) noDate.push(t);
+                else if(d < today) overdue.push(t);
+                else if(d <= endOfWeek) thisWeek.push(t);
+                else later.push(t);
+            });
+            function gItem(t, cls) {
+                let due = '';
+                if(t.due) due = fmtDate(t.due);
+                if(t.deadline) due += (due?' ':' ') + '(期限: ' + fmtDate(t.deadline) + ')';
+                if(!t.due && !t.deadline) due = '期限なし';
+                return `<div class="gtask-item ${cls}"><div class="task-content"><div class="gtask-title">${t.title}</div><div class="gtask-due${cls==='overdue'?' overdue-text':''}">${due}</div></div></div>`;
+            }
+            function gGroup(label, items, cls, iconSvg) {
+                if(!items.length) return '';
+                return `<div class="gtask-group-label">${iconSvg} ${label} <span class="gtask-count">${items.length}件</span></div>` + items.map(t => gItem(t, cls)).join('');
+            }
+            // 来週以降: 折りたたみ表示（▼=折りたたみ中 ▲=展開中）
+            function gGroupCollapsed(label, items, cls, iconSvg) {
+                if(!items.length) return '';
+                return `<div class="gtask-group-label" style="cursor:pointer;" onclick="
+                    var b=this.nextElementSibling;
+                    var a=this.querySelector('.later-toggle');
+                    if(b.style.display==='none'){b.style.display='';a.style.transform='rotate(180deg)';}
+                    else{b.style.display='none';a.style.transform='rotate(0deg)';}
+                ">
+                    ${iconSvg} ${label} <span class="gtask-count">${items.length}件</span>
+                    <span class="later-toggle" style="margin-left:auto;display:inline-block;transform:rotate(0deg);transition:transform 0.2s;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+                </div>
+                <div style="display:none;">${items.map(t => gItem(t, cls)).join('')}</div>`;
+            }
+            let gtHtml = '';
+            gtHtml += gGroup('期限切れ', overdue, 'overdue', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>');
+            gtHtml += gGroup('今週', thisWeek, 'this-week', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>');
+            gtHtml += gGroupCollapsed('来週以降', later, 'later', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-m)" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>');
+            gtHtml += gGroup('期限なし', noDate, 'no-date', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>');
+            if(!gtHtml) gtHtml = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">タスクなし</div>';
+
+            // 優先タスク（物件名でグループ化・あいうえお順）
+            const ptByProp = {};
+            [...priorityTasks].sort((a,b) => a.property.localeCompare(b.property, 'ja')).forEach(t => {
+                if (!ptByProp[t.property]) ptByProp[t.property] = [];
+                ptByProp[t.property].push(t);
+            });
+            const propKeys = Object.keys(ptByProp);
+            let ptHtml = '';
+            if (!propKeys.length) {
+                ptHtml = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">優先タスクなし</div>';
+            } else {
+                // 一括展開/折りたたみボタン
+                ptHtml += `<div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+                    <button id="ptToggleAll" onclick="(function(){
+                        var groups=document.querySelectorAll('.pt-group-body');
+                        var arrows=document.querySelectorAll('.pt-arrow');
+                        var btn=document.getElementById('ptToggleAll');
+                        var isAllOpen=[...groups].every(g=>g.style.display!=='none');
+                        groups.forEach(function(g,i){
+                            g.style.display=isAllOpen?'none':'';
+                            arrows[i].style.transform=isAllOpen?'rotate(0deg)':'rotate(180deg)';
+                        });
+                        btn.textContent=isAllOpen?'全て展開':'全て折りたたむ';
+                    })()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline;">全て展開</button>
+                </div>`;
+                propKeys.forEach(function(prop, idx) {
+                    const tasks = ptByProp[prop];
+                    const isFirst = idx === 0;
+                    // 物件ヘッダー（区切り線）
+                    ptHtml += `<div class="pt-group-header" onclick="(function(el){
+                        var body=el.nextElementSibling;
+                        var arrow=el.querySelector('.pt-arrow');
+                        var open=body.style.display!=='none';
+                        body.style.display=open?'none':'';
+                        arrow.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+                        // 一括ボタン更新
+                        var groups=document.querySelectorAll('.pt-group-body');
+                        var btn=document.getElementById('ptToggleAll');
+                        if(btn){var allOpen=[...groups].every(function(g){return g.style.display!=='none';});btn.textContent=allOpen?'全て折りたたむ':'全て展開';}
+                    })(this)" style="display:flex;align-items:center;gap:6px;padding:8px 0 4px;cursor:pointer;border-top:${idx===0?'none':'1px solid var(--border2)'};">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                        <span style="font-size:11px;font-weight:600;color:var(--text1);flex:1;">${prop}</span>
+                        <span style="font-size:10px;color:var(--text3);">${tasks.length}件</span>
+                        <span class="pt-arrow" style="display:inline-block;transform:rotate(0deg);transition:transform 0.2s;color:var(--text3);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+                    </div>
+                    <div class="pt-group-body" style="display:none;">
+                        ${tasks.map(t => `<div class="task-item">
+                            <div class="task-content">
+                                <div class="task-title">${t.title}</div>
+                            </div>
+                        </div>`).join('')}
+                    </div>`;
+                });
+            }
+
+            el.innerHTML = `<div class="tab-pane">
+                <div class="tab-section">
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-title">Google Tasks</div>
+                            <a href="https://tasks.google.com" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">Tasksを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                        </div>
+                        ${gtHtml}
+                    </div>
+                </div>
+                <div class="tab-section">
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-title">優先タスク</div>
+                            <a href="https://www.notion.so/2f76ad84622180008770f5b476df4dc4?v=2f76ad846221803bbb6d000c182e1549" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">Notionで編集 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                        </div>
+                        ${ptHtml}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // ===== ツールデータ =====
+        const toolsData = [
+            {
+                id: 'inspection',
+                name: '検査依頼',
+                subtitle: '会社への依頼メール自動送信',
+                color: '#0369a1',
+                icon: `<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>`,
+                desc: '検査の種類・日程・物件情報を入力すると、Gmailを通じて会社のメールアドレスへ自動送信するWebアプリ。出先のスマホから依頼が完結する。',
+                features: [
+                    '検査種類を選んで送信するだけ',
+                    '物件名・日程を入力するだけ',
+                    'Gmailから会社メールへ自動転送'
+                ],
+                url: './tools/検査依頼.html'
+            },
+            {
+                id: 'koute',
+                name: '工程作成',
+                subtitle: 'Googleカレンダーへ自動登録',
+                color: '#006837',
+                icon: `<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="10" x2="12" y2="22"/>`,
+                desc: 'Googleフォームに物件情報と着工日を入力すると、六曜条件（大安・友引）を考慮して工程イベントをGoogleカレンダーへ一括登録するツール。',
+                features: [
+                    '着工日から全工程を自動計算',
+                    '六曜条件（大安・友引）対応',
+                    'Googleカレンダーへ一括登録'
+                ],
+                url: './tools/工程作成.html'
+            },
+            {
+                id: 'notion-reg',
+                name: 'Notion物件登録',
+                subtitle: '物件＋共通タスク一括登録',
+                color: '#7c3aed',
+                icon: `<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>`,
+                desc: '物件情報を入力すると、NotionのプロパティDBに物件ページを新規作成し、共通タスク一覧を自動でセットするWebアプリ。登録漏れが防げる。',
+                features: [
+                    '物件名・住所など一括入力',
+                    '共通タスクを自動登録',
+                    '担当物件一覧に即反映'
+                ],
+                url: './tools/物件登録.html'
+            },
+            {
+                id: 'payment',
+                name: '支払い管理',
+                subtitle: '個人専用 支払い台帳',
+                color: '#b45309',
+                icon: `<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/>`,
+                desc: '業者への支払い予定・実績を管理するWebアプリ。物件ごと・業者ごとに集計して、支払いの抜け漏れを防ぐ個人専用版。',
+                features: [
+                    '新規登録・修正・一覧の3モード',
+                    '業者別・物件別で差額を集計',
+                    'Notionの支払いDBへ直接登録'
+                ],
+                url: './tools/支払い管理.html'
+            }
+        ];
+
+        function openToolSheet(id) {
+            const tool = toolsData.find(t => t.id === id);
+            if (!tool) return;
+
+            const featuresHtml = tool.features.map(f => `
+                <li>
+                    <svg viewBox="0 0 24 24" stroke="var(--primary)" fill="none" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    ${f}
+                </li>`).join('');
+
+            const openBtn = tool.url
+                ? `<button onclick="navigateTo('${tool.url.replace('./', '')}')" class="tool-sheet-btn tool-sheet-btn-open">開く</button>`
+                : `<button class="tool-sheet-btn tool-sheet-btn-disabled" disabled>準備中（URLを設定してください）</button>`;
+
+            document.getElementById('toolSheetContent').innerHTML = `
+                <div class="tool-sheet-handle"></div>
+                <div class="tool-sheet-header">
+                    <div class="tool-sheet-icon" style="background:${tool.color};">
+                        <svg viewBox="0 0 24 24">${tool.icon}</svg>
+                    </div>
+                    <div>
+                        <div class="tool-sheet-name">${tool.name}</div>
+                        <div class="tool-sheet-sub">${tool.subtitle}</div>
+                    </div>
+                </div>
+                <div class="tool-sheet-desc">${tool.desc}</div>
+                <ul class="tool-sheet-features">${featuresHtml}</ul>
+                ${openBtn}
+            `;
+
+            document.getElementById('toolSheetOverlay').classList.add('open');
+            document.getElementById('toolSheet').classList.add('open');
+        }
+
+        function closeToolSheet() {
+            document.getElementById('toolSheetOverlay').classList.remove('open');
+            document.getElementById('toolSheet').classList.remove('open');
+        }
+
+        // ===== ツールタブ =====
+        function renderToolsTab() {
+            const el = document.getElementById('tab-tools');
+            const cardsHtml = toolsData.map(t => `
+                <div class="tool-card-new" onclick="openToolSheet('${t.id}')">
+                    <div class="tool-icon-wrap" style="background:${t.color};">
+                        <svg viewBox="0 0 24 24">${t.icon}</svg>
+                    </div>
+                    <div class="tool-card-name">${t.name}</div>
+                    <div class="tool-card-desc">${t.subtitle}</div>
+                </div>`).join('');
+
+            el.innerHTML = `<div class="tab-pane">
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-head"><div class="card-title">Cowork ツール</div></div>
+                    <div class="tool-grid-2" style="padding-top:4px;">${cardsHtml}</div>
+                </div>
+                <div class="card" style="border: 1px dashed var(--border2);">
+                    <div class="card-head"><div class="card-title">ツールを追加</div></div>
+                    <div style="text-align:center;padding:12px;color:var(--text3);font-size:11px;line-height:1.6;">
+                        新しいCoworkツールを作成したら<br>ここにカードを追加するだけ
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function setupEventListeners() {
+            const h = document.getElementById('hamburger');
+            const d = document.getElementById('drawer');
+            const ov = document.getElementById('drawerOverlay');
+            const o = document.getElementById('modalOverlay');
+            const c = document.getElementById('modalClose');
+            h.addEventListener('click', () => {
+                h.classList.toggle('open');
+                d.classList.toggle('open');
+                if (ov) ov.classList.toggle('open');
+            });
+            if (ov) ov.addEventListener('click', closeDrawer);
+            o.addEventListener('click', e => {
+                if (e.target === o) { o.classList.remove('open'); }
+            });
+            c.addEventListener('click', () => o.classList.remove('open'));
+        }
+
+        function setupResponsive() {
+            // スマホ: プルダウン式の開閉
+            const isMobile = () => window.innerWidth <= 768;
+
+            document.querySelectorAll('.card-toggle').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    if (!isMobile()) return;
+                    const card = toggle.closest('.collapsible-card');
+                    card.classList.toggle('collapsed');
+                });
+            });
+
+            // 初期状態: 5件制限があるためスマホでも開いた状態にする
+            function applyMobileState() {
+                document.querySelectorAll('.collapsible-card').forEach(card => {
+                    card.classList.remove('collapsed');
+                });
+            }
+            applyMobileState();
+        }
+
+        // ドラッグ&ドロップでセクション並び替え（タッチ対応）
+        function setupDragAndDrop() {
+            const container = document.querySelector('.main-content');
+            const sections = () => [...container.querySelectorAll('.draggable-section')];
+            let draggedEl = null;
+            let touchStartY = 0;
+            let placeholder = null;
+
+            // 各セクションにドラッグハンドルを追加（全カードに付与して見た目統一）
+            sections().forEach(sec => {
+                const cards = sec.querySelectorAll('.card');
+                cards.forEach(card => {
+                    const handle = document.createElement('div');
+                    handle.className = 'drag-handle';
+                    handle.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>';
+                    const head = card.querySelector('.card-head');
+                    if (head) head.prepend(handle);
+                });
+
+                // タッチイベント（全ハンドルに付与）
+                cards.forEach(card => {
+                    const h = card.querySelector('.drag-handle');
+                    if (h) h.addEventListener('touchstart', (e) => {
+                        draggedEl = sec;
+                        touchStartY = e.touches[0].clientY;
+                        draggedEl.classList.add('dragging');
+                        e.preventDefault();
+                    }, {passive: false});
+                });
+            });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!draggedEl) return;
+                e.preventDefault();
+                const touchY = e.touches[0].clientY;
+                const secs = sections().filter(s => s !== draggedEl);
+
+                secs.forEach(s => s.classList.remove('drag-over'));
+
+                for (const s of secs) {
+                    const rect = s.getBoundingClientRect();
+                    if (touchY > rect.top && touchY < rect.bottom) {
+                        s.classList.add('drag-over');
+                        break;
+                    }
+                }
+            }, {passive: false});
+
+            document.addEventListener('touchend', () => {
+                if (!draggedEl) return;
+                const target = container.querySelector('.drag-over');
+                if (target && target !== draggedEl) {
+                    const rect = target.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    const lastTouch = event.changedTouches ? event.changedTouches[0].clientY : 0;
+                    if (lastTouch < midY) {
+                        container.insertBefore(draggedEl, target);
+                    } else {
+                        container.insertBefore(draggedEl, target.nextSibling);
+                    }
+                    // 順序をlocalStorageに保存
+                    saveSectionOrder();
+                }
+                sections().forEach(s => { s.classList.remove('dragging'); s.classList.remove('drag-over'); });
+                draggedEl = null;
+            });
+
+            // PC: マウスドラッグ
+            sections().forEach(sec => {
+                const handle = sec.querySelector('.drag-handle');
+                if (!handle) return;
+
+                handle.addEventListener('mousedown', (e) => {
+                    draggedEl = sec;
+                    draggedEl.classList.add('dragging');
+                    e.preventDefault();
+                });
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!draggedEl) return;
+                const secs = sections().filter(s => s !== draggedEl);
+                secs.forEach(s => s.classList.remove('drag-over'));
+                for (const s of secs) {
+                    const rect = s.getBoundingClientRect();
+                    if (e.clientY > rect.top && e.clientY < rect.bottom) {
+                        s.classList.add('drag-over');
+                        break;
+                    }
+                }
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!draggedEl) return;
+                const target = container.querySelector('.drag-over');
+                if (target && target !== draggedEl) {
+                    const rect = target.getBoundingClientRect();
+                    if (e.clientY < rect.top + rect.height / 2) {
+                        container.insertBefore(draggedEl, target);
+                    } else {
+                        container.insertBefore(draggedEl, target.nextSibling);
+                    }
+                    saveSectionOrder();
+                }
+                sections().forEach(s => { s.classList.remove('dragging'); s.classList.remove('drag-over'); });
+                draggedEl = null;
+            });
+
+            // セクション順序の保存・復元
+            function saveSectionOrder() {
+                const order = sections().map(s => s.dataset.section);
+                try { localStorage.setItem('sectionOrder', JSON.stringify(order)); } catch(e) {}
+            }
+
+            function restoreSectionOrder() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('sectionOrder'));
+                    if (!saved) return;
+                    // v4レイアウト変更: 古い並び順をリセット（tasks,properties,handoverが正しい順序）
+                    const correctOrder = ['tasks', 'properties', 'handover'];
+                    const isOldOrder = JSON.stringify(saved) !== JSON.stringify(correctOrder);
+                    if (isOldOrder && saved.length === correctOrder.length) {
+                        localStorage.setItem('sectionOrder', JSON.stringify(correctOrder));
+                        return;
+                    }
+                    // 挨拶とGcalは固定、それ以降のセクションを並び替え
+                    const secs = sections();
+                    saved.forEach(name => {
+                        const el = secs.find(s => s.dataset.section === name);
+                        if (el) container.appendChild(el);
+                    });
+                } catch(e) {}
+            }
+            restoreSectionOrder();
+        }
+
+        init();
+        setupDragAndDrop();
+    </script>
+
+    <!-- ===== ツール詳細シート ===== -->
+    <div class="tool-sheet-overlay" id="toolSheetOverlay" onclick="closeToolSheet()"></div>
+    <div class="tool-sheet" id="toolSheet">
+        <div id="toolSheetContent"></div>
+    </div>
+</body>
+</html>

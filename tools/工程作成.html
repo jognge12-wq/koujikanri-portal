@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="../manifest.json">
   <title>工程作成</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -487,7 +490,7 @@ function calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi) {
 function goToDashboard() {
   const href = window.location.href;
   const base = href.substring(0, href.lastIndexOf('/') + 1);
-  window.location.replace('../dashboard.html?tab=tools');
+  window.location.replace('../ダッシュボード.html?tab=tools');
 }
 // ネイティブ戻るボタン（スワイプ含む）もダッシュボードへ
 history.pushState(null, '', window.location.href);

@@ -1,0 +1,30 @@
+{
+  "updatedAt": "2026-04-06 22:15",
+  "source": "Notion 全現場共通タスクDB (優先=YES, 完了=NO)",
+  "priorityTasks": [
+    {"id": 1, "notionPageId": "2f86ad8462218131be74c97b45b2cb6a", "title": "引渡しの実印持参の案内", "property": "箕浦Y様", "propertyNotionId": "2f86ad84622180dface2e782fee9d04d", "stage": "竣工立会い", "status": "red", "completed": false},
+    {"id": 2, "notionPageId": "2f86ad84622181c98973d9214e57521d", "title": "汚水桝の清掃の説明", "property": "箕浦Y様", "propertyNotionId": "2f86ad84622180dface2e782fee9d04d", "stage": "竣工立会い", "status": "red", "completed": false},
+    {"id": 3, "notionPageId": "2f86ad846221814fa43be5540e0ac084", "title": "雨水桝の清掃の説明", "property": "箕浦Y様", "propertyNotionId": "2f86ad84622180dface2e782fee9d04d", "stage": "竣工立会い", "status": "red", "completed": false},
+    {"id": 4, "notionPageId": "2f86ad8462218104a16bef3108028b55", "title": "建て方の近隣挨拶分の作成・持参", "property": "髙橋T・A様", "propertyNotionId": "2f86ad84622180f6a1ebd584c21a03d0", "stage": "基礎検査", "status": "red", "completed": false},
+    {"id": 5, "notionPageId": "2f86ad846221812295a7d1ff7cd818c4", "title": "防蟻パイプの本数計測・記録", "property": "髙橋T・A様", "propertyNotionId": "2f86ad84622180f6a1ebd584c21a03d0", "stage": "基礎検査", "status": "red", "completed": false},
+    {"id": 6, "notionPageId": "2f86ad8462218190806dd7e55d745597", "title": "基礎精算の依頼", "property": "髙橋T・A様", "propertyNotionId": "2f86ad84622180f6a1ebd584c21a03d0", "stage": "基礎検査", "status": "red", "completed": false},
+    {"id": 7, "notionPageId": "2f86ad84622181cba791c2d6127f3757", "title": "構造検査・構造立会いのスケジュール共有", "property": "髙橋T・A様", "propertyNotionId": "2f86ad84622180f6a1ebd584c21a03d0", "stage": "基礎検査", "status": "red", "completed": false},
+    {"id": 8, "notionPageId": "2f86ad8462218190ab51cd7055c49706", "title": "建て方の近隣挨拶分の作成・持参", "property": "藤本A様", "propertyNotionId": "2f86ad84622180ebabfedab3c920dcdb", "stage": "基礎検査", "status": "amber", "completed": false},
+    {"id": 9, "notionPageId": "2f86ad84622181bc879fcbe671f096ac", "title": "スラブ厚の計測・記録", "property": "藤本A様", "propertyNotionId": "2f86ad84622180ebabfedab3c920dcdb", "stage": "基礎検査", "status": "amber", "completed": false},
+    {"id": 10, "notionPageId": "2f86ad8462218139a5a0d04abaf98c9f", "title": "防蟻パイプの本数計測・記録", "property": "藤本A様", "propertyNotionId": "2f86ad84622180ebabfedab3c920dcdb", "stage": "基礎検査", "status": "amber", "completed": false},
+    {"id": 11, "notionPageId": "2f86ad84622181568010effddae56bba", "title": "建性②：構造検査日時の確認※申込みは生産事務が行う", "property": "藤本A様", "propertyNotionId": "2f86ad84622180ebabfedab3c920dcdb", "stage": "基礎検査", "status": "amber", "completed": false},
+    {"id": 12, "notionPageId": "2f86ad846221815ea9efdcd7ace479a6", "title": "安全日誌の記載", "property": "野田H様", "propertyNotionId": "2f86ad8462218055955afea896a7ec1c", "stage": "木完検査", "status": "green", "completed": false},
+    {"id": 13, "notionPageId": "2f86ad8462218179aaa4f06c322671c9", "title": "BCのPBビスピッチ確認・記録", "property": "野田H様", "propertyNotionId": "2f86ad8462218055955afea896a7ec1c", "stage": "木完検査", "status": "green", "completed": false},
+    {"id": 14, "notionPageId": "2f86ad84622181d3816ff1e2294de536", "title": "追加変更の覚書の有無の確認", "property": "野田H様", "propertyNotionId": "2f86ad8462218055955afea896a7ec1c", "stage": "木完検査", "status": "green", "completed": false},
+    {"id": 15, "notionPageId": "2f86ad84622181fa87c0f9ac8f89243b", "title": "図面提出", "property": "野田H様", "propertyNotionId": "2f86ad8462218055955afea896a7ec1c", "stage": "木完検査", "status": "green", "completed": false},
+    {"id": 16, "notionPageId": "2f86ad846221813eaea9e79cc56004df", "title": "実績入力：地縄立会い", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 17, "notionPageId": "2f86ad846221812099dee399d72778c6", "title": "立会いノートの伝言板アップ", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 18, "notionPageId": "2f86ad84622181f0b021cd88273ac0d7", "title": "施工計画説明の日時決定", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 19, "notionPageId": "2f86ad846221813fb46ff697d45a8258", "title": "立会い完了・施工計画説明日時の共有・カレンダー共有", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 20, "notionPageId": "2f86ad84622181859213fcb1961da45d", "title": "遣り方検査の日程依頼", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 21, "notionPageId": "2f86ad84622181329190de4fada39d87", "title": "引継ぎ会日時の依頼", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 22, "notionPageId": "2f86ad84622181e287fac2f12900e620", "title": "ショールームの予約", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地縄立会い", "status": "amber", "completed": false},
+    {"id": 23, "notionPageId": "2f86ad84622181fc87edeeeb5b34e06b", "title": "鎮め物を業者へ渡す", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地鎮祭", "status": "amber", "completed": false},
+    {"id": 24, "notionPageId": "2f86ad846221810a8ce2e2cfbb9f1432", "title": "奉献酒の用意", "property": "大山S・M様", "propertyNotionId": "2f86ad8462218068bd9ff57eb6477e46", "stage": "地鎮祭", "status": "amber", "completed": false}
+  ]
+}
