@@ -1589,24 +1589,25 @@
                 padding: 12px;
             }
 
-            /* スマホ: 写真上段 + 日付/コメント左右2列レイアウト */
+            /* スマホ: 画像上に下部2カラムオーバーレイ */
             .greeting-card {
-                background-image: none;
-                min-height: auto;
-                padding: 0;
-                overflow: hidden;
+                background-image: url('assets/treeing.png');
+                min-height: 180px;
+                padding: 0 !important;
             }
 
             .greeting-card::before {
-                display: none;
+                display: block;
+                background: linear-gradient(
+                    to top,
+                    rgba(0,0,0,0.80) 0%,
+                    rgba(0,0,0,0.55) 40%,
+                    rgba(0,0,0,0.00) 68%
+                );
             }
 
             .greeting-img-mobile {
-                display: block;
-                width: 100%;
-                height: 150px;
-                object-fit: cover;
-                object-position: center 8%;
+                display: none;
             }
 
             .greeting-content {
@@ -1625,49 +1626,53 @@
                 flex: 1;
                 border-top: none;
                 padding-top: 0;
-                gap: 7px;
+                gap: 5px;
                 justify-content: center;
             }
 
-            /* テキストカラー: 白背景のため暗色に */
+            /* テキストカラー: 暗いオーバーレイ上なので白 */
             .date-main {
-                font-size: 15px;
+                font-size: 12px;
                 letter-spacing: 0px;
-                color: var(--text1);
-                text-shadow: none;
+                color: #ffffff;
+                text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+                white-space: nowrap;
             }
 
             .clock-mini {
-                font-size: 15px;
-                color: var(--text2);
-                text-shadow: none;
+                font-size: 12px;
+                color: rgba(255,255,255,0.92);
+                text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+                white-space: nowrap;
             }
 
             .rokuyo-tag {
                 font-size: 11px;
                 padding: 3px 9px;
-                background-color: var(--primary-l);
+                background-color: rgba(255,255,255,0.82);
                 color: var(--primary);
             }
 
             .rokuyo-tag.caution {
-                background-color: var(--red-l);
-                color: var(--red);
+                background-color: rgba(220,38,38,0.9);
+                color: #ffffff;
             }
 
             .greeting-comment {
                 font-size: 11px;
-                color: var(--text2);
-                text-shadow: none;
+                color: rgba(255,255,255,0.95);
+                text-shadow: 0 1px 4px rgba(0,0,0,0.6);
             }
 
             .greeting-badge {
-                background-color: var(--primary-l);
+                background-color: rgba(255,255,255,0.88);
                 color: var(--primary);
             }
 
+            /* バッジ横並び */
             .greeting-badge-row {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                gap: 4px;
             }
 
             .grid-2col {
