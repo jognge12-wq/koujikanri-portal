@@ -2,12 +2,17 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>施工管理ポータル</title>
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="施工管理">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <title>施工管理ポータル</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
@@ -277,10 +282,12 @@
         }
 
         .main-content {
-            margin-left: 0;
+            margin-left: auto;
+            margin-right: auto;
             margin-top: 52px;
             margin-bottom: 60px;
             padding: 16px;
+            max-width: 1000px;
             transition: margin-left 0.2s ease;
         }
 
@@ -390,17 +397,19 @@
         .card-head {
             display: flex;
             align-items: center;
-            padding: 13px 0;
+            padding: 11px 0 11px 10px;
             margin-bottom: 12px;
             border-bottom: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
             gap: 6px;
         }
 
         .card-title {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--text1);
             flex: 1;
+            letter-spacing: 0.2px;
         }
 
         .card-action {
@@ -415,45 +424,61 @@
         }
 
         .greeting-card {
-            background: linear-gradient(135deg, var(--primary) 0%, #055430 100%);
+            background-image: url('assets/treeing.png');
+            background-size: cover;
+            background-position: center 8%;
             position: relative;
             overflow: hidden;
             color: var(--surface);
             margin-bottom: 16px;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
+        /* 右寄りテキストエリアを暗くするグラデーションオーバーレイ */
         .greeting-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                polygon(0 0, 20% 10%, 30% 5%, 50% 15%, 70% 8%, 85% 20%, 100% 10%, 100% 0),
-                polygon(0 20%, 15% 25%, 35% 18%, 55% 28%, 75% 22%, 95% 30%, 100% 25%, 100% 20%);
-            background-size: 100% 40%;
-            background-repeat: no-repeat;
-            opacity: 0.08;
+            inset: 0;
+            /* 左40%は顔/画像をクリアに、右35%に向けて濃く */
+            background: linear-gradient(
+                to left,
+                rgba(0, 0, 0, 0.68) 0%,
+                rgba(0, 0, 0, 0.60) 22%,
+                rgba(0, 0, 0, 0.28) 42%,
+                rgba(0, 0, 0, 0.00) 62%
+            );
             pointer-events: none;
+            z-index: 0;
         }
 
         .greeting-content {
             position: relative;
             z-index: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            padding-left: 65%;
         }
 
         .greeting-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
             margin-bottom: 14px;
         }
 
         .date-area {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
+        }
+
+        .date-main-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
         }
 
         .date-main {
@@ -461,6 +486,7 @@
             font-weight: 600;
             color: #ffffff;
             letter-spacing: 0.5px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
         }
 
         .date-rokuyo {
@@ -470,13 +496,16 @@
         }
 
         .rokuyo-tag {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background-color: rgba(255,255,255,0.85);
+            padding: 3px 9px;
+            border-radius: 5px;
+            background-color: rgba(255,255,255,0.82);
             color: #006837;
             letter-spacing: 0.5px;
+            text-shadow: none;
+            display: inline-flex;
+            align-items: center;
         }
 
         .rokuyo-tag.caution {
@@ -486,41 +515,61 @@
 
         .clock-mini {
             font-family: 'DM Mono', monospace;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 500;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255,255,255,0.92);
             letter-spacing: 0px;
             line-height: 1;
             padding-top: 4px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
         }
 
         .greeting-bottom {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-top: 1px solid rgba(255,255,255,0.12);
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.18);
             padding-top: 12px;
+        }
+
+        .greeting-badge-row {
+            display: flex;
+            gap: 6px;
         }
 
         .greeting-comment {
             font-size: 12.5px;
             font-weight: 400;
-            color: rgba(255,255,255,0.92);
+            color: rgba(255,255,255,0.95);
             line-height: 1.5;
             flex: 1;
             min-width: 0;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.6);
         }
 
         .greeting-badge {
-            background-color: rgba(255, 255, 255, 0.85);
+            background-color: rgba(255, 255, 255, 0.88);
             color: #006837;
-            padding: 4px 12px;
-            border-radius: 6px;
+            padding: 3px 9px;
+            border-radius: 5px;
             font-size: 11px;
             font-weight: 600;
             white-space: nowrap;
-            margin-left: 12px;
-            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .greeting-badge .badge-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* モバイル用写真要素（PCでは非表示） */
+        .greeting-img-mobile {
+            display: none;
         }
 
         .schedule-section {
@@ -557,6 +606,16 @@
             color: var(--text2);
         }
 
+        .schedule-day-tag.yesterday {
+            background-color: var(--border);
+            color: var(--text3);
+            font-weight: 500;
+        }
+
+        .schedule-section.past-day {
+            opacity: 0.45;
+        }
+
         .sched-item {
             background-color: var(--surface2);
             border: 1px solid var(--border);
@@ -575,21 +634,21 @@
 
         .sched-time {
             font-family: 'DM Mono', monospace;
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text2);
             margin-bottom: 2px;
             font-weight: 500;
         }
 
         .sched-title {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text1);
             margin-bottom: 2px;
         }
 
         .sched-meta {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text2);
         }
 
@@ -599,7 +658,7 @@
             border-left: 5px solid #d50000;
             border-radius: 0 8px 8px 0;
             padding: 8px 10px 8px 12px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             color: var(--text1);
         }
@@ -611,10 +670,56 @@
             background-color: var(--surface2);
             border: 1px solid var(--border);
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             cursor: pointer;
             transition: background-color 0.12s ease;
             border-left: 3px solid;
+        }
+
+        .property-item.compact {
+            padding: 8px 10px;
+        }
+
+        .property-name-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 3px;
+        }
+
+        .property-compact-meta {
+            font-size: 11px;
+            color: var(--text3);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .property-compact-meta strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .property-compact-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 3px;
+        }
+
+        .property-compact-pct {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text3);
+            white-space: nowrap;
+        }
+
+        .property-compact-sub {
+            font-size: 10px;
+            color: var(--text3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .property-item:hover {
@@ -627,14 +732,14 @@
         }
 
         .property-name {
-            font-size: 12.5px;
+            font-size: 13.5px;
             font-weight: 500;
             color: var(--text1);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .property-location-inline {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 400;
             color: var(--text2);
             margin-left: 4px;
@@ -1473,9 +1578,111 @@
             font-weight: 500;
         }
 
+        /* PC: グリーティングカードの高さ */
+        @media (min-width: 769px) {
+            .greeting-card {
+                min-height: 260px;
+                max-height: 300px;
+                background-position: center 8%;
+            }
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 padding: 12px;
+            }
+
+            /* スマホ: 画像上に下部2カラムオーバーレイ */
+            .greeting-card {
+                background-image: url('assets/treeing.png');
+                min-height: 180px;
+                padding: 0 !important;
+            }
+
+            .greeting-card::before {
+                display: block;
+                background: linear-gradient(
+                    to top,
+                    rgba(0,0,0,0.80) 0%,
+                    rgba(0,0,0,0.55) 40%,
+                    rgba(0,0,0,0.00) 68%
+                );
+            }
+
+            .greeting-img-mobile {
+                display: none;
+            }
+
+            .greeting-content {
+                flex: 0 0 auto;
+                padding: 10px 12px 12px;
+                padding-left: 12px;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .greeting-top {
+                flex: 1;
+                min-width: 0;
+                margin-bottom: 0;
+            }
+
+            .greeting-bottom {
+                flex: 1;
+                min-width: 0;
+                border-top: none;
+                padding-top: 0;
+                gap: 5px;
+                justify-content: center;
+            }
+
+            /* テキストカラー: 暗いオーバーレイ上なので白 */
+            .date-main {
+                font-size: 12px;
+                letter-spacing: 0px;
+                color: #ffffff;
+                text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+                white-space: nowrap;
+            }
+
+            .clock-mini {
+                font-size: 12px;
+                color: rgba(255,255,255,0.92);
+                text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+                white-space: nowrap;
+            }
+
+            .rokuyo-tag {
+                font-size: 11px;
+                padding: 3px 9px;
+                background-color: rgba(255,255,255,0.82);
+                color: var(--primary);
+            }
+
+            .rokuyo-tag.caution {
+                background-color: rgba(220,38,38,0.9);
+                color: #ffffff;
+            }
+
+            .greeting-comment {
+                font-size: 11px;
+                color: rgba(255,255,255,0.95);
+                text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+            }
+
+            .greeting-badge {
+                background-color: rgba(255,255,255,0.88);
+                color: var(--primary);
+            }
+
+            /* バッジ横並び */
+            .greeting-badge-row {
+                flex-wrap: nowrap;
+                gap: 4px;
             }
 
             .grid-2col {
@@ -1546,16 +1753,17 @@
                 padding: 12px;
             }
 
+            /* グリーティング2カラム内は12pxに統一（18/16pxの上書きを解除） */
             .date-main {
-                font-size: 18px;
+                font-size: 12px;
             }
 
             .clock-mini {
-                font-size: 16px;
+                font-size: 12px;
             }
 
             .card-title {
-                font-size: 11px;
+                font-size: 12px;
             }
         }
 
@@ -1851,6 +2059,78 @@
 </head>
 <body>
 
+<!-- ============================================================
+     パスワード保護オーバーレイ
+     有効化方法: PW_HASH に simpleHash('パスワード') の値を設定する
+     確認方法: ブラウザコンソールで simpleHash('test1234') と入力
+     空のまま（PW_HASH = ''）だとパスワード不要で開ける
+     ============================================================ -->
+<div id="passwordOverlay" style="position:fixed;inset:0;background:#f4f6f9;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',sans-serif;">
+    <div style="background:#fff;border-radius:16px;padding:40px 32px;width:min(320px,88vw);text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+        <div style="width:52px;height:52px;background:#006837;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <p style="font-size:15px;font-weight:600;color:#111827;margin-bottom:4px;">施工管理ポータル</p>
+        <p style="font-size:11px;color:#9ca3af;margin-bottom:24px;">パスワードを入力してください</p>
+        <input id="pwInput" type="password" placeholder="パスワード" autocomplete="off"
+            style="width:100%;padding:11px 14px;border:1.5px solid #e8eaed;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans JP',sans-serif;transition:border-color 0.2s;"
+            onkeydown="if(event.key==='Enter')checkPassword()"
+            onfocus="this.style.borderColor='#006837'" onblur="this.style.borderColor='#e8eaed'">
+        <div id="pwError" style="color:#dc2626;font-size:11px;min-height:18px;margin-bottom:10px;"></div>
+        <button onclick="checkPassword()"
+            style="width:100%;padding:12px;background:#006837;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:opacity 0.15s;"
+            onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">ログイン</button>
+    </div>
+</div>
+<script>
+    // ── パスワードハッシュ設定 ────────────────────────────────────────
+    // 空文字（''）= パスワード保護無効（ローカル利用・テスト中はこのまま）
+    // 有効化: simpleHash('使いたいパスワード') をコンソールで確認 → 値をここに貼る
+    const PW_HASH = '';
+
+    // ── ハッシュ関数（簡易・可逆ではないが本格暗号ではない） ──────────
+    function simpleHash(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) h = (((h << 5) + h) ^ s.charCodeAt(i)) & 0xffffffff;
+        return (h >>> 0).toString(16).padStart(8, '0');
+    }
+
+    // ── パスワード確認ボタン処理 ─────────────────────────────────────
+    function checkPassword() {
+        const input  = document.getElementById('pwInput');
+        const errEl  = document.getElementById('pwError');
+        const overlay = document.getElementById('passwordOverlay');
+        if (!input || !overlay) return;
+        if (!input.value) { errEl.textContent = 'パスワードを入力してください'; return; }
+        if (simpleHash(input.value) === PW_HASH) {
+            sessionStorage.setItem('pwAuth', PW_HASH);
+            overlay.style.transition = 'opacity 0.3s';
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 320);
+        } else {
+            errEl.textContent = 'パスワードが違います';
+            input.value = '';
+            input.style.borderColor = '#dc2626';
+            input.focus();
+            setTimeout(() => { input.style.borderColor = '#e8eaed'; errEl.textContent = ''; }, 2200);
+        }
+    }
+
+    // ── ページ読み込み時: 認証済みならオーバーレイをスキップ ─────────
+    (function() {
+        const overlay = document.getElementById('passwordOverlay');
+        if (!PW_HASH || sessionStorage.getItem('pwAuth') === PW_HASH) {
+            if (overlay) overlay.style.display = 'none';
+            return;
+        }
+        setTimeout(() => {
+            const inp = document.getElementById('pwInput');
+            if (inp) inp.focus();
+        }, 150);
+    })();
+</script>
+
+
     <!-- ===== パスワードオーバーレイ ===== -->
     <div id="pw-overlay">
         <div class="pw-box">
@@ -1866,8 +2146,7 @@
     </div>
     <script>
         (function() {
-            const authExpiry = localStorage.getItem('portal_auth_expiry');
-            if (authExpiry && Date.now() < parseInt(authExpiry)) {
+            if (sessionStorage.getItem('portal_auth') === 'ok') {
                 document.getElementById('pw-overlay').classList.add('hidden');
             }
             document.getElementById('pw-input').addEventListener('keydown', function(e) {
@@ -1879,7 +2158,7 @@
         function checkPassword() {
             const input = document.getElementById('pw-input').value;
             if (input === '4022') {
-                localStorage.setItem('portal_auth_expiry', Date.now() + 7 * 24 * 60 * 60 * 1000);
+                sessionStorage.setItem('portal_auth', 'ok');
                 document.getElementById('pw-overlay').classList.add('hidden');
             } else {
                 const el = document.getElementById('pw-input');
@@ -1964,11 +2243,11 @@
         </div>
         <div class="drawer-separator"></div>
         <div class="drawer-section-label">Cowork ツール</div>
-        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/検査依頼.html')">
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/inspection.html')">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <span>検査依頼</span>
         </div>
-        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/工程作成.html')">
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/schedule.html')">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="10" x2="12" y2="22"/></svg>
             <span>工程作成</span>
         </div>
@@ -1976,7 +2255,7 @@
             <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <span>Notion物件登録</span>
         </div>
-        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/支払い管理.html')">
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/payment.html')">
             <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
             <span>支払い管理</span>
         </div>
@@ -2031,17 +2310,20 @@
     <main class="main-content mobile" id="mainContent">
 
         <div class="card greeting-card">
+            <img class="greeting-img-mobile" src="assets/treeing.png" alt="">
             <div class="greeting-content">
                 <div class="greeting-top">
                     <div class="date-area">
-                        <div class="date-main" id="dateMain">2026年4月4日（土）</div>
+                        <div class="date-main-row">
+                            <div class="date-main" id="dateMain">2026年4月4日（土）</div>
+                            <div class="clock-mini" id="clockMini">00:00</div>
+                        </div>
                         <div class="date-rokuyo" id="dateRokuyo"></div>
                     </div>
-                    <div class="clock-mini" id="clockMini">00:00</div>
                 </div>
                 <div class="greeting-bottom">
                     <div class="greeting-comment" id="greetingComment"></div>
-                    <span class="greeting-badge" id="greetingBadge">仕掛り 11件 / 着工前 12件</span>
+                    <div class="greeting-badge-row" id="greetingBadgeRow"></div>
                 </div>
             </div>
         </div>
@@ -2215,153 +2497,170 @@
             return {pct, elapsed: elapsedDays, remaining: remainingDays};
         }
 
+        // ============================================================
+        // GAS Web App URL（リアルタイム取得用）
+        // 工程作成・物件登録GASを「新バージョン」でデプロイしたURLを貼る
+        // 空のままでも動作します（バックアップデータを使用）
+        // ============================================================
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby2P2A0qi1J2As_to00a2ZE6YMg5kX-IPPJmBVGeZCh6bkSnYUP-4jvt5b2-4nrJrR6Qw/exec';
+
         let properties = [
             {id: 1, name: '箕浦Y様', location: '大垣市', shinchoku: '竣工',
              notionId: '2f86ad84622180dface2e782fee9d04d',
              dates: {着工: '2025/12/03', 建方: '2026/01/22', 引渡: '2026/04/13'},
              checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
-            {id: 2, name: '藤本A様', location: '本巣市', shinchoku: '工事中',
-             notionId: '2f86ad84622180ebabfedab3c920dcdb',
-             dates: {着工: '2026/03/06', 建方: '2026/04/15', 引渡: '2026/07/04'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 3, name: '髙橋T・A様', location: '本巣市', shinchoku: '工事中',
-             notionId: '2f86ad84622180f6a1ebd584c21a03d0',
-             dates: {着工: '2026/03/09', 建方: '2026/04/13', 引渡: '2026/07/27'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
-            {id: 4, name: '野田H様', location: '関市', shinchoku: '工事中',
-             notionId: '2f86ad8462218055955afea896a7ec1c',
-             dates: {着工: '2025/12/20', 建方: '2026/02/17', 引渡: '2026/05/30'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
-            {id: 5, name: '入野E様', location: '羽島市', shinchoku: '引渡し',
+            {id: 2, name: '入野E様', location: '羽島市', shinchoku: '引渡し',
              notionId: '2f86ad84622180dd9807d88c1e9934c2',
              dates: {着工: '2025/10/18', 建方: '2025/11/18', 引渡: '2026/02/14'},
              checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
-            {id: 6, name: '野尻K様', location: '岐阜市', shinchoku: '竣工',
-             notionId: '2f86ad846221804f9467ce44c37ef610',
-             dates: {着工: '2025/11/01', 建方: '2026/01/16', 引渡: '2026/05/02'},
-             checks: {棟札: true, 改良: true, 外構: true, 先外: false, 鎮物: false}},
-            {id: 7, name: '竹中I様', location: '大垣市', shinchoku: '引渡し',
-             notionId: '2f86ad84622180af82acd1483f0bdee4',
-             dates: {着工: '2025/11/01', 建方: '2025/12/18', 引渡: '2026/03/29'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}},
-            {id: 8, name: '柴田S・S様', location: '岐阜市', shinchoku: '竣工',
+            {id: 3, name: '柴田S・S様', location: '岐阜市', shinchoku: '竣工',
              notionId: '2f86ad84622180bdb338d025d925e96f',
              dates: {着工: '2025/12/11', 建方: '2026/01/24', 引渡: '2026/04/25'},
              checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 9, name: '小林Y・T様', location: '瑞穂市', shinchoku: '竣工',
+            {id: 4, name: '野尻K様', location: '岐阜市', shinchoku: '竣工',
+             notionId: '2f86ad846221804f9467ce44c37ef610',
+             dates: {着工: '2025/11/01', 建方: '2026/01/16', 引渡: '2026/05/02'},
+             checks: {棟札: true, 改良: true, 外構: true, 先外: false, 鎮物: false}},
+            {id: 5, name: '竹中I様', location: '大垣市', shinchoku: '引渡し',
+             notionId: '2f86ad84622180af82acd1483f0bdee4',
+             dates: {着工: '2025/11/01', 建方: '2025/12/18', 引渡: '2026/03/29'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}},
+            {id: 6, name: '山田H様', location: '瑞穂市', shinchoku: '工事中',
+             notionId: '2f86ad84622180dd98c1f4de9ae7019c',
+             dates: {着工: '2026/03/16', 建方: '2026/04/27', 引渡: '2026/07/25'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
+            {id: 7, name: '藤本A様', location: '本巣市', shinchoku: '工事中',
+             notionId: '2f86ad84622180ebabfedab3c920dcdb',
+             dates: {着工: '2026/03/06', 建方: '2026/04/15', 引渡: '2026/07/03'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 8, name: '小林Y・T様', location: '瑞穂市', shinchoku: '竣工',
              notionId: '2f86ad846221809f83d6cd52ea6259f6',
              dates: {着工: '2025/11/21', 建方: '2026/01/15', 引渡: '2026/05/23'},
              checks: {棟札: true, 改良: true, 外構: true, 先外: true, 鎮物: true}},
-            {id: 10, name: '木股C様', location: '養老町', shinchoku: '工事中',
+            {id: 9, name: '木股C様', location: '養老町', shinchoku: '工事中',
              notionId: '2f86ad846221806e9ab7fe484a153fa0',
              dates: {着工: '2026/01/21', 建方: '2026/02/27', 引渡: '2026/06/20'},
              checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
+            {id: 10, name: '髙橋T・A様', location: '本巣市', shinchoku: '工事中',
+             notionId: '2f86ad84622180f6a1ebd584c21a03d0',
+             dates: {着工: '2026/03/09', 建方: '2026/04/13', 引渡: '2026/07/27'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
             {id: 11, name: '北角O様', location: '池田町', shinchoku: '引渡し',
              notionId: '2f86ad8462218018bb0dc152838eda87',
              dates: {着工: '2025/10/27', 建方: '2025/12/05', 引渡: '2026/02/21'},
              checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 12, name: '山田H様', location: '瑞穂市', shinchoku: '工事中',
-             notionId: '2f86ad84622180dd98c1f4de9ae7019c',
-             dates: {着工: '2026/03/16', 建方: '2026/05/09', 引渡: '2026/07/25'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
-            {id: 13, name: '森瀬S・M様', location: '各務原市', shinchoku: '工事中',
+            {id: 12, name: '森瀬S・M様', location: '各務原市', shinchoku: '工事中',
              notionId: '2f86ad846221802cb583ff2d9851900d',
              dates: {着工: '2026/01/05', 建方: '2026/02/13', 引渡: '2026/05/31'},
-             checks: {棟札: false, 改良: false, 外構: true, 先外: true, 鎮物: false}}
+             checks: {棟札: false, 改良: false, 外構: true, 先外: true, 鎮物: false}},
+            {id: 13, name: '野田H様', location: '関市', shinchoku: '工事中',
+             notionId: '2f86ad8462218055955afea896a7ec1c',
+             dates: {着工: '2025/12/20', 建方: '2026/02/17', 引渡: '2026/05/30'},
+             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
+            {id: 14, name: '川地M・H様', location: '岐阜市', shinchoku: '工事中',
+             notionId: '2f86ad846221806094e2da63f463a518',
+             dates: {着工: '2026/02/05', 建方: '2026/03/13', 引渡: '2026/06/06'},
+             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}}
         ];
 
         // 着工前物件データ
         let preconProperties = [
             {id: 101, name: '瓜田N様', location: '岐阜市', shinchoku: '着工前',
              notionId: '2fd6ad846221802e81defa915614561e',
-             dates: {着工: '2026/06/29', 建方: '2026/09/01', 引渡: '2026/11/25'},
+             dates: {着工: '2026/06/29', 建方: '2026/08/06', 引渡: '2026/11/25'},
              checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 102, name: '三谷T様', location: '大垣市', shinchoku: '着工前',
-             notionId: '31e6ad8462218047b1c7d3944f09b224',
-             dates: {着工: '2026/08/01', 建方: '2026/09/08', 引渡: '2027/04/03'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 103, name: '藤本S様用', location: '大垣市', shinchoku: '着工前',
+            {id: 102, name: '藤本S様用', location: '大垣市', shinchoku: '着工前',
              notionId: '31e6ad84622180e19007dc9c226a7ad1',
              dates: {着工: '2026/06/01', 建方: '2026/07/28', 引渡: '2027/04/03'},
              checks: {棟札: false, 改良: true, 外構: true, 先外: true, 鎮物: false}},
-            {id: 104, name: '伊藤N様', location: '輪之内町', shinchoku: '着工前',
-             notionId: '2f86ad84622180f2a902f7df85f591c5',
-             dates: {着工: '2026/05/22', 建方: '2026/07/09', 引渡: '2026/09/29'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 105, name: '浅野H様', location: '輪之内町', shinchoku: '着工前',
-             notionId: '31e6ad846221808d95e0ede31bec557b',
-             dates: {着工: '2026/10/21', 建方: '2026/12/01', 引渡: '2027/03/13'},
-             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
-            {id: 106, name: '浅井T様', location: '大垣市', shinchoku: '着工前',
-             notionId: '31e6ad84622180779085db1278392672',
-             dates: {着工: '2026/08/01', 建方: '2026/09/24', 引渡: '2026/12/20'},
-             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
-            {id: 107, name: '加藤S様', location: '岐阜市', shinchoku: '着工前',
-             notionId: '31e6ad84622180c3b537c8396c7b4c9c',
-             dates: {着工: '2026/05/21', 建方: '2026/08/06', 引渡: '2026/11/07'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
-            {id: 108, name: '柳瀬S・M様', location: '垂井町', shinchoku: '着工前',
-             notionId: '31e6ad846221804dbb67fe34629ffb79',
-             dates: {着工: '2026/06/01', 建方: '2026/07/09', 引渡: '2026/10/31'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 109, name: '長澤K様', location: '関ヶ原町', shinchoku: '着工前',
+            {id: 103, name: '長澤K様', location: '関ヶ原町', shinchoku: '着工前',
              notionId: '2f86ad846221805a8fb5ed0d20874e3e',
              dates: {着工: '2026/05/13', 建方: '2026/06/25', 引渡: '2026/09/25'},
              checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
-            {id: 110, name: '佐藤Y様', location: '養老町', shinchoku: '着工前',
+            {id: 104, name: '三谷T様', location: '大垣市', shinchoku: '着工前',
+             notionId: '31e6ad8462218047b1c7d3944f09b224',
+             dates: {着工: '2026/08/01', 建方: '2026/09/08', 引渡: '2027/04/03'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 105, name: '浅井T様', location: '大垣市', shinchoku: '着工前',
+             notionId: '31e6ad84622180779085db1278392672',
+             dates: {着工: '2026/08/01', 建方: '2026/09/24', 引渡: '2026/12/20'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
+            {id: 106, name: '伊藤N様', location: '輪之内町', shinchoku: '着工前',
+             notionId: '2f86ad84622180f2a902f7df85f591c5',
+             dates: {着工: '2026/05/22', 建方: '2026/07/09', 引渡: '2026/09/29'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 107, name: '柳瀬S・M様', location: '垂井町', shinchoku: '着工前',
+             notionId: '31e6ad846221804dbb67fe34629ffb79',
+             dates: {着工: '2026/06/01', 建方: '2026/07/09', 引渡: '2026/10/31'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
+            {id: 108, name: '浅野H様', location: '輪之内町', shinchoku: '着工前',
+             notionId: '31e6ad846221808d95e0ede31bec557b',
+             dates: {着工: '2026/10/21', 建方: '2026/12/01', 引渡: '2027/03/13'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
+            {id: 109, name: '佐藤Y様', location: '養老町', shinchoku: '着工前',
              notionId: '3006ad8462218021b8fee65422781533',
-             dates: {着工: '2026/05/15', 建方: '2026/06/30', 引渡: '2026/09/25'},
+             dates: {着工: '2026/05/15', 建方: '2026/06/29', 引渡: '2026/09/25'},
+             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
+            {id: 110, name: '加藤S様', location: '岐阜市', shinchoku: '着工前',
+             notionId: '31e6ad84622180c3b537c8396c7b4c9c',
+             dates: {着工: '2026/05/21', 建方: '2026/07/06', 引渡: '2026/11/07'},
              checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}}
         ];
 
         // 優先タスク（Notionビュー「全現場共通タスクのビュー」から取得）
         // フィルタ: 優先=YES, 完了=NO / 物件名でグループ化
         // priorityTasksUpdatedAt と priorityTasks は scheduled task "sync-priority-tasks" が自動更新する
-        let priorityTasksUpdatedAt = '2026-04-06 23:13';
+        let priorityTasksUpdatedAt = '2026-04-07 06:50';
         let priorityTasks = [
-            // 箕浦Y様（竣工立会い）引渡し2026-04-13まで7日→red
-            {id: 1, notionPageId: '2f86ad8462218131be74c97b45b2cb6a', title: '引渡しの実印持参の案内', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 2, notionPageId: '2f86ad84622181c98973d9214e57521d', title: '汚水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 3, notionPageId: '2f86ad846221814fa43be5540e0ac084', title: '雨水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            // 髙橋T・A様（工事中：基礎検査）建て方2026-04-13まで7日→red
-            {id: 4, notionPageId: '2f86ad8462218104a16bef3108028b55', title: '建て方の近隣挨拶分の作成・持参', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 5, notionPageId: '2f86ad846221812295a7d1ff7cd818c4', title: '防蟻パイプの本数計測・記録', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 6, notionPageId: '2f86ad8462218190806dd7e55d745597', title: '基礎精算の依頼', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 7, notionPageId: '2f86ad84622181cba791c2d6127f3757', title: '構造検査・構造立会いのスケジュール共有', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            // 藤本A様（工事中：基礎検査）建て方2026-04-15まで9日→amber
-            {id: 8, notionPageId: '2f86ad8462218190ab51cd7055c49706', title: '建て方の近隣挨拶分の作成・持参', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 9, notionPageId: '2f86ad84622181bc879fcbe671f096ac', title: 'スラブ厚の計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 10, notionPageId: '2f86ad8462218139a5a0d04abaf98c9f', title: '防蟻パイプの本数計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 11, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            // 野田H様（工事中：木完検査）引渡し2026-05-30まで54日→green
-            {id: 12, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 13, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 14, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 15, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            // 大山S・M様（着工前：地縄立会い・地鎮祭）本体着工2026-04-28まで22日→amber
-            {id: 16, notionPageId: '2f86ad846221813eaea9e79cc56004df', title: '実績入力：地縄立会い', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 17, notionPageId: '2f86ad846221812099dee399d72778c6', title: '立会いノートの伝言板アップ', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 18, notionPageId: '2f86ad84622181f0b021cd88273ac0d7', title: '施工計画説明の日時決定', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 19, notionPageId: '2f86ad846221813fb46ff697d45a8258', title: '立会い完了・施工計画説明日時の共有・カレンダー共有', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 20, notionPageId: '2f86ad84622181859213fcb1961da45d', title: '遣り方検査の日程依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 21, notionPageId: '2f86ad84622181329190de4fada39d87', title: '引継ぎ会日時の依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 22, notionPageId: '2f86ad84622181e287fac2f12900e620', title: 'ショールームの予約', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'amber', completed: false},
-            {id: 23, notionPageId: '2f86ad84622181fc87edeeeb5b34e06b', title: '鎮め物を業者へ渡す', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'amber', completed: false},
-            {id: 24, notionPageId: '2f86ad846221810a8ce2e2cfbb9f1432', title: '奉献酒の用意', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'amber', completed: false}
+            // 箕浦Y様（竣工立会い）引渡し2026-04-13まで6日→red ※2026-04-07 06:50時点
+            {id: 1, notionPageId: '2f86ad84622181879d1cf11782ba4721', title: '災害用スリーブの説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 2, notionPageId: '2f86ad8462218131be74c97b45b2cb6a', title: '引渡しの実印持参の案内', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 3, notionPageId: '2f86ad84622181c98973d9214e57521d', title: '汚水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 4, notionPageId: '2f86ad846221814fa43be5540e0ac084', title: '雨水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            {id: 5, notionPageId: '2f86ad84622181fa8336e11809ae47f6', title: '立会い完了の報告', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
+            // 髙橋T・A様（工事中：基礎検査）建て方2026-04-13まで6日→red
+            {id: 6, notionPageId: '2f86ad8462218104a16bef3108028b55', title: '建て方の近隣挨拶分の作成・持参', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 7, notionPageId: '2f86ad846221812295a7d1ff7cd818c4', title: '防蟻パイプの本数計測・記録', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 8, notionPageId: '2f86ad8462218190806dd7e55d745597', title: '基礎精算の依頼', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            {id: 9, notionPageId: '2f86ad84622181cba791c2d6127f3757', title: '構造検査・構造立会いのスケジュール共有', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
+            // 藤本A様（工事中：基礎検査）建て方2026-04-15まで8日→amber
+            {id: 10, notionPageId: '2f86ad8462218190ab51cd7055c49706', title: '建て方の近隣挨拶分の作成・持参', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 11, notionPageId: '2f86ad84622181bc879fcbe671f096ac', title: 'スラブ厚の計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 12, notionPageId: '2f86ad8462218139a5a0d04abaf98c9f', title: '防蟻パイプの本数計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            {id: 13, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            // 野田H様（工事中：木完検査）引渡し2026-05-30まで53日→green
+            {id: 14, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 15, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 16, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 17, notionPageId: '2f86ad8462218116b63cd0709fcec20d', title: '実績入力：足場解体', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 18, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            // 大山S・M様（着工前：地縄立会い→地鎮祭フェーズ）着工2026-04-28まで21日→green
+            {id: 19, notionPageId: '2f86ad846221810a8ce2e2cfbb9f1432', title: '奉献酒の用意', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
+            {id: 20, notionPageId: '2f86ad84622181fc87edeeeb5b34e06b', title: '鎮め物を業者へ渡す', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
+            {id: 21, notionPageId: '2f86ad846221812099dee399d72778c6', title: '立会いノートの伝言板アップ', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 22, notionPageId: '2f86ad84622181329190de4fada39d87', title: '引継ぎ会日時の依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 23, notionPageId: '2f86ad846221813fb46ff697d45a8258', title: '立会い完了・施工計画説明日時の共有・カレンダー共有', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 24, notionPageId: '2f86ad84622181f0b021cd88273ac0d7', title: '施工計画説明の日時決定', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 25, notionPageId: '2f86ad84622181859213fcb1961da45d', title: '遣り方検査の日程依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 26, notionPageId: '2f86ad846221813eaea9e79cc56004df', title: '実績入力：地縄立会い', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 27, notionPageId: '2f86ad84622181e287fac2f12900e620', title: 'ショールームの予約', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false}
         ];
 
         const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
         // Google Tasks（Google ToDoから取得。ルーティン以外のイレギュラータスク）
         // googleTasksUpdatedAt と googleTasks は scheduled task で自動更新予定
-        const googleTasksUpdatedAt = '2026-04-05 15:00';
+        const googleTasksUpdatedAt = '2026-04-07 07:03';
 
         // Googleカレンダー更新時刻（スケジュールタスクが自動更新）
-        const gcalUpdatedAt = '2026-04-05 14:01';
+        const gcalUpdatedAt = '2026-04-07 06:49';
         const googleTasks = [
             {title: '竹山様邸図面チェック', due: '2026-04-04'},
+            {title: '竹山様邸砕石追加見積もりの提示', due: '2026-04-07', deadline: '2026-04-11'},
+            {title: '川地様邸ニッチクロス変更の朱書と指示', due: '2026-04-07', deadline: '2026-04-07'},
+            {title: '柴田様邸南面マモラー横の屋根の浮き確認', due: '2026-04-07', deadline: '2026-04-10'},
             {title: '小林様邸宅配ボックス納品連絡', due: '2026-04-10', deadline: '2026-04-18'},
-            {title: '竹中様邸外構追加発注', due: '2026-04-11', deadline: '2026-04-17'},
+            {title: '竹中様邸外構追加発注※土肥さんから日時指定有り', due: '2026-04-11', deadline: '2026-04-17'},
             {title: '大山様邸予算依頼', due: '2026-04-16'},
             {title: '大井様邸予算依頼', due: '2026-04-16'},
             {title: '北角様邸入居後訪問LINE', due: '2026-04-18'},
@@ -2371,7 +2670,6 @@
             {title: '長屋様邸質疑まとめ', due: '2026-04-26'},
             {title: '長屋様邸予算依頼', due: '2026-04-27', deadline: '2026-04-28'},
             {title: '大山様邸質疑まとめ', due: '2026-04-28'},
-            {title: '運転日誌提出', due: '2026-04-28'},
             {title: '佐藤様邸PCa発注', due: '2026-04-30', deadline: '2026-05-02'},
             {title: '長澤様邸質疑まとめ', due: '2026-05-07'},
             {title: '佐藤様邸質疑まとめ', due: '2026-05-12'},
@@ -2379,18 +2677,18 @@
             {title: '伊藤様邸質疑まとめ', due: '2026-05-18'},
             {title: '柳瀬様邸質疑まとめ', due: '2026-05-28'},
             {title: '瓜田様邸質疑まとめ', due: '2026-06-24'},
-            {title: '三谷様邸質疑まとめ', due: '2026-07-28'},
-            {title: '浅井様邸質疑まとめ', due: '2026-07-28'},
-            {title: '浅野様邸質疑まとめ', due: '2026-10-20'},
-            {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'},
-            {title: '柴田様邸南面マモラー横の屋根の浮き確認', due: null}
+            {title: '三谷様邸様邸質疑まとめ', due: '2026-07-28'},
+            {title: '浅井様邸様邸質疑まとめ', due: '2026-07-28'},
+            {title: '浅野様邸様邸質疑まとめ', due: '2026-10-20'},
+            {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'}
         ];
 
         // ===== 着工・引渡しデータ（Googleカレンダーから取得） =====
         // 着工: 「全日予定」カレンダーの「〜様邸本体着工」イベント
         // 引渡し: 「時間指定予定」カレンダーの「🔑〜様邸引渡し」イベント
         // ※スケジュールタスクで自動更新（最終同期: 2026/4/6）
-        // [自動更新 2026-04-06] 着工21件・引渡し27件確認済み・全配列最新（差分なし）
+        // [自動更新 2026-04-06 16:03] 着工21件・引渡し27件確認済み・差分なし・配列最新
+        // [自動更新 2026-04-07 06:17] 着工21件・引渡しカレンダー0件（既存27件維持）・差分なし・タイムスタンプのみ更新
 
         // 着工済み実績（今日以前の「本体着工」イベント）
         let startedProperties = [
@@ -2400,65 +2698,34 @@
             { name: '川地様', date: '2/5' },
             { name: '藤本様', date: '3/6' },
             { name: '髙橋様', date: '3/9' },
-            { name: '山田様', date: '3/16' },
-            { name: '大山様', date: '4/28' },
-            { name: '大井様', date: '4/28' },
-            { name: '長屋様', date: '5/11' },
-            { name: '長澤様', date: '5/13' },
-            { name: '佐藤様', date: '5/15' },
-            { name: '加藤様', date: '5/21' },
-            { name: '伊藤様', date: '5/22' },
-            { name: '柳瀬様', date: '6/1' },
-            { name: '藤本S様', date: '6/1' },
-            { name: '竹山様', date: '6/22' },
-            { name: '瓜田様', date: '6/29' },
-            { name: '三谷様', date: '8/1' },
-            { name: '浅井様', date: '8/1' },
-            { name: '浅野様', date: '10/21' }
+            { name: '山田様', date: '3/16' }
         ];
 
-        // 月別着工件数（1月〜12月）
-        let monthlyStarts = [3, 1, 3, 2, 5, 4, 0, 2, 0, 1, 0, 0];
+        // 今月着工予定（当月の「本体着工」イベント）
+        let monthlyStarts = [
+            { name: '大山様', date: '4/28' },
+            { name: '大井様', date: '4/28' }
+        ];
 
         // 引渡し済み実績（今日以前の「引渡し」イベント）
         let deliveredProperties = [
             { name: '國枝様', date: '1/23' },
             { name: '入野様', date: '2/14' },
             { name: '北角様', date: '2/21' },
-            { name: '竹中様', date: '3/28' },
-            { name: '箕浦様', date: '4/13' },
-            { name: '柴田様', date: '4/25' },
-            { name: '野尻様', date: '5/2' },
-            { name: '福田様', date: '5/23' },
-            { name: '小林様', date: '5/23' },
-            { name: '野田様', date: '5/30' },
-            { name: '森瀬様', date: '5/31' },
-            { name: '川地様', date: '6/6' },
-            { name: '木股様', date: '6/20' },
-            { name: '藤本様', date: '7/3' },
-            { name: '髙橋様', date: '7/27' },
-            { name: '大山様', date: '9/12' },
-            { name: '長澤様', date: '9/25' },
-            { name: '佐藤様', date: '9/25' },
-            { name: '長屋様', date: '9/26' },
-            { name: '山田様', date: '9/26' },
-            { name: '伊藤様', date: '9/29' },
-            { name: '大井様', date: '10/1' },
-            { name: '加藤様', date: '10/17' },
-            { name: '竹山様', date: '10/24' },
-            { name: '柳瀬様', date: '10/31' },
-            { name: '瓜田様', date: '11/12' },
-            { name: '浅井様', date: '12/20' }
+            { name: '竹中様', date: '3/28' }
         ];
 
-        // 月別引渡し件数（1月〜12月）
-        let monthlyDeliveries = [1, 2, 1, 2, 5, 2, 2, 0, 6, 4, 1, 1];
+        // 今月引渡し予定（当月の「引渡し」イベント）
+        let monthlyDeliveries = [
+            { name: '箕浦様', date: '4/13' },
+            { name: '柴田様', date: '4/25' }
+        ];
 
-        // 年間着工棟数（Googleカレンダー「本体着工」イベントから月別集計）2026年 自動更新: 2026/4/6
+        // 年間着工棟数（Googleカレンダー「本体着工」イベントから月別集計）
         // 1月:3, 2月:1, 3月:3, 4月:2, 5月:5, 6月:4, 7月:0, 8月:2, 9月:0, 10月:1, 11月:0, 12月:0
         let yearlyStartCounts = [3, 1, 3, 2, 5, 4, 0, 2, 0, 1, 0, 0];
 
-        // 年間引渡し棟数（Googleカレンダー「引渡し」イベントから月別集計）2026年 自動更新: 2026/4/6
+        // 年間引渡し棟数（Googleカレンダー「引渡し」イベントから月別集計）
         // 1月:1, 2月:2, 3月:1, 4月:2, 5月:5, 6月:2, 7月:2, 8月:0, 9月:6, 10月:4, 11月:1, 12月:1
         let yearlyDeliveryCounts = [1, 2, 1, 2, 5, 2, 2, 0, 6, 4, 1, 1];
 
@@ -2629,9 +2896,13 @@
             if (tabParam && ['home','week','properties','tasks','tools'].includes(tabParam)) {
                 switchTab(tabParam);
             }
+            // URLパラメータをクリア（次回起動時にタブが残らないよう）
+            if (window.location.search) {
+                history.replaceState({}, '', window.location.pathname);
+            }
             // データ整合性チェック
             validateData();
-            // 一括更新時刻（全データソースの中で最新の更新時刻を表示）
+            // 一括更新時刻（バックアップデータの最新タイムスタンプを表示）
             const globalSync = document.getElementById('globalSyncTime');
             if (globalSync) {
                 const timestamps = [
@@ -2642,8 +2913,12 @@
                 if (timestamps.length > 0) {
                     const latest = timestamps.sort().pop();
                     globalSync.textContent = `最終更新: ${latest}`;
+                } else {
+                    globalSync.textContent = '最終更新: —';
                 }
             }
+            // GAS APIが設定されていればリアルタイムデータを取得して上書き
+            fetchLiveData();
         }
 
         // ========== 時間帯別コメント（24h x 10パターン = 240種類）==========
@@ -2764,42 +3039,31 @@
             if (isPrecon) {
                 // 着工前: 着工までのカウントダウン
                 const daysUntilStart = Math.max(0, Math.ceil((startDate - now) / 86400000));
-                const prog = calcProgress(p.dates.着工, p.dates.引渡);
                 return `
-                <div class="property-item" data-property-id="${p.id}" data-source="precon" style="border-left-color: ${borderColor};">
+                <div class="property-item compact" data-property-id="${p.id}" data-source="precon" style="border-left-color: ${borderColor};">
                     <div class="property-content">
-                        <div class="property-name">${p.name} <span class="property-location-inline">${p.location}</span></div>
-                        <div class="progress-bar-dates">
-                            <span class="progress-date-label">${formatDateWithDay(p.dates.着工)}</span>
-                            <div class="property-progress" style="flex:1;">
-                                <div class="property-progress-bar"><div class="property-progress-fill" style="width: 0%; background: ${borderColor};"></div></div>
-                            </div>
-                            <span class="progress-date-label">${formatDateWithDay(p.dates.引渡)}</span>
+                        <div class="property-name-row">
+                            <span class="property-name">${p.name}</span>
+                            <span class="property-compact-meta">着工まで<strong>${daysUntilStart}</strong>日</span>
                         </div>
-                        <div class="progress-days">
-                            <span>着工まであと${daysUntilStart}日</span>
-                            <span class="progress-days-left">引渡 ${formatDateWithDay(p.dates.引渡)}</span>
-                        </div>
+                        <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${formatDateWithDay(p.dates.着工)} &nbsp;·&nbsp; 引渡 ${formatDateWithDay(p.dates.引渡)}</div>
                     </div>
                 </div>`;
             } else {
                 // 仕掛り（工事中・竣工）
                 const prog = calcProgress(p.dates.着工, p.dates.引渡);
                 return `
-                <div class="property-item" data-property-id="${p.id}" data-source="shikakari" style="border-left-color: ${borderColor};">
+                <div class="property-item compact" data-property-id="${p.id}" data-source="shikakari" style="border-left-color: ${borderColor};">
                     <div class="property-content">
-                        <div class="property-name">${p.name} <span class="property-location-inline">${p.location}</span></div>
-                        <div class="progress-bar-dates">
-                            <span class="progress-date-label">${formatDateWithDay(p.dates.着工)}</span>
-                            <div class="property-progress" style="flex:1;">
-                                <div class="property-progress-bar"><div class="property-progress-fill" style="width: ${prog.pct}%;"></div></div>
-                            </div>
-                            <span class="progress-date-label">${formatDateWithDay(p.dates.引渡)}</span>
+                        <div class="property-name-row">
+                            <span class="property-name">${p.name}</span>
+                            <span class="property-compact-meta">あと<strong>${prog.remaining}</strong>日</span>
                         </div>
-                        <div class="progress-days">
-                            <span>着工から${prog.elapsed}日経過</span>
-                            <span class="progress-days-left">引渡しまであと${prog.remaining}日</span>
+                        <div class="property-compact-bar">
+                            <div class="property-progress-bar" style="flex:1;"><div class="property-progress-fill" style="width:${prog.pct}%;"></div></div>
+                            <span class="property-compact-pct">${prog.pct}%</span>
                         </div>
+                        <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${formatDateWithDay(p.dates.着工)} &nbsp;·&nbsp; 引渡 ${formatDateWithDay(p.dates.引渡)}</div>
                     </div>
                 </div>`;
             }
@@ -2866,44 +3130,134 @@
             });
         }
 
-        // Googleカレンダー「今日/明日」ラベルを現在日付に基づいて動的補正
+        // Googleカレンダー「今日/明日/昨日」ラベルを現在日付に基づいて動的補正
         function updateCalendarDateLabels() {
-            const now  = new Date();
-            const y    = now.getFullYear();
-            const todayMs    = new Date(y, now.getMonth(), now.getDate()).getTime();
-            const tomorrowMs = todayMs + 86400000;
+            const now         = new Date();
+            const y           = now.getFullYear();
+            const todayMs     = new Date(y, now.getMonth(), now.getDate()).getTime();
+            const tomorrowMs  = todayMs + 86400000;
+            const yesterdayMs = todayMs - 86400000;
 
             document.querySelectorAll('.schedule-label').forEach(label => {
-                const text = label.textContent;
-                const m = text.match(/(\d+)月(\d+)日/);
+                // textContent ではなく firstChild(テキストノード)から日付を取得
+                const rawText = Array.from(label.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent).join('');
+                const m = rawText.match(/(\d+)月(\d+)日/);
                 if (!m) return;
                 const labelMs = new Date(y, parseInt(m[1]) - 1, parseInt(m[2])).getTime();
 
                 // 既存バッジを削除
                 label.querySelectorAll('.schedule-day-tag').forEach(t => t.remove());
 
+                // 親セクションの past-day クラスをリセット
+                const section = label.closest('.schedule-section');
+
                 if (labelMs === todayMs) {
                     const span = document.createElement('span');
                     span.className = 'schedule-day-tag today';
                     span.textContent = '今日';
                     label.appendChild(span);
+                    if (section) section.classList.remove('past-day');
                 } else if (labelMs === tomorrowMs) {
                     const span = document.createElement('span');
                     span.className = 'schedule-day-tag tomorrow';
                     span.textContent = '明日';
                     label.appendChild(span);
+                    if (section) section.classList.remove('past-day');
+                } else if (labelMs === yesterdayMs) {
+                    const span = document.createElement('span');
+                    span.className = 'schedule-day-tag yesterday';
+                    span.textContent = '昨日';
+                    label.appendChild(span);
+                    if (section) section.classList.add('past-day');
+                } else if (labelMs < todayMs) {
+                    // それ以前の日付も薄く表示
+                    if (section) section.classList.add('past-day');
                 }
             });
         }
 
-        // 手動同期（ページリロードで最新データを反映）
-        function manualSync() {
-            // リロードで最新のHTMLを読み込む（スケジュールタスクが更新済み）
-            setTimeout(() => location.reload(), 600);
+        // ============================================================
+        // GAS APIリアルタイム取得（優先タスク + カレンダー）
+        // GAS_WEBAPP_URL が設定されていれば自動で呼ばれる
+        // ============================================================
+        async function fetchLiveData() {
+            if (!GAS_WEBAPP_URL) return;
+            try {
+                const res = await fetch(GAS_WEBAPP_URL + '?mode=getDashboardData');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'GAS APIエラー');
+
+                // 優先タスク更新
+                if (Array.isArray(data.priorityTasks)) {
+                    priorityTasks = data.priorityTasks;
+                    priorityTasksUpdatedAt = data.timestamp || '';
+                }
+
+                // カレンダーデータ更新
+                if (data.calendarData) {
+                    const c = data.calendarData;
+                    if (Array.isArray(c.startedProperties))    startedProperties    = c.startedProperties;
+                    if (Array.isArray(c.monthlyStarts))        monthlyStarts        = c.monthlyStarts;
+                    if (Array.isArray(c.deliveredProperties))  deliveredProperties  = c.deliveredProperties;
+                    if (Array.isArray(c.monthlyDeliveries))    monthlyDeliveries    = c.monthlyDeliveries;
+                    if (Array.isArray(c.yearlyStartCounts))    yearlyStartCounts    = c.yearlyStartCounts;
+                    if (Array.isArray(c.yearlyDeliveryCounts)) yearlyDeliveryCounts = c.yearlyDeliveryCounts;
+                    gcalUpdatedAt = data.timestamp || '';
+                }
+
+                // UIを再レンダリング
+                renderTasks();
+                renderMonthTable();
+                renderStatusCards();
+                updateCalendarDateLabels();
+
+                // 最終更新時刻を更新
+                const globalSync = document.getElementById('globalSyncTime');
+                if (globalSync && data.timestamp) {
+                    globalSync.textContent = `最終更新: ${data.timestamp}`;
+                }
+
+            } catch(err) {
+                console.warn('GAS API取得失敗（バックアップデータを使用）:', err.message);
+            }
         }
 
-        // 自動同期タイマー（1時間ごとにリロード）
-        setInterval(() => location.reload(), 60 * 60 * 1000);
+        // 手動同期（GAS URL設定済み → リアルタイムAPI取得 / 未設定 → ページリロード）
+        function manualSync() {
+            const btn = document.querySelector('.sync-btn');
+            const syncTimeEl = document.getElementById('globalSyncTime');
+            const spinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+            const staticSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.innerHTML = spinSvg + ' 更新中...'; }
+            if (syncTimeEl) syncTimeEl.textContent = '読み込み中...';
+
+            if (GAS_WEBAPP_URL) {
+                // GAS APIからリアルタイム取得
+                fetchLiveData().finally(() => {
+                    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = staticSvg + ' 一括更新'; }
+                });
+            } else {
+                // フォールバック：ページリロード（キャッシュバイパス）
+                setTimeout(() => {
+                    const base = location.pathname;
+                    const hash = location.hash || '';
+                    location.href = base + '?r=' + Date.now() + hash;
+                }, 800);
+            }
+        }
+
+        // 自動更新タイマー（1時間ごと）
+        setInterval(() => {
+            if (GAS_WEBAPP_URL) {
+                fetchLiveData(); // GAS設定済み → サイレントAPI取得
+            } else {
+                const base = location.pathname;
+                location.href = base + '?r=' + Date.now(); // 未設定 → キャッシュバイパスリロード
+            }
+        }, 60 * 60 * 1000);
 
         function renderTasks() {
             const t = document.getElementById('filterTabs');
@@ -3033,11 +3387,29 @@
         }
 
         function renderStatusCards() {
-            // 挨拶バッジの件数を動的更新
-            const badgeEl = document.getElementById('greetingBadge');
-            if (badgeEl) {
+            // 挨拶バッジ（下段に件数タグを複数表示）
+            const badgeRow = document.getElementById('greetingBadgeRow');
+            if (badgeRow) {
                 const activeShi = properties.filter(p => p.shinchoku !== '引渡し').length;
-                badgeEl.textContent = `仕掛り ${activeShi}件 / 着工前 ${preconProperties.length}件`;
+                const preconCnt = preconProperties.length;
+                // 今月引渡し件数
+                const now = new Date();
+                const thisMonthDeliveries = deliveredProperties
+                    ? deliveredProperties.filter(d => {
+                        if (!d.date) return false;
+                        const parts = d.date.split('/');
+                        return parseInt(parts[0]) === now.getMonth() + 1;
+                      }).length
+                    : 0;
+                badgeRow.innerHTML = `
+                    <span class="greeting-badge">
+                        仕掛り <span class="badge-num">${activeShi}</span>件
+                    </span>
+                    <span class="greeting-badge">
+                        着工前 <span class="badge-num">${preconCnt}</span>件
+                    </span>
+                    ${thisMonthDeliveries > 0 ? `<span class="greeting-badge" style="background:rgba(255,200,0,0.9);color:#7c4500;">今月引渡 <span class="badge-num" style="color:#7c4500;">${thisMonthDeliveries}</span>件</span>` : ''}
+                `;
             }
 
             const chevronSvg = '<svg class="status-card-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
@@ -3205,13 +3577,40 @@
         }
 
         // ===== 週間タブ =====
+        // ホームのスケジュールセクションから指定日の予定HTMLを取得
+        function getCalendarEventsForDate(targetDateMs) {
+            const sections = document.querySelectorAll('#tab-home .schedule-section');
+            for (const sec of sections) {
+                const label = sec.querySelector('.schedule-label');
+                if (!label) continue;
+                const rawText = Array.from(label.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent).join('');
+                const m = rawText.match(/(\d+)月(\d+)日/);
+                if (!m) continue;
+                const y = new Date().getFullYear();
+                const sectionDateMs = new Date(y, parseInt(m[1]) - 1, parseInt(m[2])).getTime();
+                if (sectionDateMs === targetDateMs) {
+                    // その日のイベントアイテムだけ抽出してクローン
+                    const items = sec.querySelectorAll('.sched-item, .sched-all-day');
+                    if (items.length === 0) return null;
+                    const frag = document.createDocumentFragment();
+                    items.forEach(item => frag.appendChild(item.cloneNode(true)));
+                    const wrapper = document.createElement('div');
+                    wrapper.appendChild(frag);
+                    return wrapper.innerHTML;
+                }
+            }
+            return null;
+        }
+
         function renderWeekTab() {
             const now = new Date();
             const weeks = ['日','月','火','水','木','金','土'];
             // 今週の日曜日起点
             const startOfWeek = new Date(now);
             startOfWeek.setDate(now.getDate() - now.getDay());
-            // 日付ストリップ
+            // 日付ストリップ（タップ可能・data-date属性付き）
             let stripHtml = '<div class="week-day-strip">';
             for (let i = 0; i < 7; i++) {
                 const d = new Date(startOfWeek);
@@ -3219,7 +3618,8 @@
                 const isToday = d.toDateString() === now.toDateString();
                 const isSun = i === 0, isSat = i === 6;
                 const cls = [isToday?'today':'', isSun?'sun':'', isSat?'sat':''].filter(Boolean).join(' ');
-                stripHtml += `<div class="week-day-cell ${cls}">
+                const dateMs = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+                stripHtml += `<div class="week-day-cell ${cls}" data-datems="${dateMs}" data-label="${d.getMonth()+1}月${d.getDate()}日（${weeks[d.getDay()]}）" style="cursor:pointer;">
                     <div class="wdc-dow">${weeks[d.getDay()]}</div>
                     <div class="wdc-num">${d.getDate()}</div>
                 </div>`;
@@ -3231,7 +3631,7 @@
                 ${stripHtml}
                 <div class="card" style="margin-bottom:16px;">
                     <div class="card-head">
-                        <div class="card-title">今日の予定</div>
+                        <div class="card-title" id="weekDayTitle">今日の予定</div>
                         <a href="https://calendar.google.com" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">カレンダーを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
                     </div>
                     <div id="weekTodayEvents"></div>
@@ -3251,9 +3651,39 @@
                 </div>
             </div>`;
 
-            // 今日の予定（カレンダーはiframe埋込みのため、ダッシュボードと同じプレースホルダー表示）
-            const todayEl = document.getElementById('weekTodayEvents');
-            todayEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">カレンダーデータはホームタブと同期されます</div>';
+            // 指定日の予定を表示する関数
+            function showDayEvents(dateMs, label) {
+                const titleEl = document.getElementById('weekDayTitle');
+                const evEl = document.getElementById('weekTodayEvents');
+                if (titleEl) titleEl.textContent = label + ' の予定';
+                // アクティブセルを更新
+                el.querySelectorAll('.week-day-cell').forEach(c => {
+                    c.style.outline = parseInt(c.dataset.datems) === dateMs
+                        ? '2px solid var(--primary)' : 'none';
+                    c.style.borderRadius = '6px';
+                });
+                const html = getCalendarEventsForDate(dateMs);
+                if (html) {
+                    evEl.innerHTML = html;
+                } else {
+                    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                    const msg = dateMs === todayMs ? '今日の予定はありません' : '取得済みデータなし';
+                    const d = new Date(dateMs);
+                    const gcalUrl = `https://calendar.google.com/calendar/r/day/${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+                    evEl.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;">${msg}<br><a href="${gcalUrl}" target="_blank" style="color:var(--primary);font-size:11px;display:inline-flex;align-items:center;gap:3px;margin-top:6px;">この日をカレンダーで確認 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a></div>`;
+                }
+            }
+
+            // 日付セルのタップイベント
+            el.querySelectorAll('.week-day-cell[data-datems]').forEach(cell => {
+                cell.addEventListener('click', () => {
+                    showDayEvents(parseInt(cell.dataset.datems), cell.dataset.label);
+                });
+            });
+
+            // 初期表示: 今日の予定
+            const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            showDayEvents(todayMs, '今日');
 
             // 今週のタスク（Google Tasks から今週分を抽出）
             const weekTaskEl = document.getElementById('weekTaskList');
@@ -3336,19 +3766,13 @@
                     const bc = colorMap[p.shinchoku] || '#9ca3af';
                     const koujiDate = p.dates.着工 ? formatDateWithDay(p.dates.着工) : '—';
                     const hiwatashiDate = p.dates.引渡 ? formatDateWithDay(p.dates.引渡) : '—';
-                    return `<div class="property-item" data-property-id="${p.id}" data-source="${p.shinchoku === '着工前' ? 'precon' : 'shikakari'}" style="border-left-color:${bc};">
+                    return `<div class="property-item compact" data-property-id="${p.id}" data-source="${p.shinchoku === '着工前' ? 'precon' : 'shikakari'}" style="border-left-color:${bc};">
                         <div class="property-content">
-                            <div class="property-name">${p.name} <span class="property-location-inline">${p.location}</span></div>
-                            <div class="prop-date-row">
-                                <div class="prop-date-col">
-                                    <div class="prop-date-label-sm">着工</div>
-                                    <div class="prop-date-val">${koujiDate}</div>
-                                </div>
-                                <div class="prop-date-col">
-                                    <div class="prop-date-label-sm">引渡し</div>
-                                    <div class="prop-date-val">${hiwatashiDate}</div>
-                                </div>
+                            <div class="property-name-row">
+                                <span class="property-name">${p.name}</span>
+                                <span class="property-compact-meta" style="font-size:10px;">${p.shinchoku}</span>
                             </div>
+                            <div class="property-compact-sub">${p.location} &nbsp;·&nbsp; 着工 ${koujiDate} &nbsp;·&nbsp; 引渡 ${hiwatashiDate}</div>
                         </div>
                     </div>`;
                 }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">物件なし</div>';
@@ -3507,7 +3931,7 @@
                     '物件名・日程を入力するだけ',
                     'Gmailから会社メールへ自動転送'
                 ],
-                url: './tools/検査依頼.html'
+                url: './tools/inspection.html'
             },
             {
                 id: 'koute',
@@ -3521,7 +3945,7 @@
                     '六曜条件（大安・友引）対応',
                     'Googleカレンダーへ一括登録'
                 ],
-                url: './tools/工程作成.html'
+                url: './tools/schedule.html'
             },
             {
                 id: 'notion-reg',
@@ -3535,7 +3959,7 @@
                     '共通タスクを自動登録',
                     '担当物件一覧に即反映'
                 ],
-                url: './tools/物件登録.html'
+                url: './tools/property.html'
             },
             {
                 id: 'payment',
@@ -3549,7 +3973,7 @@
                     '業者別・物件別で差額を集計',
                     'Notionの支払いDBへ直接登録'
                 ],
-                url: './tools/支払い管理.html'
+                url: './tools/payment.html'
             }
         ];
 
@@ -3599,7 +4023,7 @@
         function renderToolsTab() {
             const el = document.getElementById('tab-tools');
             const cardsHtml = toolsData.map(t => `
-                <div class="tool-card-new" onclick="openToolSheet('${t.id}')">
+                <div class="tool-card-new" onclick="${t.url ? `navigateTo('${t.url.replace('./', '')}')` : ''}">
                     <div class="tool-icon-wrap" style="background:${t.color};">
                         <svg viewBox="0 0 24 24">${t.icon}</svg>
                     </div>
