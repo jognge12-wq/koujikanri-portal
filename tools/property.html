@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="../manifest.json">
+  <title>物件登録</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sfc: { dark:'#004d29', primary:'#006837', light:'#e8f5e9', border:'#a5d6a7' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans JP','sans-serif'],
+            mono: ['DM Mono','monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #d1d5db;
+      border-top-color: #004d29;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .setup-input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #d1d5db; border-radius: 10px;
+      font-size: 13px; font-family: 'DM Mono', monospace; color: #1e293b;
+      background: #fff; outline: none; transition: border-color .2s; box-sizing: border-box;
+    }
+    .setup-input:focus { border-color: #004d29; }
+    .setup-input::placeholder { color: #94a3b8; font-family: 'Noto Sans JP', sans-serif; }
+
+    /* フォーム入力スタイル */
+    .form-input {
+      width: 100%; padding: 12px 14px;
+      font-size: 15px; font-family: 'Noto Sans JP', sans-serif; color: #1e293b;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      background: #fff; outline: none; transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none; appearance: none; box-sizing: border-box;
+    }
+    .form-input:focus {
+      border-color: #006837;
+      box-shadow: 0 0 0 3px rgba(0, 104, 55, 0.1);
+    }
+    .form-input::placeholder { color: #94a3b8; }
+    select.form-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    input[type="date"].form-input { color: #1e293b; }
+    input[type="date"].form-input::-webkit-date-and-time-value { text-align: left; }
+
+    /* チェックボックスアイテム */
+    .check-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 14px;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .check-item:has(input:checked) {
+      border-color: #006837;
+      background: #f0faf4;
+    }
+    .check-item input[type="checkbox"] {
+      width: 20px; height: 20px;
+      accent-color: #006837;
+      flex-shrink: 0; cursor: pointer;
+      border-radius: 4px;
+    }
+    .check-item span {
+      font-size: 14px; font-weight: 500; color: #374151;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-900">
+
+<div id="app"
+     class="max-w-md mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
+     style="height: calc(100vh - 32px);">
+
+  <!-- ヘッダー（他ツールと共通構造） -->
+  <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <a onclick="goToDashboard()" style="cursor:pointer;"
+         class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+         title="ダッシュボードへ戻る">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </a>
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <div>
+          <h1 class="text-base font-bold tracking-wide">物件登録</h1>
+          <p class="text-[10px] text-white/65 font-medium mt-0.5">Notion 担当物件一覧 ＆ タスク一括登録</p>
+        </div>
+      </div>
+    </div>
+    <button id="settingsBtn" onclick="openChangePanel()"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors opacity-0 pointer-events-none"
+            title="URL設定を変更">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- コンテンツエリア -->
+  <div class="flex-1 flex flex-col relative min-h-0">
+
+    <!-- セットアップ画面（URL未設定時） -->
+    <div id="setupScreen" class="flex-1 flex items-center justify-center p-6">
+      <div class="w-full max-w-xs">
+        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="#004d29" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <h2 class="text-base font-bold text-slate-800 mb-1">GAS WebApp URL を設定</h2>
+        <p class="text-xs text-slate-500 leading-relaxed mb-5">
+          デプロイ済みの GAS WebApp URL を入力してください。一度設定すると次回から自動的に開きます。
+        </p>
+        <p class="text-[11px] font-semibold text-slate-600 mb-2">WebApp URL</p>
+        <input type="url" id="urlInput" class="setup-input"
+               placeholder="https://script.google.com/macros/s/..."
+               oninput="onUrlInput()">
+        <p id="setupError" class="text-[11px] text-red-500 mt-2 hidden">
+          有効な GAS WebApp URL を入力してください。
+        </p>
+        <button id="saveBtn" onclick="saveUrl()" disabled
+                class="w-full mt-5 py-3 bg-sfc-dark text-white rounded-xl text-sm font-bold
+                       hover:opacity-90 active:opacity-75 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+          このURLで開く
+        </button>
+      </div>
+    </div>
+
+    <!-- メインフォーム -->
+    <div id="formScreen" class="flex-1 flex flex-col hidden min-h-0">
+
+      <!-- スクロール領域 -->
+      <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+
+        <!-- 物件情報 -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <h3 class="text-[11px] font-bold text-sfc-primary uppercase tracking-wider mb-3 pb-2 border-b border-green-50">物件情報</h3>
+
+          <div class="mb-3">
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+              物件名
+              <span class="text-red-400 text-xs font-medium ml-1">必須</span>
+            </label>
+            <input type="text" id="bukkenName" placeholder="例：山田T・H様"
+                   class="form-input" autocomplete="off" autocorrect="off" spellcheck="false">
+            <p id="nameError" class="text-xs text-red-400 mt-1 hidden">物件名を入力してください</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">市町村</label>
+            <select id="city" class="form-input">
+              <option value="">（選択してください）</option>
+              <option>養老町</option>
+              <option>大野町</option>
+              <option>関ヶ原町</option>
+              <option>輪之内町</option>
+              <option>海津市</option>
+              <option>笠松町</option>
+              <option>揖斐川町</option>
+              <option>瑞穂市</option>
+              <option>羽島市</option>
+              <option>本巣市</option>
+              <option>山県市</option>
+              <option>池田町</option>
+              <option>垂井町</option>
+              <option>岐南町</option>
+              <option>北方町</option>
+              <option>大垣市</option>
+              <option>関市</option>
+              <option>各務原市</option>
+              <option>岐阜市</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 日程 -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <h3 class="text-[11px] font-bold text-sfc-primary uppercase tracking-wider mb-3 pb-2 border-b border-green-50">日程</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">本体着工</label>
+              <input type="date" id="startDate" class="form-input">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">建て方</label>
+              <input type="date" id="frameDate" class="form-input">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">引渡し</label>
+              <input type="date" id="deliveryDate" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- その他チェック項目 -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <h3 class="text-[11px] font-bold text-sfc-primary uppercase tracking-wider mb-3 pb-2 border-b border-green-50">その他チェック項目</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="check-item">
+              <input type="checkbox" id="sakiSoto">
+              <span>先外</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="kairo">
+              <span>改良</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="gaiko">
+              <span>外構</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="shizumono">
+              <span>鎮物</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="munefuda">
+              <span>棟札</span>
+            </label>
+          </div>
+        </div>
+
+      </div><!-- /スクロール領域 -->
+
+      <!-- 送信ボタン（固定フッター） -->
+      <div class="flex-shrink-0 px-4 py-3 bg-white border-t border-slate-100">
+        <button id="submitBtn" onclick="submitForm()"
+                class="w-full py-4 bg-sfc-dark text-white rounded-2xl text-[15px] font-bold
+                       hover:opacity-90 active:scale-[0.98] transition-all">
+          Notion に登録する
+        </button>
+        <p class="text-center text-[11px] text-slate-400 mt-2">登録後、Notionへの反映に1〜2分かかります</p>
+      </div>
+    </div>
+
+    <!-- ローディング画面 -->
+    <div id="loadingScreen"
+         class="absolute inset-0 bg-white z-50 hidden items-center justify-center flex-col gap-4">
+      <div class="spinner"></div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-slate-700">Notionに登録中...</p>
+        <p class="text-xs text-slate-400 mt-1">タスクの作成に1〜2分かかります</p>
+      </div>
+    </div>
+
+    <!-- 完了画面 -->
+    <div id="successScreen"
+         class="absolute inset-0 bg-white z-50 hidden items-center justify-center flex-col gap-3 p-8 text-center">
+      <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+             fill="none" stroke="#006837" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 class="text-lg font-bold text-slate-800">登録完了！</h2>
+      <p id="successName" class="text-sm font-semibold text-slate-600"></p>
+      <p id="successCount" class="text-xs text-slate-400"></p>
+      <div class="w-full space-y-2 mt-4">
+        <button onclick="resetForm()"
+                class="w-full py-3 bg-sfc-dark text-white rounded-xl text-sm font-bold hover:opacity-90 active:opacity-75 transition-opacity">
+          続けて登録する
+        </button>
+        <button onclick="goToDashboard()"
+                class="w-full py-3 bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors">
+          ダッシュボードに戻る
+        </button>
+      </div>
+    </div>
+
+    <!-- エラー画面 -->
+    <div id="errorScreen"
+         class="absolute inset-0 bg-white z-50 hidden items-center justify-center flex-col gap-3 p-8 text-center">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+             fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h2 class="text-base font-bold text-slate-800">登録エラー</h2>
+      <p id="errorMsg" class="text-xs text-slate-500 leading-relaxed"></p>
+      <button onclick="hideError()"
+              class="w-full mt-2 py-3 bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-sm font-semibold">
+        戻る
+      </button>
+    </div>
+
+  </div><!-- /コンテンツエリア -->
+</div>
+
+<!-- URL変更パネル -->
+<div id="changePanel"
+     class="fixed inset-0 z-50 bg-black/40 hidden items-end justify-center">
+  <div class="bg-white rounded-t-2xl p-5 pb-8 w-full max-w-md shadow-xl">
+    <p class="text-sm font-bold text-slate-800 mb-4">WebApp URL を変更</p>
+    <div class="flex gap-2">
+      <input type="url" id="changeUrlInput" class="setup-input flex-1"
+             placeholder="https://script.google.com/macros/s/...">
+      <button onclick="updateUrl()"
+              class="flex-shrink-0 px-4 py-[11px] bg-sfc-dark text-white rounded-xl text-sm font-bold whitespace-nowrap">
+        保存
+      </button>
+    </div>
+    <button onclick="closeChangePanel()"
+            class="w-full mt-3 py-3 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-sm font-semibold">
+      キャンセル
+    </button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'notion_reg_gas_url_v1';
+let gasUrl = '';
+
+// ダッシュボードへ戻る（iOS スワイプ戻り対策）
+function goToDashboard() {
+  const href = window.location.href;
+  const base = href.substring(0, href.lastIndexOf('/') + 1);
+  window.location.replace('../%E3%82%BF%E3%82%99%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9B%E3%82%99%E3%83%BC%E3%83%88%E3%82%99.html?tab=tools');
+}
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', function() { goToDashboard(); });
+
+// 初期化
+function init() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    gasUrl = saved;
+    showFormScreen();
+  }
+}
+
+function showFormScreen() {
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('formScreen').classList.remove('hidden');
+  document.getElementById('settingsBtn').classList.remove('opacity-0', 'pointer-events-none');
+}
+
+// フォーム送信
+async function submitForm() {
+  const name = document.getElementById('bukkenName').value.trim();
+  if (!name) {
+    document.getElementById('nameError').classList.remove('hidden');
+    document.getElementById('bukkenName').focus();
+    return;
+  }
+  document.getElementById('nameError').classList.add('hidden');
+
+  // ローディング表示
+  const loading = document.getElementById('loadingScreen');
+  loading.classList.remove('hidden');
+  loading.classList.add('flex');
+
+  // パラメータ組み立て
+  const params = new URLSearchParams();
+  params.append('mode', 'submit');
+  params.append('物件名', name);
+  params.append('市町村', document.getElementById('city').value);
+  params.append('本体着工', document.getElementById('startDate').value || '');
+  params.append('建て方',   document.getElementById('frameDate').value || '');
+  params.append('引渡し',   document.getElementById('deliveryDate').value || '');
+  if (document.getElementById('sakiSoto').checked)  params.append('先外', 'on');
+  if (document.getElementById('kairo').checked)     params.append('改良', 'on');
+  if (document.getElementById('gaiko').checked)     params.append('外構', 'on');
+  if (document.getElementById('shizumono').checked) params.append('鎮物', 'on');
+  if (document.getElementById('munefuda').checked)  params.append('棟札', 'on');
+
+  try {
+    const res = await fetch(gasUrl + '?' + params.toString());
+    const result = await res.json();
+
+    loading.classList.add('hidden');
+    loading.classList.remove('flex');
+
+    if (result.success) {
+      showSuccess(result.name, result.count);
+    } else {
+      showError(result.message || '登録に失敗しました');
+    }
+  } catch(err) {
+    loading.classList.add('hidden');
+    loading.classList.remove('flex');
+    showError('通信エラーが発生しました。\n再度お試しください。\n\n詳細: ' + err.message);
+  }
+}
+
+function showSuccess(name, count) {
+  document.getElementById('successName').textContent = '「' + name + '」';
+  document.getElementById('successCount').textContent = count + '件のタスクを作成しました';
+  const s = document.getElementById('successScreen');
+  s.classList.remove('hidden');
+  s.classList.add('flex');
+}
+
+function showError(msg) {
+  document.getElementById('errorMsg').textContent = msg;
+  const e = document.getElementById('errorScreen');
+  e.classList.remove('hidden');
+  e.classList.add('flex');
+}
+
+function hideError() {
+  const e = document.getElementById('errorScreen');
+  e.classList.add('hidden');
+  e.classList.remove('flex');
+}
+
+function resetForm() {
+  document.getElementById('bukkenName').value = '';
+  document.getElementById('city').value = '';
+  document.getElementById('startDate').value = '';
+  document.getElementById('frameDate').value = '';
+  document.getElementById('deliveryDate').value = '';
+  ['sakiSoto','kairo','gaiko','shizumono','munefuda'].forEach(function(id) {
+    document.getElementById(id).checked = false;
+  });
+  const s = document.getElementById('successScreen');
+  s.classList.add('hidden');
+  s.classList.remove('flex');
+}
+
+// URLセットアップ
+function onUrlInput() {
+  const val = document.getElementById('urlInput').value.trim();
+  const ok = val.startsWith('https://script.google.com/macros/s/');
+  document.getElementById('saveBtn').disabled = !ok;
+  document.getElementById('setupError').classList.add('hidden');
+}
+
+function saveUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url.startsWith('https://script.google.com/macros/s/')) {
+    document.getElementById('setupError').classList.remove('hidden');
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY, url);
+  gasUrl = url;
+  showFormScreen();
+}
+
+function openChangePanel() {
+  document.getElementById('changeUrlInput').value = localStorage.getItem(STORAGE_KEY) || '';
+  const p = document.getElementById('changePanel');
+  p.classList.remove('hidden');
+  p.classList.add('flex');
+}
+
+function closeChangePanel() {
+  const p = document.getElementById('changePanel');
+  p.classList.add('hidden');
+  p.classList.remove('flex');
+}
+
+function updateUrl() {
+  const url = document.getElementById('changeUrlInput').value.trim();
+  if (!url.startsWith('https://script.google.com/macros/s/')) return;
+  localStorage.setItem(STORAGE_KEY, url);
+  gasUrl = url;
+  closeChangePanel();
+}
+
+init();
+</script>
+</body>
+</html>
