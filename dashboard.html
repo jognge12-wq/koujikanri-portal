@@ -2342,34 +2342,7 @@
                     <div class="card-title">Googleカレンダー</div>
                     <a href="https://calendar.google.com" target="_blank" rel="noopener" style="font-size:11px;color:var(--primary);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:3px;">Googleカレンダーを開く <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
                 </div>
-                <div class="schedule-section">
-                    <div class="schedule-label">4月5日 日 <span class="schedule-day-tag today">今日</span></div>
-                    <div class="sched-item sched-all-day" style="border-left-color: #D50000;">
-                        <div class="sched-content">
-                            <div class="sched-title">法定休日</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="schedule-section">
-                    <div class="schedule-label">4月6日 月 <span class="schedule-day-tag tomorrow">明日</span></div>
-                    <div class="sched-item sched-all-day" style="border-left-color: #D50000;">
-                        <div class="sched-content">
-                            <div class="sched-title">4/19振休</div>
-                        </div>
-                    </div>
-                    <div class="sched-item sched-all-day" style="border-left-color: #fad165;">
-                        <div class="sched-content">
-                            <div class="sched-title">野尻様邸先行外構</div>
-                            <div class="sched-meta">岐阜市, 日本、岐阜県岐阜市</div>
-                        </div>
-                    </div>
-                    <div class="sched-item" style="border-left-color: #c2c2c2;">
-                        <div class="sched-content">
-                            <div class="sched-time">09:45 - 11:40</div>
-                            <div class="sched-title">永佳高校入学式</div>
-                        </div>
-                    </div>
-                </div>
+                <div id="scheduleContainer"><div style="padding:12px;color:var(--text3);font-size:12px;text-align:center;">一括更新でカレンダーを取得します</div></div>
             </div>
         </div>
 
@@ -2650,10 +2623,10 @@
 
         // Google Tasks（Google ToDoから取得。ルーティン以外のイレギュラータスク）
         // googleTasksUpdatedAt と googleTasks は scheduled task で自動更新予定
-        const googleTasksUpdatedAt = '2026-04-07 07:03';
+        let googleTasksUpdatedAt = '2026-04-07 07:03';
 
         // Googleカレンダー更新時刻（スケジュールタスクが自動更新）
-        const gcalUpdatedAt = '2026-04-07 06:49';
+        let gcalUpdatedAt = '2026-04-07 06:49';
         const googleTasks = [
             {title: '竹山様邸図面チェック', due: '2026-04-04'},
             {title: '竹山様邸砕石追加見積もりの提示', due: '2026-04-07', deadline: '2026-04-11'},
@@ -2682,6 +2655,9 @@
             {title: '浅野様邸様邸質疑まとめ', due: '2026-10-20'},
             {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'}
         ];
+
+        // 今日・明日のカレンダーイベント（GASから動的取得）
+        let scheduleEvents = [];
 
         // ===== 着工・引渡しデータ（Googleカレンダーから取得） =====
         // 着工: 「全日予定」カレンダーの「〜様邸本体着工」イベント
@@ -2884,7 +2860,7 @@
             renderHandoverTitle();
             renderMonthTable();
             renderStatusCards();
-            updateCalendarDateLabels();
+            renderScheduleSection();
             updateClock();
             setInterval(updateClock, 1000);
             setupEventListeners();
@@ -3179,6 +3155,65 @@
         }
 
         // ============================================================
+        // スケジュールセクション動的レンダリング（GASから取得した今日・明日）
+        // ============================================================
+        function renderScheduleSection() {
+            const container = document.getElementById('scheduleContainer');
+            if (!container) return;
+            const weeks = ['日','月','火','水','木','金','土'];
+
+            if (!scheduleEvents || scheduleEvents.length === 0) {
+                container.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;text-align:center;">一括更新でカレンダーを取得します</div>';
+                return;
+            }
+
+            const now        = new Date();
+            const todayMs    = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const tomorrowMs = todayMs + 86400000;
+
+            let html = '';
+            scheduleEvents.forEach(function(day) {
+                const parts = day.dateStr.split('-');
+                const y = parseInt(parts[0]), mo = parseInt(parts[1]), d = parseInt(parts[2]);
+                const dateMs = new Date(y, mo - 1, d).getTime();
+                const dow    = weeks[new Date(y, mo - 1, d).getDay()];
+
+                let badge = '', sectionExtra = '';
+                if      (dateMs === todayMs)    badge = '<span class="schedule-day-tag today">今日</span>';
+                else if (dateMs === tomorrowMs) badge = '<span class="schedule-day-tag tomorrow">明日</span>';
+                else if (dateMs < todayMs)      sectionExtra = ' past-day';
+
+                let evHtml = '';
+                if (day.events.length === 0) {
+                    evHtml = '<div style="padding:6px 0;color:var(--text3);font-size:12px;">予定なし</div>';
+                } else {
+                    day.events.forEach(function(ev) {
+                        const bc = ev.color || '#4285f4';
+                        if (ev.isAllDay) {
+                            evHtml += `<div class="sched-item sched-all-day" style="border-left-color:${bc};">
+                                <div class="sched-content"><div class="sched-title">${ev.title}</div></div>
+                            </div>`;
+                        } else {
+                            evHtml += `<div class="sched-item" style="border-left-color:${bc};">
+                                <div class="sched-content">
+                                    <div class="sched-time">${ev.startTime} - ${ev.endTime}</div>
+                                    <div class="sched-title">${ev.title}</div>
+                                </div>
+                            </div>`;
+                        }
+                    });
+                }
+
+                html += `<div class="schedule-section${sectionExtra}">
+                    <div class="schedule-label">${mo}月${d}日（${dow}） ${badge}</div>
+                    ${evHtml}
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ============================================================
         // GAS APIリアルタイム取得（優先タスク + カレンダー）
         // GAS_WEBAPP_URL が設定されていれば自動で呼ばれる
         // ============================================================
@@ -3208,11 +3243,22 @@
                     gcalUpdatedAt = data.timestamp || '';
                 }
 
+                // 今日・明日のスケジュールイベント更新
+                if (Array.isArray(data.scheduleEvents)) {
+                    scheduleEvents = data.scheduleEvents;
+                }
+
                 // UIを再レンダリング
                 renderTasks();
+                renderScheduleSection();
                 renderMonthTable();
                 renderStatusCards();
-                updateCalendarDateLabels();
+
+                // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
+                const _taskTab = document.getElementById('tab-tasks');
+                if (_taskTab) _taskTab.dataset.rendered = '';
+                const _weekTab = document.getElementById('tab-week');
+                if (_weekTab) _weekTab.dataset.rendered = '';
 
                 // 最終更新時刻を更新
                 const globalSync = document.getElementById('globalSyncTime');
@@ -3577,31 +3623,38 @@
         }
 
         // ===== 週間タブ =====
-        // ホームのスケジュールセクションから指定日の予定HTMLを取得
+        // scheduleEventsから指定日の予定HTMLを生成
         function getCalendarEventsForDate(targetDateMs) {
-            const sections = document.querySelectorAll('#tab-home .schedule-section');
-            for (const sec of sections) {
-                const label = sec.querySelector('.schedule-label');
-                if (!label) continue;
-                const rawText = Array.from(label.childNodes)
-                    .filter(n => n.nodeType === Node.TEXT_NODE)
-                    .map(n => n.textContent).join('');
-                const m = rawText.match(/(\d+)月(\d+)日/);
-                if (!m) continue;
-                const y = new Date().getFullYear();
-                const sectionDateMs = new Date(y, parseInt(m[1]) - 1, parseInt(m[2])).getTime();
-                if (sectionDateMs === targetDateMs) {
-                    // その日のイベントアイテムだけ抽出してクローン
-                    const items = sec.querySelectorAll('.sched-item, .sched-all-day');
-                    if (items.length === 0) return null;
-                    const frag = document.createDocumentFragment();
-                    items.forEach(item => frag.appendChild(item.cloneNode(true)));
-                    const wrapper = document.createElement('div');
-                    wrapper.appendChild(frag);
-                    return wrapper.innerHTML;
-                }
+            if (!scheduleEvents || scheduleEvents.length === 0) return null;
+            const d = new Date(targetDateMs);
+            const dateStr = d.getFullYear() + '-' +
+                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                String(d.getDate()).padStart(2, '0');
+
+            const day = scheduleEvents.find(s => s.dateStr === dateStr);
+            if (!day) return null;
+
+            if (day.events.length === 0) {
+                return '<div style="padding:8px 0;color:var(--text3);font-size:12px;text-align:center;">予定なし</div>';
             }
-            return null;
+
+            let html = '';
+            day.events.forEach(function(ev) {
+                const bc = ev.color || '#4285f4';
+                if (ev.isAllDay) {
+                    html += `<div class="sched-item sched-all-day" style="border-left-color:${bc};">
+                        <div class="sched-content"><div class="sched-title">${ev.title}</div></div>
+                    </div>`;
+                } else {
+                    html += `<div class="sched-item" style="border-left-color:${bc};">
+                        <div class="sched-content">
+                            <div class="sched-time">${ev.startTime} - ${ev.endTime}</div>
+                            <div class="sched-title">${ev.title}</div>
+                        </div>
+                    </div>`;
+                }
+            });
+            return html;
         }
 
         function renderWeekTab() {
