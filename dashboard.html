@@ -2577,7 +2577,11 @@
             {id: 109, name: '藤本S様用', location: '大垣市', shinchoku: '着工前',
              notionId: '31e6ad84622180e19007dc9c226a7ad1',
              dates: {着工: '2026/06/01', 建方: '2026/07/28', 引渡: '2027/04/03'},
-             checks: {棟札: false, 改良: true, 外構: true, 先外: true, 鎮物: false}}
+             checks: {棟札: false, 改良: true, 外構: true, 先外: true, 鎮物: false}},
+            {id: 110, name: '大井M・Y様', location: '大垣市', shinchoku: '着工前',
+             notionId: '2f86ad8462218060b9c6dc0a0c756d70',
+             dates: {着工: '2026/04/28', 建方: '2026/06/18', 引渡: '2026/10/01'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}}
         ];
 
         // 優先タスク（Notionビュー「全現場共通タスクのビュー」から取得）
@@ -2903,17 +2907,13 @@
             }
             // データ整合性チェック
             validateData();
-            // 一括更新時刻（バックアップデータの最新タイムスタンプを表示）
+            // 最終更新時刻（localStorage > バックアップタイムスタンプ）
             const globalSync = document.getElementById('globalSyncTime');
             if (globalSync) {
-                const timestamps = [
-                    typeof gcalUpdatedAt !== 'undefined' ? gcalUpdatedAt : null,
-                    typeof googleTasksUpdatedAt !== 'undefined' ? googleTasksUpdatedAt : null,
-                    typeof priorityTasksUpdatedAt !== 'undefined' ? priorityTasksUpdatedAt : null
-                ].filter(Boolean);
-                if (timestamps.length > 0) {
-                    const latest = timestamps.sort().pop();
-                    globalSync.textContent = `最終更新: ${latest}`;
+                var savedSync = '';
+                try { savedSync = localStorage.getItem('dashSyncTime') || ''; } catch(e) {}
+                if (savedSync) {
+                    globalSync.textContent = savedSync;
                 } else {
                     globalSync.textContent = '最終更新: —';
                 }
@@ -3319,23 +3319,25 @@
                     googleTasksUpdatedAt = data.timestamp || '';
                 }
 
-                // UIを再レンダリング（iOS Safari縮小防止: viewport固定で描画）
+                // UIを再レンダリング（iOS Safari縮小防止: 描画中は非表示）
                 var scrollY = window.scrollY;
-                var vp = document.querySelector('meta[name="viewport"]');
-                var vpOrig = vp ? vp.getAttribute('content') : '';
-                try {
-                    if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-                    renderTasks();
-                    renderScheduleSection();
-                    renderMonthTable();
-                    renderStatusCards();
-                    renderGoogleTasks();
-                } finally {
-                    requestAnimationFrame(function() {
-                        if (vp && vpOrig) vp.setAttribute('content', vpOrig);
-                        window.scrollTo(0, scrollY);
-                    });
+                var mainEl = document.getElementById('mainContent');
+                if (mainEl) {
+                    mainEl.style.visibility = 'hidden';
+                    mainEl.style.minHeight = mainEl.offsetHeight + 'px';
                 }
+                renderTasks();
+                renderScheduleSection();
+                renderMonthTable();
+                renderStatusCards();
+                renderGoogleTasks();
+                requestAnimationFrame(function() {
+                    if (mainEl) {
+                        mainEl.style.visibility = '';
+                        mainEl.style.minHeight = '';
+                    }
+                    window.scrollTo(0, scrollY);
+                });
 
                 // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
                 const _taskTab = document.getElementById('tab-tasks');
@@ -3343,18 +3345,14 @@
                 const _weekTab = document.getElementById('tab-week');
                 if (_weekTab) _weekTab.dataset.rendered = '';
 
-                // 最終更新時刻を更新（デバッグ情報付き）
-                var gasSchedCount = Array.isArray(data.scheduleEvents) ? data.scheduleEvents.length : 0;
-                var gasSchedEvents = 0;
-                if (Array.isArray(data.scheduleEvents)) {
-                    data.scheduleEvents.forEach(function(d) { gasSchedEvents += (d.events ? d.events.length : 0); });
-                }
-                var debugInfo = ' (GAS: ' + gasSchedCount + '日/' + gasSchedEvents + '件)';
-                if (data.calError) debugInfo += ' [CalErr: ' + data.calError + ']';
+                // 最終更新時刻を更新・保存
+                var syncText = '最終更新: ' + (data.timestamp || '');
+                if (data.calError) syncText += ' [CalErr: ' + data.calError + ']';
                 const globalSync = document.getElementById('globalSyncTime');
                 if (globalSync && data.timestamp) {
-                    globalSync.textContent = '最終更新: ' + data.timestamp + debugInfo;
+                    globalSync.textContent = syncText;
                 }
+                try { localStorage.setItem('dashSyncTime', syncText); } catch(e) {}
 
             } catch(err) {
                 console.warn('GAS API取得失敗（バックアップデータを使用）:', err.message);
