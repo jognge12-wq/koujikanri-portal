@@ -5,7 +5,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="施工管理">
@@ -2622,8 +2622,6 @@
         const googleTasks = [
             {title: '竹山様邸図面チェック', due: '2026-04-04'},
             {title: '竹山様邸砕石追加見積もりの提示', due: '2026-04-07', deadline: '2026-04-11'},
-            {title: '川地様邸ニッチクロス変更の朱書と指示', due: '2026-04-07', deadline: '2026-04-07'},
-            {title: '柴田様邸南面マモラー横の屋根の浮き確認', due: '2026-04-07', deadline: '2026-04-10'},
             {title: '小林様邸宅配ボックス納品連絡', due: '2026-04-10', deadline: '2026-04-18'},
             {title: '竹中様邸外構追加発注※土肥さんから日時指定有り', due: '2026-04-11', deadline: '2026-04-17'},
             {title: '大山様邸予算依頼', due: '2026-04-16'},
@@ -3300,11 +3298,19 @@
                     }
                 }
 
+                // Google Tasks更新（GASからリアルタイム取得）
+                if (Array.isArray(data.googleTasks) && data.googleTasks.length > 0) {
+                    googleTasks.length = 0;
+                    data.googleTasks.forEach(function(t) { googleTasks.push(t); });
+                    googleTasksUpdatedAt = data.timestamp || '';
+                }
+
                 // UIを再レンダリング
                 renderTasks();
                 renderScheduleSection();
                 renderMonthTable();
                 renderStatusCards();
+                renderGoogleTasks();
 
                 // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
                 const _taskTab = document.getElementById('tab-tasks');
@@ -4328,6 +4334,18 @@
 
         init();
         setupDragAndDrop();
+
+        // ツール画面から戻った時のレイアウト崩れ防止（iOS Safari BFCache対策）
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                // BFCacheから復帰した場合、viewportをリセット
+                var vp = document.querySelector('meta[name="viewport"]');
+                var content = vp.getAttribute('content');
+                vp.setAttribute('content', 'width=device-width');
+                setTimeout(function() { vp.setAttribute('content', content); }, 0);
+                window.scrollTo(0, 0);
+            }
+        });
     </script>
 
     <!-- ===== ツール詳細シート ===== -->
