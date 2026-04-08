@@ -3284,10 +3284,32 @@
                 }
 
                 // 週間スケジュールイベント更新
-                // GASからデータが返れば常に採用（リアルタイムが最新）
-                // 空配列の場合のみバックアップを保持（カレンダーAPIエラー時）
+                // GASが実際にイベントを含むデータを返した場合のみ採用
+                // カレンダーAPIエラーで空イベントが返った場合はバックアップを保持
                 if (Array.isArray(data.scheduleEvents) && data.scheduleEvents.length > 0) {
-                    scheduleEvents = data.scheduleEvents;
+                    var gasHasRealEvents = data.scheduleEvents.some(function(d) {
+                        return d.events && d.events.length > 0;
+                    });
+                    if (gasHasRealEvents) {
+                        // GASに実イベントあり → 週間分をマージ
+                        // バックアップにしかない日はバックアップから補完
+                        var gasMap = {};
+                        data.scheduleEvents.forEach(function(d) { gasMap[d.dateStr] = d; });
+                        var merged = [];
+                        scheduleEvents.forEach(function(d) {
+                            if (gasMap[d.dateStr]) {
+                                merged.push(gasMap[d.dateStr]);
+                                delete gasMap[d.dateStr];
+                            } else {
+                                merged.push(d);
+                            }
+                        });
+                        // GASにあってバックアップにない日も追加
+                        Object.keys(gasMap).forEach(function(k) { merged.push(gasMap[k]); });
+                        // 日付順ソート
+                        merged.sort(function(a, b) { return a.dateStr < b.dateStr ? -1 : a.dateStr > b.dateStr ? 1 : 0; });
+                        scheduleEvents = merged;
+                    }
                 }
 
                 // Google Tasks更新（GASからリアルタイム取得）
@@ -3321,14 +3343,22 @@
                 const _weekTab = document.getElementById('tab-week');
                 if (_weekTab) _weekTab.dataset.rendered = '';
 
-                // 最終更新時刻を更新
+                // 最終更新時刻を更新（デバッグ情報付き）
+                var gasSchedCount = Array.isArray(data.scheduleEvents) ? data.scheduleEvents.length : 0;
+                var gasSchedEvents = 0;
+                if (Array.isArray(data.scheduleEvents)) {
+                    data.scheduleEvents.forEach(function(d) { gasSchedEvents += (d.events ? d.events.length : 0); });
+                }
+                var debugInfo = ' (GAS: ' + gasSchedCount + '日/' + gasSchedEvents + '件)';
                 const globalSync = document.getElementById('globalSyncTime');
                 if (globalSync && data.timestamp) {
-                    globalSync.textContent = `最終更新: ${data.timestamp}`;
+                    globalSync.textContent = '最終更新: ' + data.timestamp + debugInfo;
                 }
 
             } catch(err) {
                 console.warn('GAS API取得失敗（バックアップデータを使用）:', err.message);
+                var globalSyncErr = document.getElementById('globalSyncTime');
+                if (globalSyncErr) globalSyncErr.textContent = 'GASエラー: ' + err.message;
                 // エラー時もバックアップデータで再描画（初回表示が消えないように）
                 renderScheduleSection();
             }
