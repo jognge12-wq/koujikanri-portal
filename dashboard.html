@@ -3297,27 +3297,23 @@
                     googleTasksUpdatedAt = data.timestamp || '';
                 }
 
-                // UIを再レンダリング（iOS Safari縮小防止: position:fixedで完全固定）
-                var body = document.body;
+                // UIを再レンダリング（iOS Safari縮小防止: viewport固定で描画）
                 var scrollY = window.scrollY;
-                body.style.position = 'fixed';
-                body.style.top = '-' + scrollY + 'px';
-                body.style.left = '0';
-                body.style.right = '0';
-                body.style.width = '100%';
-                renderTasks();
-                renderScheduleSection();
-                renderMonthTable();
-                renderStatusCards();
-                renderGoogleTasks();
-                requestAnimationFrame(function() {
-                    body.style.position = '';
-                    body.style.top = '';
-                    body.style.left = '';
-                    body.style.right = '';
-                    body.style.width = '';
-                    window.scrollTo(0, scrollY);
-                });
+                var vp = document.querySelector('meta[name="viewport"]');
+                var vpOrig = vp ? vp.getAttribute('content') : '';
+                try {
+                    if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                    renderTasks();
+                    renderScheduleSection();
+                    renderMonthTable();
+                    renderStatusCards();
+                    renderGoogleTasks();
+                } finally {
+                    requestAnimationFrame(function() {
+                        if (vp && vpOrig) vp.setAttribute('content', vpOrig);
+                        window.scrollTo(0, scrollY);
+                    });
+                }
 
                 // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
                 const _taskTab = document.getElementById('tab-tasks');
@@ -3333,6 +3329,8 @@
 
             } catch(err) {
                 console.warn('GAS API取得失敗（バックアップデータを使用）:', err.message);
+                // エラー時もバックアップデータで再描画（初回表示が消えないように）
+                renderScheduleSection();
             }
         }
 
