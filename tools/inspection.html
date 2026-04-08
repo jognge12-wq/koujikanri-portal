@@ -343,7 +343,8 @@ async function autoDeleteCompletedProjects() {
 function renderProjectList() {
   const select = document.getElementById('project-select');
   select.innerHTML = '<option value="">物件を選択してください</option>';
-  projects.forEach(p => {
+  const sorted = [...projects].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  sorted.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
     const done = isProjectComplete(p);
@@ -367,7 +368,7 @@ function renderButtons() {
       </button>
       <button id="del-btn-${type}" onclick="toggleDelegate('${type}', event)"
         class="delegate-btn absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-500 leading-tight transition-all">
-        代理
+        $��理
       </button>
     </div>`).join('');
 }
