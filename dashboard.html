@@ -2516,7 +2516,7 @@
              checks: {棟札: true, 改良: true, 外構: true, 先外: false, 鎮物: false}},
             {id: 10, name: '山田H様', location: '瑞穂市', shinchoku: '工事中',
              notionId: '2f86ad84622180dd98c1f4de9ae7019c',
-             dates: {着工: '2026/03/16', 建方: '2026/04/27', 引渡: '2026/07/25'},
+             dates: {着工: '2026/03/16', 建方: '2026/04/27', 引渡: '2026/09/26'},
              checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
             {id: 11, name: '野田H様', location: '関市', shinchoku: '工事中',
              notionId: '2f86ad8462218055955afea896a7ec1c',
@@ -3350,6 +3350,7 @@
                     data.scheduleEvents.forEach(function(d) { gasSchedEvents += (d.events ? d.events.length : 0); });
                 }
                 var debugInfo = ' (GAS: ' + gasSchedCount + '日/' + gasSchedEvents + '件)';
+                if (data.calError) debugInfo += ' [CalErr: ' + data.calError + ']';
                 const globalSync = document.getElementById('globalSyncTime');
                 if (globalSync && data.timestamp) {
                     globalSync.textContent = '最終更新: ' + data.timestamp + debugInfo;
