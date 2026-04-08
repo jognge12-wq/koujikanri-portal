@@ -2648,9 +2648,24 @@
             {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'}
         ];
 
-        // 今日・明日のカレンダーイベント（バックアップ。GAS取得で上書き）
-        // [自動更新 2026-04-08 09:00] gcal-dashboard-douki が毎朝5時に更新
+        // カレンダーイベント（バックアップ。GAS取得で上書き）
+        // [自動更新 2026-04-08 23:50] gcal-dashboard-douki が毎朝5時に更新
         let scheduleEvents = [
+            { dateStr: '2026-04-05', events: [
+                { title: '法定休日', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
+            ]},
+            { dateStr: '2026-04-06', events: [
+                { title: '4/19振休', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
+                { title: '野尻様邸先行外構', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
+            ]},
+            { dateStr: '2026-04-07', events: [
+                { title: '藤本様邸基礎検査※桑原くん', isAllDay: true, startTime: null, endTime: null, color: '#9a9cff' },
+                { title: '髙橋様邸基礎検査※桑原くん', isAllDay: true, startTime: null, endTime: null, color: '#9a9cff' },
+                { title: '柴田様邸竣工前確認', isAllDay: false, startTime: '08:30', endTime: '10:00', color: '#9a9cff' },
+                { title: '野尻様邸現場確認', isAllDay: false, startTime: '10:00', endTime: '11:30', color: '#9a9cff' },
+                { title: '箕浦様邸竣工立会い', isAllDay: false, startTime: '13:30', endTime: '15:30', color: '#9a9cff' },
+                { title: '川地様邸性能断熱検査', isAllDay: false, startTime: '15:00', endTime: '15:30', color: '#9a9cff' }
+            ]},
             { dateStr: '2026-04-08', events: [
                 { title: 'スミリン会コンペ', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
                 { title: '所定休日', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
@@ -2658,6 +2673,16 @@
             { dateStr: '2026-04-09', events: [
                 { title: '計画年休', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
                 { title: '野田様邸足場解体', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
+            ]},
+            { dateStr: '2026-04-10', events: [
+                { title: '福田様邸足場解体', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
+                { title: '柴田様邸竣工検査', isAllDay: false, startTime: '08:30', endTime: '16:00', color: '#9a9cff' },
+                { title: '長屋様邸仮設計画打合せ', isAllDay: false, startTime: '17:00', endTime: '18:00', color: '#9a9cff' },
+                { title: '竹山様邸図面FB', isAllDay: false, startTime: '18:00', endTime: '19:00', color: '#9a9cff' }
+            ]},
+            { dateStr: '2026-04-11', events: [
+                { title: '大山様邸地鎮祭・地縄立会い', isAllDay: false, startTime: '09:00', endTime: '10:30', color: '#9a9cff' },
+                { title: '森瀬様邸木完立会い', isAllDay: false, startTime: '14:00', endTime: '15:30', color: '#9a9cff' }
             ]}
         ];
 
@@ -3173,9 +3198,24 @@
             const now        = new Date();
             const todayMs    = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const tomorrowMs = todayMs + 86400000;
+            const todayStr   = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+            const tmrDate    = new Date(tomorrowMs);
+            const tmrStr     = tmrDate.getFullYear() + '-' + String(tmrDate.getMonth()+1).padStart(2,'0') + '-' + String(tmrDate.getDate()).padStart(2,'0');
+
+            // ホームタブでは今日・明日のみ表示（週間タブはgetCalendarEventsForDateで全日参照可）
+            const homeDays = scheduleEvents.filter(function(d) {
+                return d.dateStr === todayStr || d.dateStr === tmrStr;
+            });
+            // 今日・明日がデータに無い場合は空で補完
+            if (!homeDays.find(function(d){ return d.dateStr === todayStr; })) {
+                homeDays.unshift({ dateStr: todayStr, events: [] });
+            }
+            if (!homeDays.find(function(d){ return d.dateStr === tmrStr; })) {
+                homeDays.push({ dateStr: tmrStr, events: [] });
+            }
 
             let html = '';
-            scheduleEvents.forEach(function(day) {
+            homeDays.forEach(function(day) {
                 const parts = day.dateStr.split('-');
                 const y = parseInt(parts[0]), mo = parseInt(parts[1]), d = parseInt(parts[2]);
                 const dateMs = new Date(y, mo - 1, d).getTime();
@@ -3247,8 +3287,17 @@
                 }
 
                 // 今日・明日のスケジュールイベント更新
+                // GASがカレンダーエラーで空を返した場合、バックアップデータを保持する
                 if (Array.isArray(data.scheduleEvents)) {
-                    scheduleEvents = data.scheduleEvents;
+                    const gasHasEvents = data.scheduleEvents.some(function(d) {
+                        return d.events && d.events.length > 0;
+                    });
+                    const backupHasEvents = scheduleEvents.some(function(d) {
+                        return d.events && d.events.length > 0;
+                    });
+                    if (gasHasEvents || !backupHasEvents) {
+                        scheduleEvents = data.scheduleEvents;
+                    }
                 }
 
                 // UIを再レンダリング
