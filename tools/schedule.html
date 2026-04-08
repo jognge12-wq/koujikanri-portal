@@ -288,7 +288,7 @@ function calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi) {
     <div class="bg-white rounded-t-2xl p-5 pb-8 w-full max-w-md shadow-xl">
       <p class="text-sm font-bold text-slate-800 mb-1">GAS WebApp URL を設定</p>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        現場タスク自動登録 v3 のデプロイURLを入力してください。物件登録ツールと共有します。
+        現場タスグ自動登録 v3 のデプロイURLを入力してください。物件登録ツールと共有します。
       </p>
       <div class="flex gap-2">
         <input type="url" id="urlPanelInput"
@@ -382,7 +382,7 @@ function calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi) {
       </div>
     </div>
 
-    <!-- 計算ボタン -->
+    <!-- 墢加ボタン -->
     <button id="btn-calc" onclick="calculate()"
       class="w-full py-4 px-5 rounded-2xl font-bold text-slate-500 bg-slate-200 pointer-events-none shadow-xl active:scale-95 transition-all duration-200">
       <span class="flex items-center justify-center gap-2">
@@ -475,7 +475,8 @@ function calcSchedules(bukkenName, location, chakou, tatemae, hikiwatashi) {
         <p class="text-[12px] text-slate-600 leading-relaxed">Googleカレンダーを開いて確認してください。</p>
         <button onclick="resetForm()"
           class="mt-2 text-[12px] font-bold text-sfc-primary border border-sfc-border bg-white rounded-xl px-4 py-2 active:scale-95 transition-all">
-          別の物件を作成する
+          #�"����&���ێ
+H��成する
         </button>
       </div>
     </div>
@@ -531,7 +532,7 @@ function loadNotionProperties() {
         statusEl.classList.remove('hidden');
         return;
       }
-      _notionProperties.forEach(p => {
+      [..._notionProperties].sort((a, b) => a.name.localeCompare(b.name, 'ja')).forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
         opt.textContent = p.name;
