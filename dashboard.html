@@ -4395,10 +4395,20 @@
 
         init();
         setupDragAndDrop();
+
+        // PWA(standalone)モードではiOSが前回スクロール位置を復元するため、強制的に無効化
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
         // ページ読み込み時に必ずトップへスクロール
         window.scrollTo(0, 0);
         // iOS Safari: 遅延してもう一度スクロール（レンダリング後にずれる対策）
         setTimeout(function() { window.scrollTo(0, 0); }, 100);
+        setTimeout(function() { window.scrollTo(0, 0); }, 300);
+        // iOS standaloneモード用: DOMContentLoaded後にも再度
+        if (window.navigator.standalone) {
+            setTimeout(function() { window.scrollTo(0, 0); }, 500);
+        }
 
         // ツール画面から戻った時のレイアウト崩れ防止（iOS Safari BFCache対策）
         window.addEventListener('pageshow', function(e) {
@@ -4410,6 +4420,7 @@
                     setTimeout(function() { vp.setAttribute('content', content); }, 0);
                 }
                 window.scrollTo(0, 0);
+                setTimeout(function() { window.scrollTo(0, 0); }, 100);
             }
         });
     </script>
