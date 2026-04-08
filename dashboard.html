@@ -2883,6 +2883,26 @@
         }
 
         function init() {
+            // localStorageキャッシュがあればバックアップデータより優先
+            try {
+                var cachedSched = localStorage.getItem('dashScheduleEvents');
+                if (cachedSched) {
+                    var parsed = JSON.parse(cachedSched);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        scheduleEvents = parsed;
+                    }
+                }
+                var cachedTasks = localStorage.getItem('dashGoogleTasks');
+                if (cachedTasks) {
+                    var parsedT = JSON.parse(cachedTasks);
+                    if (Array.isArray(parsedT) && parsedT.length > 0) {
+                        googleTasks.length = 0;
+                        parsedT.forEach(function(t) { googleTasks.push(t); });
+                    }
+                }
+                var cachedTasksAt = localStorage.getItem('dashGoogleTasksAt');
+                if (cachedTasksAt) googleTasksUpdatedAt = cachedTasksAt;
+            } catch(e) {}
             renderProperties();
             renderTasks();
             renderGoogleTasks();
@@ -3318,6 +3338,13 @@
                     data.googleTasks.forEach(function(t) { googleTasks.push(t); });
                     googleTasksUpdatedAt = data.timestamp || '';
                 }
+
+                // GASデータをlocalStorageにキャッシュ（リロード時にバックアップより優先）
+                try {
+                    localStorage.setItem('dashScheduleEvents', JSON.stringify(scheduleEvents));
+                    localStorage.setItem('dashGoogleTasks', JSON.stringify(googleTasks));
+                    localStorage.setItem('dashGoogleTasksAt', googleTasksUpdatedAt);
+                } catch(e) {}
 
                 // UIを再レンダリング（iOS Safari縮小防止: 描画中は非表示）
                 var scrollY = window.scrollY;
