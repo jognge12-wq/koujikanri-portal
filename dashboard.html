@@ -2648,8 +2648,18 @@
             {title: '山田様邸建て方人数確認、報告', due: null, deadline: '2026-04-20'}
         ];
 
-        // 今日・明日のカレンダーイベント（GASから動的取得）
-        let scheduleEvents = [];
+        // 今日・明日のカレンダーイベント（バックアップ。GAS取得で上書き）
+        // [自動更新 2026-04-08 09:00] gcal-dashboard-douki が毎朝5時に更新
+        let scheduleEvents = [
+            { dateStr: '2026-04-08', events: [
+                { title: 'スミリン会コンペ', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
+                { title: '所定休日', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
+            ]},
+            { dateStr: '2026-04-09', events: [
+                { title: '計画年休', isAllDay: true, startTime: null, endTime: null, color: '#fad165' },
+                { title: '野田様邸足場解体', isAllDay: true, startTime: null, endTime: null, color: '#fad165' }
+            ]}
+        ];
 
         // ===== 着工・引渡しデータ（Googleカレンダーから取得） =====
         // 着工: 「全日予定」カレンダーの「〜様邸本体着工」イベント
