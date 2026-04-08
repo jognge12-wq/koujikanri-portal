@@ -2577,46 +2577,38 @@
             {id: 110, name: '加藤S様', location: '岐阜市', shinchoku: '着工前',
              notionId: '31e6ad84622180c3b537c8396c7b4c9c',
              dates: {着工: '2026/05/21', 建方: '2026/07/06', 引渡: '2026/11/07'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}}
+             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
+            {id: 111, name: '大山S・M様', location: '大垣市', shinchoku: '着工前',
+             notionId: '2f86ad8462218068bd9ff57eb6477e46',
+             dates: {着工: '2026/04/28', 建方: '2026/06/15', 引渡: '2026/09/12'},
+             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}}
         ];
 
         // 優先タスク（Notionビュー「全現場共通タスクのビュー」から取得）
         // フィルタ: 優先=YES, 完了=NO / 物件名でグループ化
         // priorityTasksUpdatedAt と priorityTasks は scheduled task "sync-priority-tasks" が自動更新する
-        let priorityTasksUpdatedAt = '2026-04-07 06:50';
+        let priorityTasksUpdatedAt = '2026-04-08 05:09';
         let priorityTasks = [
-            // 箕浦Y様（竣工立会い）引渡し2026-04-13まで6日→red ※2026-04-07 06:50時点
-            {id: 1, notionPageId: '2f86ad84622181879d1cf11782ba4721', title: '災害用スリーブの説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 2, notionPageId: '2f86ad8462218131be74c97b45b2cb6a', title: '引渡しの実印持参の案内', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 3, notionPageId: '2f86ad84622181c98973d9214e57521d', title: '汚水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 4, notionPageId: '2f86ad846221814fa43be5540e0ac084', title: '雨水桝の清掃の説明', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            {id: 5, notionPageId: '2f86ad84622181fa8336e11809ae47f6', title: '立会い完了の報告', property: '箕浦Y様', propertyNotionId: '2f86ad84622180dface2e782fee9d04d', stage: '竣工立会い', status: 'red', completed: false},
-            // 髙橋T・A様（工事中：基礎検査）建て方2026-04-13まで6日→red
-            {id: 6, notionPageId: '2f86ad8462218104a16bef3108028b55', title: '建て方の近隣挨拶分の作成・持参', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 7, notionPageId: '2f86ad846221812295a7d1ff7cd818c4', title: '防蟻パイプの本数計測・記録', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 8, notionPageId: '2f86ad8462218190806dd7e55d745597', title: '基礎精算の依頼', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            {id: 9, notionPageId: '2f86ad84622181cba791c2d6127f3757', title: '構造検査・構造立会いのスケジュール共有', property: '髙橋T・A様', propertyNotionId: '2f86ad84622180f6a1ebd584c21a03d0', stage: '基礎検査', status: 'red', completed: false},
-            // 藤本A様（工事中：基礎検査）建て方2026-04-15まで8日→amber
-            {id: 10, notionPageId: '2f86ad8462218190ab51cd7055c49706', title: '建て方の近隣挨拶分の作成・持参', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 11, notionPageId: '2f86ad84622181bc879fcbe671f096ac', title: 'スラブ厚の計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 12, notionPageId: '2f86ad8462218139a5a0d04abaf98c9f', title: '防蟻パイプの本数計測・記録', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            {id: 13, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            // 野田H様（工事中：木完検査）引渡し2026-05-30まで53日→green
-            {id: 14, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 15, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 16, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 17, notionPageId: '2f86ad8462218116b63cd0709fcec20d', title: '実績入力：足場解体', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 18, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            // 大山S・M様（着工前：地縄立会い→地鎮祭フェーズ）着工2026-04-28まで21日→green
-            {id: 19, notionPageId: '2f86ad846221810a8ce2e2cfbb9f1432', title: '奉献酒の用意', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
-            {id: 20, notionPageId: '2f86ad84622181fc87edeeeb5b34e06b', title: '鎮め物を業者へ渡す', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
-            {id: 21, notionPageId: '2f86ad846221812099dee399d72778c6', title: '立会いノートの伝言板アップ', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 22, notionPageId: '2f86ad84622181329190de4fada39d87', title: '引継ぎ会日時の依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 23, notionPageId: '2f86ad846221813fb46ff697d45a8258', title: '立会い完了・施工計画説明日時の共有・カレンダー共有', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 24, notionPageId: '2f86ad84622181f0b021cd88273ac0d7', title: '施工計画説明の日時決定', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 25, notionPageId: '2f86ad84622181859213fcb1961da45d', title: '遣り方検査の日程依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 26, notionPageId: '2f86ad846221813eaea9e79cc56004df', title: '実績入力：地縄立会い', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 27, notionPageId: '2f86ad84622181e287fac2f12900e620', title: 'ショールームの予約', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false}
+            // 柴田S・S様（竣工検査）引渡し2026-04-25まで17日→amber ※2026-04-08 05:09時点
+            {id: 1, notionPageId: '2f86ad84622181709659e5eb9e023bb3', title: '完了検査・性能評価検査の完了報告', property: '柴田S・S様', propertyNotionId: '2f86ad84622180bdb338d025d925e96f', stage: '竣工検査', status: 'amber', completed: false},
+            // 藤本A様（工事中：基礎検査）→amber
+            {id: 2, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
+            // 野田H様（工事中：木完検査）引渡し2026-05-30まで52日→green
+            {id: 3, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 4, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 5, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 6, notionPageId: '2f86ad8462218116b63cd0709fcec20d', title: '実績入力：足場解体', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            {id: 7, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
+            // 大山S・M様（着工前：地縄立会い→地鎮祭フェーズ）着工2026-04-28まで20日→green
+            {id: 8, notionPageId: '2f86ad846221810a8ce2e2cfbb9f1432', title: '奉献酒の用意', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
+            {id: 9, notionPageId: '2f86ad84622181fc87edeeeb5b34e06b', title: '鎮め物を業者へ渡す', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
+            {id: 10, notionPageId: '2f86ad846221812099dee399d72778c6', title: '立会いノートの伝言板アップ', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 11, notionPageId: '2f86ad84622181329190de4fada39d87', title: '引継ぎ会日時の依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 12, notionPageId: '2f86ad846221813fb46ff697d45a8258', title: '立会い完了・施工計画説明日時の共有・カレンダー共有', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 13, notionPageId: '2f86ad84622181f0b021cd88273ac0d7', title: '施工計画説明の日時決定', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 14, notionPageId: '2f86ad84622181859213fcb1961da45d', title: '遣り方検査の日程依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 15, notionPageId: '2f86ad846221813eaea9e79cc56004df', title: '実績入力：地縄立会い', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
+            {id: 16, notionPageId: '2f86ad84622181e287fac2f12900e620', title: 'ショールームの予約', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false}
         ];
 
         const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -2626,7 +2618,7 @@
         let googleTasksUpdatedAt = '2026-04-07 07:03';
 
         // Googleカレンダー更新時刻（スケジュールタスクが自動更新）
-        let gcalUpdatedAt = '2026-04-07 06:49';
+        let gcalUpdatedAt = '2026-04-08 05:01';
         const googleTasks = [
             {title: '竹山様邸図面チェック', due: '2026-04-04'},
             {title: '竹山様邸砕石追加見積もりの提示', due: '2026-04-07', deadline: '2026-04-11'},
@@ -2665,6 +2657,7 @@
         // ※スケジュールタスクで自動更新（最終同期: 2026/4/6）
         // [自動更新 2026-04-06 16:03] 着工21件・引渡し27件確認済み・差分なし・配列最新
         // [自動更新 2026-04-07 06:17] 着工21件・引渡しカレンダー0件（既存27件維持）・差分なし・タイムスタンプのみ更新
+        // [自動更新 2026-04-08 05:01] 着工21件・引渡しカレンダー0件（既存27件維持）・差分なし・タイムスタンプのみ更新
 
         // 着工済み実績（今日以前の「本体着工」イベント）
         let startedProperties = [
@@ -3962,7 +3955,8 @@
                     <div class="card">
                         <div class="card-head">
                             <div class="card-title">優先タスク</div>
-                            <a href="https://www.notion.so/2f76ad84622180008770f5b476df4dc4?v=2f76ad846221803bbb6d000c182e1549" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;">Notionで編集 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
+                            <span style="font-size:11px;color:var(--text3);margin-left:4px;">${priorityTasks.length}件</span>
+                            <a href="https://www.notion.so/2f76ad84622180008770f5b476df4dc4?v=2f76ad846221803bbb6d000c182e1549" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:3px;margin-left:auto;">Notionで編集 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>
                         </div>
                         ${ptHtml}
                     </div>
