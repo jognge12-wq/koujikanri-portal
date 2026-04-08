@@ -3305,12 +3305,21 @@
                     googleTasksUpdatedAt = data.timestamp || '';
                 }
 
-                // UIを再レンダリング
+                // UIを再レンダリング（iOS Safari縮小防止: body幅固定→描画→解除）
+                var body = document.body;
+                var scrollY = window.scrollY;
+                body.style.minWidth = body.offsetWidth + 'px';
+                body.style.overflow = 'hidden';
                 renderTasks();
                 renderScheduleSection();
                 renderMonthTable();
                 renderStatusCards();
                 renderGoogleTasks();
+                requestAnimationFrame(function() {
+                    body.style.minWidth = '';
+                    body.style.overflow = '';
+                    window.scrollTo(0, scrollY);
+                });
 
                 // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
                 const _taskTab = document.getElementById('tab-tasks');
