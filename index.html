@@ -3813,10 +3813,8 @@
 
         function updateClock() {
             const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('clockMini').textContent = `${h}:${m}`;
-            document.getElementById('greetingComment').textContent = getComment(now.getHours(), now);
+            const comment = document.getElementById('greetingComment');
+            if (comment) comment.textContent = getComment(now.getHours(), now);
         }
 
         // ホーム: ステータスサマリー更新
