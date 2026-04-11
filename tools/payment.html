@@ -38,14 +38,22 @@
     }
     .setup-input:focus { border-color:#004d29; }
     .setup-input::placeholder { color:#94a3b8; font-family:'Noto Sans JP',sans-serif; }
+    /* レスポンシブ高さ調整 */
+    @media (min-width: 768px) {
+      [data-responsive-height] { height: calc(100vh - 64px) !important; }
+    }
+    @media (min-width: 1024px) {
+      [data-responsive-height] { height: calc(100vh - 96px) !important; }
+    }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-900">
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 lg:p-12 font-sans text-slate-900">
 
 <!-- ===== アプリカード（schedule.html / inspection.html と同一構造） ===== -->
 <div id="app"
-     class="max-w-md mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
-     style="height: calc(100vh - 32px);">
+     class="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
+     style="height: calc(100vh - 32px);"
+     data-responsive-height>
 
   <!-- ヘッダー（schedule.html から完全コピー） -->
   <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">

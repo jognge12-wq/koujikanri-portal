@@ -76,6 +76,26 @@
 <body class="bg-slate-100 min-h-screen font-sans text-slate-900">
 
 <script>
+/* レスポンシブ: コンテナ幅をデバイスに合わせて調整（DOMContentLoaded後に実行） */
+document.addEventListener('DOMContentLoaded', function(){
+  var app = document.getElementById('app');
+  if (!app) return;
+  function setWidth(){
+    var w = window.innerWidth;
+    if(w >= 1024){
+      app.style.maxWidth = '900px';
+    } else if(w >= 768){
+      app.style.maxWidth = '640px';
+    } else {
+      app.style.maxWidth = '448px';
+    }
+  }
+  setWidth();
+  window.addEventListener('resize', setWidth);
+});
+</script>
+
+<script>
 const GAS_CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbxZvu3-7dYrh3_f9lMS1etMp4_20F9D5Z6bgwgJPryOKdwtttyyDQz2oaSJIVmexXhA/exec',
   SENDER: {
@@ -99,7 +119,7 @@ const GAS_CONFIG = {
 };
 </script>
 
-<div class="py-4 px-3">
+<div class="py-4 px-3 md:py-8 md:px-8 lg:py-12 lg:px-12">
 <div id="app" class="max-w-md mx-auto bg-white shadow-xl rounded-3xl overflow-hidden border border-slate-100">
 
   <!-- ===== Main View ===== -->
