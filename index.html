@@ -509,18 +509,11 @@
             letter-spacing: 0.3px;
             text-shadow: 0 1px 6px rgba(0,0,0,0.5);
             line-height: 1.2;
+            white-space: nowrap;
         }
 
-        /* 時刻（日付の下に配置） */
-        .clock-mini {
-            font-size: 15px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.85);
-            letter-spacing: 0.5px;
-            line-height: 1;
-            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
-            font-family: 'DM Mono', monospace;
-        }
+        /* 時刻（非表示） */
+        .clock-mini { display: none; }
 
         /* 六曜・暦注タグ行 */
         .date-rokuyo {
@@ -1826,11 +1819,11 @@
                 display: none;
             }
 
-            /* スマホ: パディングをコンパクトに */
+            /* スマホ: パディングをコンパクトに・上端を揃える */
             .greeting-content {
-                padding: 0 14px 6px 12px;
-                gap: 8px;
-                align-items: flex-end;
+                padding: 0 14px 8px 12px;
+                gap: 10px;
+                align-items: flex-start;
             }
 
             /* 日付側: 縮まないように固定 */
@@ -1838,20 +1831,9 @@
                 flex-shrink: 0;
             }
 
-            .date-main-row {
-                flex-direction: column;
-                gap: 2px;
-            }
-
             .date-main {
                 font-size: 13px;
                 letter-spacing: 0;
-                white-space: nowrap;
-            }
-
-            .clock-mini {
-                font-size: 11px;
-                white-space: nowrap;
             }
 
             .date-rokuyo {
@@ -1955,10 +1937,6 @@
                 font-size: 12px;
             }
 
-            .clock-mini {
-                font-size: 10px;
-            }
-
             .card-title {
                 font-size: 12px;
             }
@@ -2010,13 +1988,11 @@
         }
         .portal-stat:active { border-color: var(--primary); }
         .portal-stat-num {
-            font-family: 'DM Mono', monospace; font-size: 22px;
+            font-family: 'Noto Sans JP', sans-serif; font-size: 22px;
             font-weight: 700; color: var(--primary); line-height: 1;
-            display: flex; align-items: baseline; gap: 1px;
         }
         .portal-stat-unit {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 13px; font-weight: 700; color: var(--primary);
+            font-size: 13px; font-weight: 700;
         }
         .portal-stat-label {
             font-size: 11px; color: var(--text2); font-weight: 500; margin-top: 3px;
@@ -3039,7 +3015,6 @@
                     <div class="date-area">
                         <div class="date-main-row">
                             <div class="date-main" id="dateMain">2026年4月4日（土）</div>
-                            <div class="clock-mini" id="clockMini">00:00</div>
                         </div>
                         <div class="date-rokuyo" id="dateRokuyo"></div>
                     </div>
