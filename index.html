@@ -139,7 +139,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             padding: 0 16px;
             z-index: 99;
         }
@@ -148,34 +148,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .top-bar-brand-icon {
-            width: 28px;
-            height: 28px;
-            background-color: var(--primary);
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .top-bar-brand-icon svg {
-            width: 15px;
-            height: 15px;
-            stroke: #ffffff;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .top-bar-brand-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text1);
-            letter-spacing: 0.1px;
         }
 
         .top-bar-title {
@@ -191,25 +163,30 @@
             cursor: pointer;
             background: none;
             border: none;
+            padding: 0;
+            overflow: visible;
         }
 
         .hamburger span {
             width: 100%;
             height: 2px;
             background-color: var(--text1);
-            transition: all 0.12s ease;
+            transition: all 0.15s ease;
+            display: block;
         }
 
+        /* ×マーク: translateY で中央へ移動してから rotate（はみ出し防止）*/
         .hamburger.open span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
+            transform: translateY(8px) rotate(45deg);
         }
 
         .hamburger.open span:nth-child(2) {
             opacity: 0;
+            transform: scaleX(0);
         }
 
         .hamburger.open span:nth-child(3) {
-            transform: rotate(-45deg) translate(8px, -8px);
+            transform: translateY(-8px) rotate(-45deg);
         }
 
         .drawer {
@@ -1851,15 +1828,28 @@
             .greeting-content {
                 padding: 0 14px 6px 12px;
                 gap: 8px;
+                align-items: flex-end;
+            }
+
+            /* 日付側: 縮まないように固定 */
+            .greeting-top {
+                flex-shrink: 0;
+            }
+
+            .date-main-row {
+                flex-wrap: nowrap;
+                gap: 6px;
             }
 
             .date-main {
                 font-size: 13px;
                 letter-spacing: 0;
+                white-space: nowrap;
             }
 
             .clock-mini {
                 font-size: 13px;
+                white-space: nowrap;
             }
 
             .date-rokuyo {
@@ -1872,9 +1862,11 @@
                 padding: 2px 7px;
             }
 
+            /* コメント側: 残りの幅を使う */
             .greeting-bottom {
-                max-width: 55%;
+                flex: 1;
                 min-width: 0;
+                max-width: none;
             }
 
             .greeting-comment {
@@ -1883,6 +1875,7 @@
                 -webkit-line-clamp: 3;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
+                word-break: break-word;
             }
 
             .grid-2col {
@@ -2929,12 +2922,6 @@
     </nav>
 
     <div class="top-bar">
-        <div class="top-bar-brand">
-            <div class="top-bar-brand-icon">
-                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <span class="top-bar-brand-name">施工管理ポータル</span>
-        </div>
         <span class="top-bar-title" id="topBarTitle" aria-hidden="true">ダッシュボード</span>
         <button class="hamburger" id="hamburger" aria-label="メニューを開く">
             <span></span>
