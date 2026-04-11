@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="../manifest.json">
+  <title>検査依頼</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sfc: {
+              dark:    '#004d29',
+              primary: '#006837',
+              light:   '#e8f5e9',
+              border:  '#a5d6a7'
+            }
+          },
+          fontFamily: {
+            sans: ['Noto Sans JP', 'sans-serif'],
+            mono: ['DM Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes spin-loader {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .icon-spin { animation: spin-loader 0.9s linear infinite; display: inline-block; }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.94) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-card { animation: modal-in 0.18s ease-out forwards; }
+    /* チェックボックスのアクセントカラー */
+    #delegate-check { accent-color: #006837; }
+
+    /* ── カスタム日付ピッカー ── */
+    #date-display-btn { -webkit-tap-highlight-color: transparent; }
+
+    /* ── ドラムロール時刻ピッカー ── */
+    .drum-column { position: relative; height: 200px; overflow: hidden; width: 68px; }
+    .drum-track  { position: relative; z-index: 1; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+    .drum-item   {
+      height: 40px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; font-family: 'Noto Sans JP', sans-serif;
+      color: #cbd5e1; transition: color 0.2s;
+      user-select: none; -webkit-user-select: none;
+    }
+    .drum-item.active { color: #1e293b; font-weight: 800; }
+    .drum-fade-top, .drum-fade-bottom {
+      position: absolute; left: 0; right: 0; height: 80px; pointer-events: none; z-index: 2;
+    }
+    .drum-fade-top    { top: 0; background: linear-gradient(to bottom, #f8fafc 10%, transparent); }
+    .drum-fade-bottom { bottom: 0; background: linear-gradient(to top, #f8fafc 10%, transparent); }
+    .drum-highlight {
+      position: absolute; top: 80px; left: 4px; right: 4px; height: 40px;
+      border-radius: 10px; background: #e8f5e9; border: 2px solid #a5d6a7; z-index: 0;
+    }
+    .drum-separator {
+      font-size: 24px; font-weight: 800; color: #94a3b8; line-height: 200px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
+
+<script>
+const GAS_CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxZvu3-7dYrh3_f9lMS1etMp4_20F9D5Z6bgwgJPryOKdwtttyyDQz2oaSJIVmexXhA/exec',
+  SENDER: {
+    name: '城岸 政行',
+    company: '住友林業株式会社 岐阜支店 生産G',
+    phone: '',
+    bcc: '',
+  },
+  EMAILS: {
+    '基礎': 'JOUGAN_masayuki@star.sfc.co.jp',
+    '躯体': 'JOUGAN_masayuki@star.sfc.co.jp',
+    '断熱': 'JOUGAN_masayuki@star.sfc.co.jp',
+    '竣工': 'JOUGAN_masayuki@star.sfc.co.jp',
+  },
+  PROCESS_LABELS: {
+    '基礎': '基礎検査',
+    '躯体': '躯体検査',
+    '断熱': '断熱検査',
+    '竣工': '竣工検査',
+  },
+};
+</script>
+
+<div class="py-4 px-3">
+<div id="app" class="max-w-md mx-auto bg-white shadow-xl rounded-3xl overflow-hidden border border-slate-100">
+
+  <!-- ===== Main View ===== -->
+  <div id="main-view">
+
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #004d29 0%, #00703d 100%);" class="text-white px-5 py-5">
+      <div class="flex items-center gap-3">
+        <a onclick="goToDashboard()" style="cursor:pointer;"
+           class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 transition-colors flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-75">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <h1 class="text-base font-bold tracking-wide">検査依頼</h1>
+          </div>
+          <p class="text-[11px] text-white/55 mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-5 space-y-5">
+
+      <!-- ── Step 1: 物件 ── -->
+      <div>
+        <div class="flex items-center gap-2 mb-2.5">
+          <span class="w-5 h-5 rounded-full bg-sfc-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">1</span>
+          <span class="text-[10px] font-black text-slate-400 tracking-widest uppercase">物件を選択</span>
+        </div>
+
+        <select id="project-select" onchange="onProjectChange(this.value)"
+          class="w-full p-4 border-2 border-slate-200 rounded-xl bg-white focus:border-sfc-primary outline-none text-base font-bold appearance-none">
+          <option value="">物件を選択してください</option>
+        </select>
+
+        <!-- 登録番号（インライン） -->
+        <div id="project-info" class="hidden mt-3">
+
+          <!-- 登録番号あり：表示モード -->
+          <div id="reg-has-value" class="hidden">
+            <div class="px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">登録番号</span>
+                  <span id="reg-value-display" class="font-mono font-bold text-sm text-sfc-primary"></span>
+                </div>
+                <button onclick="startEditReg()"
+                  class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 font-bold px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                  </svg>
+                  編集
+                </button>
+              </div>
+              <!-- 所在地（市町村）：Notionから取得できた場合のみ表示 -->
+              <div id="city-row" class="hidden">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">所在地</span>
+                  <span id="city-display" class="text-xs font-bold text-slate-600"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 未設定 or 編集中：入力モード -->
+          <div id="reg-edit-section" class="hidden">
+            <div class="flex items-center gap-1.5 mb-2 px-0.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">登録番号</span>
+              <span id="reg-unset-badge" class="text-[10px] font-bold text-amber-500">（未設定）</span>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="inline-reg-input" placeholder="2026-001"
+                class="flex-1 p-3.5 border-2 border-slate-200 rounded-xl outline-none focus:border-sfc-primary text-sm font-bold font-mono bg-white">
+              <button onclick="saveInlineReg()"
+                class="px-5 rounded-xl text-sm font-bold text-white bg-sfc-primary active:scale-95 transition-all">保存</button>
+            </div>
+            <button id="reg-cancel-edit" onclick="cancelEditReg()"
+              class="hidden mt-2 text-[11px] text-slate-400 hover:text-slate-600 px-0.5">
+              キャンセル
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100"></div>
+
+      <!-- ── Step 2: 検査区分 ── -->
+      <div id="section-inspection" class="opacity-30 pointer-events-none transition-opacity duration-300">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-5 h-5 rounded-full bg-sfc-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">2</span>
+          <span class="text-[10px] font-black text-slate-400 tracking-widest uppercase">検査区分を選択</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3" id="inspection-grid"></div>
+      </div>
+
+      <div class="border-t border-slate-100"></div>
+
+      <!-- ── Step 3: 日程 ── -->
+      <div id="section-datetime" class="opacity-30 pointer-events-none transition-opacity duration-300">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-5 h-5 rounded-full bg-sfc-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">3</span>
+          <span class="text-[10px] font-black text-slate-400 tracking-widest uppercase">検査依頼日</span>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-4">
+
+          <!-- 希望日（カスタム表示 + hidden native input） -->
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 block mb-1.5">希望日</label>
+            <input type="date" id="inspection-date" onchange="updateDay()"
+              class="absolute opacity-0 w-0 h-0 pointer-events-none" tabindex="-1">
+            <button type="button" id="date-display-btn" onclick="openDatePicker()"
+              class="w-full flex items-center justify-between p-3.5 border-2 border-slate-200 rounded-xl bg-white hover:border-sfc-primary active:border-sfc-primary transition-colors text-left">
+              <span id="date-display-text" class="text-base font-bold text-slate-400">日付を選択</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 開始時刻（ドラムロール式） -->
+          <div>
+            <label class="text-[11px] font-bold text-slate-400 block mb-1.5">開始時刻</label>
+            <div class="flex items-center justify-center gap-2 p-3 border-2 border-slate-200 rounded-xl bg-white">
+              <!-- 時 -->
+              <div class="drum-column" id="drum-hour">
+                <div class="drum-highlight"></div>
+                <div class="drum-fade-top"></div>
+                <div class="drum-fade-bottom"></div>
+                <div class="drum-track" id="drum-hour-track"></div>
+              </div>
+              <span class="drum-separator select-none">:</span>
+              <!-- 分（15分刻み） -->
+              <div class="drum-column" id="drum-minute">
+                <div class="drum-highlight"></div>
+                <div class="drum-fade-top"></div>
+                <div class="drum-fade-bottom"></div>
+                <div class="drum-track" id="drum-minute-track"></div>
+              </div>
+            </div>
+            <input type="hidden" id="start-time" value="10:00">
+          </div>
+
+          <!-- 代理人チェック -->
+          <div class="pt-3 border-t border-slate-100">
+            <label class="flex items-center gap-3 cursor-pointer select-none py-1">
+              <input type="checkbox" id="delegate-check" onchange="onDelegateChange()"
+                class="w-5 h-5 rounded border-2 border-slate-300 cursor-pointer flex-shrink-0">
+              <div>
+                <p class="text-sm font-bold text-slate-700">代理人が申込む</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">カレンダー登録のみ（メール送信なし）</p>
+              </div>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 実行ボタン -->
+      <button id="btn-execute" onclick="executeRequest()"
+        class="w-full py-4 px-5 rounded-2xl font-bold text-white bg-slate-300 pointer-events-none shadow-sm active:scale-95 transition-all duration-200">
+        <span id="btn-execute-label" class="text-base">検査依頼を送信</span>
+      </button>
+
+      <!-- GAS未設定通知 -->
+      <p id="gas-notice" class="text-[11px] text-center text-amber-600 bg-amber-50 border border-amber-200 rounded-xl p-3 hidden">
+        <span class="flex items-center justify-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          GAS_URL が未設定です。
+        </span>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ===== ローディングオーバーレイ ===== -->
+  <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="modal-card bg-white rounded-2xl p-8 text-center shadow-2xl max-w-xs mx-4">
+      <div class="flex justify-center mb-4">
+        <span class="icon-spin">
+          <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#e2e8f0" stroke-width="3"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#006837" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </div>
+      <p id="loading-title" class="font-bold text-lg text-sfc-dark">処理中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 結果モーダル ===== -->
+  <div id="result-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="modal-card bg-white rounded-2xl p-6 shadow-2xl max-w-xs mx-4 w-full">
+      <div id="result-icon" class="flex justify-center mb-3"></div>
+      <h2 id="result-title" class="text-lg font-bold text-center mb-3"></h2>
+      <div id="result-body" class="text-sm text-slate-500 space-y-1.5 text-center bg-slate-50 rounded-xl p-3"></div>
+      <button id="result-close-btn" onclick="closeResultModal()"
+        class="w-full mt-5 p-3.5 rounded-xl font-bold text-white bg-sfc-primary active:scale-95 transition-all">OK</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ============================================================
+   定数・アイコン
+============================================================ */
+const types = ['基礎', '躯体', '断熱', '竣工'];
+
+const TYPE_ICONS = {
+  '基礎': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
+  </svg>`,
+  '躯体': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <line x1="3" y1="9" x2="21" y2="9"/>
+    <line x1="9" y1="21" x2="9" y2="9"/>
+  </svg>`,
+  '断熱': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+  </svg>`,
+  '竣工': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>`,
+};
+
+const ICON_SUCCESS = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#006837" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+  <polyline points="22 4 12 14.01 9 11.01"/>
+</svg>`;
+const ICON_ERROR = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="15" y1="9" x2="9" y2="15"/>
+  <line x1="9" y1="9" x2="15" y2="15"/>
+</svg>`;
+
+/* ============================================================
+   状態変数
+============================================================ */
+let projects     = JSON.parse(localStorage.getItem('myProjects')) || [];
+let currentProject = null;
+let currentType    = null;
+const todayStr   = new Date().toISOString().split('T')[0];
+
+/* ============================================================
+   ナビゲーション
+============================================================ */
+function goToDashboard() {
+  window.location.replace('../index.html?tab=tools');
+}
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', () => goToDashboard());
+
+/* ============================================================
+   初期化
+============================================================ */
+async function init() {
+  const gasNotice = document.getElementById('gas-notice');
+  if (GAS_CONFIG.GAS_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    gasNotice.classList.remove('hidden');
+    document.getElementById('btn-execute-label').textContent = 'Gmail作成（設定前モード）';
+  } else {
+    gasNotice.classList.add('hidden');
+    setLoading(true, 'データを読み込み中...');
+    try {
+      const cached = JSON.parse(localStorage.getItem('myProjects')) || [];
+      const result = await postToGAS({ action: 'getProjects' });
+      if (result.success && Array.isArray(result.projects)) {
+        // GASデータにローカルの times/history/delegate をマージ
+        const cacheMap = {};
+        cached.forEach(p => { cacheMap[p.id] = p; });
+        projects = result.projects.map(p => {
+          const c = cacheMap[p.id] || {};
+          // GAS側に times がなければキャッシュから復元
+          if (!p.times || !Object.keys(p.times).length) p.times = c.times || {};
+          // history/delegate もGAS側が空ならキャッシュから復元
+          if (!p.history || !Object.keys(p.history).length) p.history = c.history || {};
+          if (!p.delegate || !Object.keys(p.delegate).length) p.delegate = c.delegate || {};
+          return p;
+        });
+        localStorage.setItem('myProjects', JSON.stringify(projects));
+        await autoDeleteCompletedProjects();
+
+        // キャッシュから復元した times をGASに同期（初回のみ・バックグラウンド）
+        for (const p of projects) {
+          if (p.times && Object.keys(p.times).length && p.history && Object.keys(p.history).length) {
+            postToGAS({ action: 'updateProject', id: p.id,
+              reg: p.reg || '', history: p.history, delegate: p.delegate || {}, times: p.times
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('GAS読み込み失敗。キャッシュを使用:', e);
+    }
+    setLoading(false);
+  }
+  renderProjectList();
+  renderButtons();
+  initDrumRolls();
+}
+
+/* ============================================================
+   竣工済み自動削除
+============================================================ */
+async function autoDeleteCompletedProjects() {
+  const toDelete = projects.filter(p => {
+    const d = p.history?.['竣工'];
+    return d && d < todayStr;
+  });
+  if (!toDelete.length) return;
+  for (const p of toDelete) {
+    try { await postToGAS({ action: 'deleteProject', id: p.id }); } catch(e) {}
+  }
+  projects = projects.filter(p => !(p.history?.['竣工'] && p.history['竣工'] < todayStr));
+  localStorage.setItem('myProjects', JSON.stringify(projects));
+}
+
+/* ============================================================
+   物件リスト描画
+   - 竣工完了は非表示
+   - 登録番号（着工）順にソート、未設定は末尾
+============================================================ */
+function renderProjectList() {
+  const select = document.getElementById('project-select');
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">物件を選択してください</option>';
+
+  const sorted = [...projects]
+    .filter(p => !isProjectComplete(p))
+    .sort((a, b) => {
+      if (a.reg && b.reg) return a.reg.localeCompare(b.reg);
+      if (!a.reg && !b.reg) return a.name.localeCompare(b.name, 'ja');
+      return a.reg ? -1 : 1; // 登録番号あり → 前、なし → 末尾
+    });
+
+  sorted.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.reg ? p.name : `${p.name}（番号未設定）`;
+    select.appendChild(opt);
+  });
+
+  // 選択状態を復元
+  if (currentVal) select.value = currentVal;
+}
+
+/* ============================================================
+   検査区分ボタン描画（代理ボタンなし）
+============================================================ */
+function renderButtons() {
+  const grid = document.getElementById('inspection-grid');
+  grid.innerHTML = types.map(type => `
+    <button id="btn-${type}" onclick="selectType('${type}')"
+      class="type-btn w-full p-4 rounded-2xl border-2 border-slate-200 bg-white font-bold text-slate-700 transition-all flex flex-col items-center justify-center min-h-[110px] gap-2">
+      <span class="type-icon opacity-60">${TYPE_ICONS[type]}</span>
+      <span class="type-label text-base">${type}</span>
+      <span class="history-tag text-[11px] px-2.5 py-0.5 rounded-full hidden font-bold"></span>
+    </button>`).join('');
+}
+
+/* ============================================================
+   登録番号 インライン表示・編集
+============================================================ */
+function updateRegDisplay() {
+  const info     = document.getElementById('project-info');
+  const hasValue = document.getElementById('reg-has-value');
+  const editSec  = document.getElementById('reg-edit-section');
+  const cancelBtn = document.getElementById('reg-cancel-edit');
+  const unsetBadge = document.getElementById('reg-unset-badge');
+
+  info.classList.remove('hidden');
+
+  if (currentProject.reg) {
+    document.getElementById('reg-value-display').textContent = currentProject.reg;
+    // 所在地（市町村）を表示
+    const cityRow = document.getElementById('city-row');
+    const cityDisplay = document.getElementById('city-display');
+    if (currentProject.city) {
+      cityDisplay.textContent = currentProject.city;
+      cityRow.classList.remove('hidden');
+    } else {
+      cityRow.classList.add('hidden');
+    }
+    hasValue.classList.remove('hidden');
+    editSec.classList.add('hidden');
+  } else {
+    hasValue.classList.add('hidden');
+    editSec.classList.remove('hidden');
+    cancelBtn.classList.add('hidden');   // 新規登録時はキャンセル不要
+    unsetBadge.classList.remove('hidden');
+    document.getElementById('inline-reg-input').value = '';
+  }
+}
+
+function startEditReg() {
+  document.getElementById('reg-has-value').classList.add('hidden');
+  document.getElementById('reg-edit-section').classList.remove('hidden');
+  document.getElementById('reg-cancel-edit').classList.remove('hidden');
+  document.getElementById('reg-unset-badge').classList.add('hidden'); // 編集中は「未設定」非表示
+  const input = document.getElementById('inline-reg-input');
+  input.value = currentProject.reg || '';
+  input.focus();
+}
+
+function cancelEditReg() {
+  updateRegDisplay();
+}
+
+async function saveInlineReg() {
+  const reg = document.getElementById('inline-reg-input').value.trim();
+  if (!reg) { alert('登録番号を入力してください'); return; }
+  setLoading(true, 'データを保存中...');
+  currentProject.reg = reg;
+  try {
+    await postToGAS({ action: 'saveProject', id: currentProject.id, reg,
+      history: currentProject.history || {}, delegate: currentProject.delegate || {} });
+  } catch(e) { console.warn('GAS保存失敗:', e); }
+  localStorage.setItem('myProjects', JSON.stringify(projects));
+  setLoading(false);
+  renderProjectList();
+  document.getElementById('project-select').value = currentProject.id;
+  updateRegDisplay();
+  checkReady();
+}
+
+/* ============================================================
+   物件選択変更
+============================================================ */
+function onProjectChange(id) {
+  currentProject = projects.find(p => p.id === id) || null;
+  const isSelected = !!currentProject;
+
+  // Step 2/3 の有効・無効
+  ['section-inspection', 'section-datetime'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.opacity      = isSelected ? '1'    : '0.3';
+    el.style.pointerEvents = isSelected ? 'auto' : 'none';
+  });
+
+  // 登録番号表示
+  if (isSelected) {
+    updateRegDisplay();
+    updateButtonStates();
+  } else {
+    document.getElementById('project-info').classList.add('hidden');
+  }
+
+  // 代理チェックをリセット
+  const delegateCheck = document.getElementById('delegate-check');
+  if (delegateCheck) delegateCheck.checked = false;
+  currentType = null;
+  checkReady();
+}
+
+/* ============================================================
+   検査区分ボタン状態更新
+   ・未検査    : 白背景 / スレートボーダー（明確）
+   ・予約済み  : 青背景（disabled なし）
+   ・代理人申込: オレンジ
+   ・検査完了  : グレー
+============================================================ */
+function updateButtonStates() {
+  types.forEach(type => {
+    const btn  = document.getElementById(`btn-${type}`);
+    const tag  = btn.querySelector('.history-tag');
+    const icon = btn.querySelector('.type-icon');
+    const scheduledDate = currentProject.history?.[type];
+    const isDelegated   = !!(currentProject.delegate?.[type]);
+
+    // ── リセット ──
+    btn.disabled = false;
+    btn.classList.remove(
+      'bg-white', 'bg-slate-100', 'bg-slate-200', 'bg-slate-50',
+      'bg-blue-50', 'bg-sfc-light',
+      'text-slate-400', 'text-slate-600', 'text-slate-700',
+      'text-blue-700', 'text-sfc-primary',
+      'border-slate-100', 'border-slate-200',
+      'border-blue-300', 'border-sfc-primary',
+      'ring-2', 'ring-sfc-primary'
+    );
+    tag.classList.remove(
+      'hidden',
+      'bg-blue-500', 'bg-blue-100', 'text-blue-700',
+      'bg-slate-200', 'bg-slate-300', 'text-slate-500', 'text-white',
+      'bg-sfc-light', 'text-sfc-primary'
+    );
+    tag.classList.add('hidden');
+    if (icon) { icon.classList.remove('opacity-30', 'opacity-40', 'opacity-60', 'opacity-100'); icon.classList.add('opacity-60'); }
+
+    const isPast     = scheduledDate && scheduledDate <= todayStr;
+    const dayNames   = ['日','月','火','水','木','金','土'];
+    let dateDisplay  = '';
+    if (scheduledDate) {
+      const [, sm, sd] = scheduledDate.split('-');
+      const dayChar = dayNames[new Date(scheduledDate).getDay()];
+      dateDisplay = `${parseInt(sm)}/${parseInt(sd)}(${dayChar})`;
+    }
+
+    // ── 検査完了（グレー）：過去日付が最優先 ──
+    if (isPast) {
+      btn.classList.add('bg-slate-200', 'text-slate-400', 'border-slate-200');
+      if (icon) { icon.classList.replace('opacity-60', 'opacity-30'); }
+      tag.classList.remove('hidden');
+      tag.innerText = `${dateDisplay} 検査完了`;
+      tag.classList.add('bg-slate-300', 'text-slate-500');
+
+    // ── 代理人が申込み（青・テキストで区別） ──
+    } else if (isDelegated) {
+      btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
+      tag.classList.remove('hidden');
+      tag.innerText = dateDisplay
+        ? `${dateDisplay} 代理人が申込み`
+        : '代理人が申込み';
+      tag.classList.add('bg-blue-500', 'text-white');
+
+    // ── 予約済み（青・日付+曜日付き） ──
+    } else if (scheduledDate) {
+      btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
+      tag.classList.remove('hidden');
+      tag.innerText = `${dateDisplay} 予約済み`;
+      tag.classList.add('bg-blue-500', 'text-white');
+
+    // ── 未検査（デフォルト：白・クリア） ──
+    } else {
+      btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+    }
+  });
+}
+
+/* ============================================================
+   検査区分タップ
+============================================================ */
+function selectType(type, restoreState = true) {
+  if (!currentProject) return;
+
+  // 既に同じタイプが選択中ならドラム等をリセットしない
+  if (currentType === type && restoreState) {
+    return;
+  }
+
+  currentType = type;
+
+  const existingDate     = currentProject.history?.[type];
+  const existingTime     = currentProject.times?.[type] || '';
+  const existingDelegate = !!(currentProject.delegate?.[type]);
+  const delegateCheck    = document.getElementById('delegate-check');
+
+  // 初回選択時のみ既存データを復元（チェック外し操作時は復元しない）
+  if (restoreState) {
+    // 日付：既存なら復元、なければクリア
+    const dateInput = document.getElementById('inspection-date');
+    if (existingDate) {
+      dateInput.value = existingDate;
+    } else {
+      dateInput.value = '';
+    }
+    updateDay();
+
+    // 代理人チェック
+    if (delegateCheck) {
+      delegateCheck.checked = existingDelegate;
+    }
+
+    // 時刻ドラム：既存なら復元、なければ 10:00
+    if (typeof setDrumTime === 'function') {
+      if (existingTime) {
+        const [eh, em] = existingTime.split(':').map(Number);
+        setDrumTime(eh, em);
+      } else {
+        setDrumTime(10, 0);
+      }
+    }
+  }
+
+  // 全リセット
+  updateButtonStates();
+
+  // 選択ボタンに緑を適用（完了・代理人済みでも強制選択可能）
+  const selected = document.getElementById(`btn-${type}`);
+  if (selected) {
+    selected.classList.remove(
+      'bg-white', 'text-slate-700', 'border-slate-200',
+      'bg-blue-50', 'text-blue-700', 'border-blue-300',
+      'bg-slate-200', 'text-slate-400'
+    );
+    selected.classList.add('bg-sfc-light', 'text-sfc-primary', 'border-sfc-primary', 'ring-2', 'ring-sfc-primary');
+    const ic = selected.querySelector('.type-icon');
+    if (ic) { ic.classList.remove('opacity-30', 'opacity-40', 'opacity-60'); ic.classList.add('opacity-100'); }
+
+    // 既存データがある場合はタグを「変更可能」表示に（プレビューで上書きしない）
+    const tag = selected.querySelector('.history-tag');
+    if (tag && (existingDate || existingDelegate)) {
+      tag.classList.remove('hidden', 'bg-blue-500', 'bg-slate-300',
+        'text-slate-500', 'text-white');
+      tag.innerText = '変更可能';
+      tag.classList.add('bg-sfc-light', 'text-sfc-primary');
+    }
+  }
+
+  checkReady();
+}
+
+/* ============================================================
+   代理チェック変更
+============================================================ */
+function onDelegateChange() {
+  const isDelegate = document.getElementById('delegate-check').checked;
+
+  if (currentType) {
+    if (isDelegate) {
+      applyDelegatePreview(currentType, true);
+    } else {
+      // チェックを外した → restoreState=false で再描画（チェックが戻らないように）
+      selectType(currentType, false);
+      return;
+    }
+  }
+
+  checkReady();
+}
+
+function applyDelegatePreview(type, isDelegate) {
+  const btn  = document.getElementById(`btn-${type}`);
+  const tag  = btn?.querySelector('.history-tag');
+  if (!btn) return;
+
+  if (isDelegate) {
+    btn.classList.remove('bg-sfc-light', 'text-sfc-primary', 'border-sfc-primary', 'ring-2', 'ring-sfc-primary',
+      'bg-white', 'text-slate-700', 'border-slate-200');
+    btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
+    const ic = btn.querySelector('.type-icon');
+    if (ic) { ic.classList.remove('opacity-100', 'opacity-60'); ic.classList.add('opacity-40'); }
+    if (tag) {
+      tag.classList.remove('hidden', 'bg-slate-300', 'text-slate-500', 'bg-sfc-light', 'text-sfc-primary');
+      const dateVal = document.getElementById('inspection-date').value;
+      if (dateVal) {
+        const [, pm, pd] = dateVal.split('-');
+        const pDay = ['日','月','火','水','木','金','土'][new Date(dateVal).getDay()];
+        tag.innerText = `${parseInt(pm)}/${parseInt(pd)}(${pDay}) 代理人が申込み`;
+      } else {
+        tag.innerText = '代理人が申込み';
+      }
+      tag.classList.add('bg-blue-500', 'text-white');
+    }
+  }
+}
+
+/* ============================================================
+   実行可能チェック
+============================================================ */
+function checkReady() {
+  const btn        = document.getElementById('btn-execute');
+  const label      = document.getElementById('btn-execute-label');
+  const isDelegate = document.getElementById('delegate-check')?.checked;
+  const dateVal    = document.getElementById('inspection-date').value;
+  const isReady    = currentProject && currentProject.reg && currentType && dateVal;
+  const isPastDate = dateVal && dateVal <= todayStr;
+
+  btn.classList.toggle('bg-slate-300',       !isReady);
+  btn.classList.toggle('pointer-events-none', !isReady);
+  btn.classList.toggle('bg-sfc-primary',      !!isReady);
+
+  // 既存予約があるかどうかで「新規」vs「変更」ラベルを切り替え
+  const isChange = currentType && !!(currentProject?.history?.[currentType]);
+
+  if (isReady) {
+    if (isPastDate) {
+      label.textContent = isDelegate ? '代理人として記録' : (isChange ? '記録を変更' : '過去の検査を記録');
+    } else if (isDelegate) {
+      label.textContent = isChange ? '代理人の申込みを変更' : '代理人の申込みを登録';
+    } else {
+      label.textContent = isChange ? '日程変更を送信' : '検査依頼を送信';
+    }
+  } else {
+    label.textContent = '検査依頼を送信';
+  }
+}
+
+/* ============================================================
+   日付ピッカー：カスタム表示 + ネイティブ input[date]
+============================================================ */
+function openDatePicker() {
+  const inp = document.getElementById('inspection-date');
+  if (typeof inp.showPicker === 'function') {
+    inp.showPicker();
+  } else {
+    inp.focus(); inp.click();
+  }
+}
+
+function updateDay() {
+  const d   = document.getElementById('inspection-date').value;
+  const btn = document.getElementById('date-display-btn');
+  const txt = document.getElementById('date-display-text');
+  if (d) {
+    const dt      = new Date(d);
+    const dayName = ['日','月','火','水','木','金','土'][dt.getDay()];
+    const dayColor = dt.getDay() === 0 ? '#ef4444' : dt.getDay() === 6 ? '#3b82f6' : '#1e293b';
+    txt.innerHTML = `<span style="color:#1e293b">${dt.getMonth()+1}月${dt.getDate()}日</span><span style="color:${dayColor};margin-left:2px">(${dayName})</span>`;
+    btn.classList.remove('border-slate-200');
+    btn.classList.add('border-sfc-primary');
+  } else {
+    txt.textContent = '日付を選択';
+    txt.style.color = '';
+    btn.classList.add('border-slate-200');
+    btn.classList.remove('border-sfc-primary');
+  }
+  checkReady();
+}
+
+/* ============================================================
+   時刻ピッカー：ドラムロール（タッチ＆スワイプ対応）
+============================================================ */
+const DRUM_HOURS   = Array.from({length: 24}, (_, i) => i);
+const DRUM_MINUTES = [0, 15, 30, 45];
+const DRUM_ITEM_H  = 40;   // px per item
+const DRUM_VISIBLE = 5;    // visible items count (200px / 40px)
+let drumHourIdx   = 10;    // default 10時
+let drumMinuteIdx = 0;     // default 00分
+
+function initDrumRolls() {
+  buildDrumTrack('drum-hour-track',   DRUM_HOURS,   drumHourIdx,   v => v.toString().padStart(2,'0'));
+  buildDrumTrack('drum-minute-track', DRUM_MINUTES, drumMinuteIdx, v => v.toString().padStart(2,'0'));
+  makeDrumDraggable('drum-hour',   DRUM_HOURS,   () => drumHourIdx,   i => { drumHourIdx = i; syncDrumTime(); });
+  makeDrumDraggable('drum-minute', DRUM_MINUTES, () => drumMinuteIdx, i => { drumMinuteIdx = i; syncDrumTime(); });
+}
+
+function buildDrumTrack(trackId, values, activeIdx, fmt) {
+  const track = document.getElementById(trackId);
+  // padding items top/bottom for centering
+  const pad = Math.floor(DRUM_VISIBLE / 2);
+  let html = '';
+  for (let i = 0; i < pad; i++) html += `<div class="drum-item" style="height:${DRUM_ITEM_H}px"></div>`;
+  values.forEach((v, i) => {
+    html += `<div class="drum-item${i === activeIdx ? ' active' : ''}" data-idx="${i}" style="height:${DRUM_ITEM_H}px">${fmt(v)}</div>`;
+  });
+  for (let i = 0; i < pad; i++) html += `<div class="drum-item" style="height:${DRUM_ITEM_H}px"></div>`;
+  track.innerHTML = html;
+  track.style.transform = `translateY(${-activeIdx * DRUM_ITEM_H}px)`;
+}
+
+function makeDrumDraggable(colId, values, getIdx, setIdx) {
+  const col   = document.getElementById(colId);
+  const track = col.querySelector('.drum-track');
+  let startY = 0, startOffset = 0, isDragging = false;
+
+  function onStart(e) {
+    isDragging = true;
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    startOffset = -getIdx() * DRUM_ITEM_H;
+    track.style.transition = 'none';
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!isDragging) return;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY);
+    const diff = y - startY;
+    track.style.transform = `translateY(${startOffset + diff}px)`;
+    e.preventDefault();
+  }
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    track.style.transition = '';
+    const current = parseFloat(track.style.transform.replace(/[^-\d.]/g, '')) || 0;
+    let idx = Math.round(-current / DRUM_ITEM_H);
+    idx = Math.max(0, Math.min(values.length - 1, idx));
+    setIdx(idx);
+    track.style.transform = `translateY(${-idx * DRUM_ITEM_H}px)`;
+    // update active class
+    track.querySelectorAll('.drum-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.idx == idx);
+    });
+  }
+
+  col.addEventListener('touchstart', onStart, {passive: false});
+  col.addEventListener('touchmove',  onMove,  {passive: false});
+  col.addEventListener('touchend',   onEnd);
+  col.addEventListener('mousedown',  onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup',   onEnd);
+
+  // タップで直接選択
+  track.addEventListener('click', e => {
+    const item = e.target.closest('.drum-item');
+    if (!item || item.dataset.idx == null) return;
+    const idx = parseInt(item.dataset.idx);
+    setIdx(idx);
+    track.style.transform = `translateY(${-idx * DRUM_ITEM_H}px)`;
+    track.querySelectorAll('.drum-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.idx == idx);
+    });
+  });
+}
+
+function syncDrumTime() {
+  const hh = DRUM_HOURS[drumHourIdx].toString().padStart(2, '0');
+  const mm = DRUM_MINUTES[drumMinuteIdx].toString().padStart(2, '0');
+  document.getElementById('start-time').value = `${hh}:${mm}`;
+}
+
+function setDrumTime(h, m) {
+  drumHourIdx = DRUM_HOURS.indexOf(h);
+  if (drumHourIdx < 0) drumHourIdx = 10;
+  // 分は最も近い15分刻みに丸める
+  const closest = DRUM_MINUTES.reduce((prev, curr) => Math.abs(curr - m) < Math.abs(prev - m) ? curr : prev);
+  drumMinuteIdx = DRUM_MINUTES.indexOf(closest);
+  buildDrumTrack('drum-hour-track',   DRUM_HOURS,   drumHourIdx,   v => v.toString().padStart(2,'0'));
+  buildDrumTrack('drum-minute-track', DRUM_MINUTES, drumMinuteIdx, v => v.toString().padStart(2,'0'));
+  syncDrumTime();
+}
+
+/* ============================================================
+   竣工完了判定
+============================================================ */
+function isProjectComplete(project) {
+  const d = project.history?.['竣工'];
+  return !!(project.delegate?.['竣工']) || (d && d <= todayStr);
+}
+
+/* ============================================================
+   実行（メール送信 / 代理登録）
+============================================================ */
+async function executeRequest() {
+  const date       = document.getElementById('inspection-date').value;
+  const startTime  = document.getElementById('start-time').value;
+  const isDelegate = document.getElementById('delegate-check').checked;
+  const isPastDate = date <= todayStr;
+  const [, mm, dd] = date.split('-');
+  const processLabel = GAS_CONFIG.PROCESS_LABELS[currentType] || `${currentType}検査`;
+
+  const dayChar    = ['日','月','火','水','木','金','土'][new Date(date).getDay()];
+  const dateLabel  = `${parseInt(mm)}/${parseInt(dd)}(${dayChar})`;
+
+  // 既存予約があるか（=変更操作か）
+  const prevDate     = currentProject.history?.[currentType] || '';
+  const prevDelegate = !!(currentProject.delegate?.[currentType]);
+  const isChange     = !!prevDate;
+
+  // ── 過去日付モード：記録のみ（メール・カレンダーなし） ──
+  if (isPastDate) {
+    setLoading(true, '記録中...');
+    if (!currentProject.history) currentProject.history = {};
+    if (!currentProject.times)   currentProject.times   = {};
+    currentProject.history[currentType] = date;
+    currentProject.times[currentType]   = startTime;
+    if (isDelegate) {
+      if (!currentProject.delegate) currentProject.delegate = {};
+      currentProject.delegate[currentType] = '代理人';
+    } else {
+      if (currentProject.delegate) delete currentProject.delegate[currentType];
+    }
+    try {
+      await postToGAS({ action: 'updateProject', id: currentProject.id,
+        reg: currentProject.reg, history: currentProject.history, delegate: currentProject.delegate || {}, times: currentProject.times || {} });
+    } catch(e) { console.warn('GAS同期失敗:', e); }
+    localStorage.setItem('myProjects', JSON.stringify(projects));
+    setLoading(false);
+    const suffix = isDelegate ? '（代理人）' : '';
+    showResultModal('success', isChange ? '変更完了' : '記録完了',
+      `${processLabel} を ${dateLabel} に記録しました${suffix}。\nメール・カレンダー登録はありません。`);
+    return;
+  }
+
+  // ── 代理人の申込み（カレンダー登録のみ・メールなし） ──
+  if (isDelegate) {
+    setLoading(true, isChange ? 'カレンダーを更新中...' : '代理人の申込みを登録中...');
+    if (!currentProject.history)  currentProject.history  = {};
+    if (!currentProject.delegate) currentProject.delegate = {};
+    if (!currentProject.times)    currentProject.times    = {};
+    currentProject.history[currentType]  = date;
+    currentProject.delegate[currentType] = '代理人';
+    currentProject.times[currentType]    = startTime;
+
+    try {
+      const payload = {
+        action:          'submitInspection',
+        propertyName:    currentProject.name,
+        propertyAddress: currentProject.address || '',
+        location:        currentProject.city || currentProject.address || '',
+        process:         processLabel,
+        inspectionDate:  date,
+        inspectionTime:  startTime,
+        notes:           `登録番号: ${currentProject.reg}\n代理人が申込み`,
+        recipientEmail:  '',
+        skipEmail:       true,
+        isUpdate:        isChange,
+        previousDate:    prevDate,
+        senderName:      GAS_CONFIG.SENDER.name,
+        senderCompany:   GAS_CONFIG.SENDER.company,
+        senderPhone:     GAS_CONFIG.SENDER.phone,
+        bccEmail:        '',
+      };
+      const result = await postToGAS(payload);
+      await postToGAS({ action: 'updateProject', id: currentProject.id,
+        reg: currentProject.reg, history: currentProject.history, delegate: currentProject.delegate, times: currentProject.times || {} });
+      localStorage.setItem('myProjects', JSON.stringify(projects));
+      setLoading(false);
+
+      const details = [];
+      if (result.results?.calendar?.success) {
+        details.push(`${dateLabel} カレンダーに${isChange ? '更新' : '登録'}完了`);
+      } else if (result.results?.calendar?.error) {
+        details.push(`カレンダー: ${result.results.calendar.error}`);
+      }
+      details.push(`${dateLabel} 代理人の申込みとして登録`);
+      details.push('メールは送信されません');
+      showResultModal('success',
+        isChange ? '代理人の申込み変更完了' : '代理人の申込み完了',
+        details.join('\n'));
+    } catch (err) {
+      setLoading(false);
+      showResultModal('error', '通信エラー', `GASへの接続に失敗しました。\n${err.message}`);
+    }
+    return;
+  }
+
+  // ── 設定前レガシーモード ──
+  if (GAS_CONFIG.GAS_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    executeLegacyMode(date, startTime);
+    return;
+  }
+
+  // ── 通常: メール送信 ＆ カレンダー登録 ──
+  const recipientEmail = GAS_CONFIG.EMAILS[currentType];
+  if (!recipientEmail) {
+    showResultModal('error', '送信先未設定', `工程「${currentType}」の送信先が設定されていません。`);
+    return;
+  }
+
+  setLoading(true, isChange ? '変更通知を送信中...' : 'メール・カレンダー処理中...');
+  try {
+    // 変更時は旧日付を整形
+    let prevDateLabel = '';
+    if (isChange && prevDate) {
+      const [, pm, pd] = prevDate.split('-');
+      const pdc = ['日','月','火','水','木','金','土'][new Date(prevDate).getDay()];
+      prevDateLabel = `${parseInt(pm)}/${parseInt(pd)}(${pdc})`;
+    }
+
+    const payload = {
+      action:          'submitInspection',
+      propertyName:    currentProject.name,
+      propertyAddress: currentProject.address || '',
+      location:        currentProject.city   || currentProject.address || '',
+      process:         processLabel,
+      inspectionDate:  date,
+      inspectionTime:  startTime,
+      recipientEmail,
+      senderName:      GAS_CONFIG.SENDER.name,
+      senderCompany:   GAS_CONFIG.SENDER.company,
+      senderPhone:     GAS_CONFIG.SENDER.phone,
+      bccEmail:        GAS_CONFIG.SENDER.bcc,
+      // 変更通知用フラグ
+      isUpdate:        isChange,
+      previousDate:    prevDate,
+      notes:           isChange
+        ? `登録番号: ${currentProject.reg}\n※ 検査日程変更: ${prevDateLabel} → ${dateLabel} ${startTime}`
+        : `登録番号: ${currentProject.reg}`,
+      // GAS側でメール件名を切り替えるためのヒント
+      emailSubject:    isChange
+        ? `【検査日程変更】${currentProject.name} ${processLabel}`
+        : `【検査依頼】${currentProject.name} ${processLabel}`,
+    };
+    const result = await postToGAS(payload);
+    if (result.success) {
+      currentProject.history[currentType] = date;
+      if (!currentProject.times) currentProject.times = {};
+      currentProject.times[currentType] = startTime;
+      if (currentProject.delegate) delete currentProject.delegate[currentType];
+      try {
+        await postToGAS({ action: 'updateProject', id: currentProject.id, name: currentProject.name,
+          reg: currentProject.reg, history: currentProject.history, delegate: currentProject.delegate || {}, times: currentProject.times || {} });
+      } catch(e) {}
+      localStorage.setItem('myProjects', JSON.stringify(projects));
+      setLoading(false);
+      const details = [];
+      if (result.results?.saved?.success)    details.push('スプレッドシートに記録');
+      else if (result.results?.saved?.error) details.push(`記録: ${result.results.saved.error}`);
+      if (result.results?.email?.success)    details.push(`${recipientEmail} に${isChange ? '変更通知' : '依頼'}送信完了`);
+      else if (result.results?.email?.error) details.push(`メール: ${result.results.email.error}`);
+      if (result.results?.calendar?.success) details.push(`${dateLabel} カレンダーに${isChange ? '更新' : '登録'}完了`);
+      else if (result.results?.calendar?.error) details.push(`カレンダー: ${result.results.calendar.error}`);
+      if (!details.length) details.push(`${dateLabel} ${isChange ? '変更' : '依頼'}完了`);
+      showResultModal('success', isChange ? '日程変更完了' : '依頼完了', details.join('\n'));
+    } else {
+      setLoading(false);
+      showResultModal('error', '送信エラー', result.error || '不明なエラー');
+    }
+  } catch (err) {
+    setLoading(false);
+    showResultModal('error', '通信エラー', `GASへの接続に失敗しました。\n${err.message}`);
+  }
+}
+
+function executeLegacyMode(date, startTime) {
+  const processLabel = GAS_CONFIG.PROCESS_LABELS[currentType] || `${currentType}検査`;
+  const subject = `【検査依頼】${currentProject.name} ${processLabel}`;
+  const body    = `物件：${currentProject.name}\n登録番号：${currentProject.reg}\n検査種別：${processLabel}\n日時：${date} ${startTime}〜`;
+  currentProject.history[currentType] = date;
+  if (!currentProject.times) currentProject.times = {};
+  currentProject.times[currentType] = startTime;
+  localStorage.setItem('myProjects', JSON.stringify(projects));
+  window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+  const startDT = date.replace(/-/g, '') + 'T' + startTime.replace(':', '') + '00';
+  const endHour = parseInt(startTime.split(':')[0]) + 1;
+  const endDT   = date.replace(/-/g, '') + 'T' + endHour.toString().padStart(2, '0') + startTime.split(':')[1] + '00';
+  setTimeout(() => {
+    if (confirm('Gmailを開きました。続けてカレンダーに追加しますか？')) {
+      window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(subject)}&dates=${startDT}/${endDT}&details=${encodeURIComponent(body)}&colorid=1`, '_blank');
+    }
+    // UIリフレッシュ（リロードなし）
+    if (currentProject) {
+      updateButtonStates();
+      renderProjectList();
+      document.getElementById('project-select').value = currentProject.id;
+    }
+    currentType = null;
+    document.getElementById('inspection-date').value = '';
+    updateDay();
+    if (typeof setDrumTime === 'function') setDrumTime(10, 0);
+    checkReady();
+  }, 500);
+}
+
+/* ============================================================
+   GAS通信
+============================================================ */
+async function postToGAS(payload) {
+  const response = await fetch(GAS_CONFIG.GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    redirect: 'follow',
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+/* ============================================================
+   UI ヘルパー
+============================================================ */
+function setLoading(isLoading, statusText = '') {
+  document.getElementById('loading-overlay').classList.toggle('hidden', !isLoading);
+  const t = document.getElementById('loading-title');
+  if (t) t.textContent = statusText || '処理中...';
+}
+
+function showResultModal(type, title, bodyText) {
+  document.getElementById('result-icon').innerHTML    = type === 'success' ? ICON_SUCCESS : ICON_ERROR;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-body').innerHTML    = bodyText.split('\n').map(l => `<p>${l}</p>`).join('');
+  document.getElementById('result-modal').classList.remove('hidden');
+}
+
+function closeResultModal() {
+  document.getElementById('result-modal').classList.add('hidden');
+
+  // 物件選択を維持したままUIをリフレッシュ
+  if (currentProject) {
+    updateButtonStates();
+    renderProjectList();
+    document.getElementById('project-select').value = currentProject.id;
+  }
+
+  // 検査区分・入力欄をリセット
+  currentType = null;
+  const dc = document.getElementById('delegate-check');
+  if (dc) dc.checked = false;
+  document.getElementById('inspection-date').value = '';
+  updateDay();
+  if (typeof setDrumTime === 'function') setDrumTime(10, 0);
+  checkReady();
+}
+
+/* ============================================================
+   起動
+============================================================ */
+init();
+</script>
+
+</body>
+</html>

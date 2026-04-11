@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="../manifest.json">
+  <title>新規物件登録</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width:28px; height:28px; border:3px solid #d1d5db;
+      border-top-color:#004d29; border-radius:50%;
+      animation: spin 0.8s linear infinite;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sfc: { dark:'#004d29', primary:'#006837', light:'#e8f5e9', border:'#a5d6a7' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans JP','sans-serif'],
+            mono: ['DM Mono','monospace'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-900">
+
+<div id="app"
+     class="max-w-md mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
+     style="height: calc(100vh - 32px);">
+
+  <!-- ヘッダー（schedule.html / payment.html と同一構造） -->
+  <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <a onclick="goToDashboard()" style="cursor:pointer;"
+         class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
+         title="ダッシュボードへ戻る">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </a>
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <div>
+          <h1 class="text-base font-bold tracking-wide">新規物件登録</h1>
+          <p class="text-[10px] text-white/65 font-medium mt-0.5">Notion 担当物件一覧へ登録</p>
+        </div>
+      </div>
+    </div>
+    <!-- スペーサー（ヘッダーの左右バランス） -->
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- コンテンツエリア -->
+  <div class="flex-1 flex flex-col relative min-h-0">
+    <div id="loadingOverlay"
+         class="absolute inset-0 bg-slate-50 z-50 flex items-center justify-center flex-col gap-3">
+      <div class="spinner"></div>
+      <p class="text-xs text-slate-400">読み込み中...</p>
+    </div>
+    <iframe id="gasFrame" src="" allow="clipboard-write" allowfullscreen
+            class="flex-1 w-full border-none"
+            onload="document.getElementById('loadingOverlay').style.display='none'">
+    </iframe>
+  </div>
+
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby2P2A0qi1J2As_to00a2ZE6YMg5kX-IPPJmBVGeZCh6bkSnYUP-4jvt5b2-4nrJrR6Qw/exec';
+document.getElementById('gasFrame').src = GAS_URL;
+
+function goToDashboard() {
+  window.location.replace('../index.html?tab=tools');
+}
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', function() { goToDashboard(); });
+</script>
+</body>
+</html>

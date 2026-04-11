@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>施工管理 / タスク</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:      #006837;
+      --green-dark: #004d29;   /* sfc-darkに統一 */
+      --green-light:#e8f5e9;   /* sfc-lightに統一 */
+      --green-mid:  #4a9e72;
+      --bg:         #f1f5f9;   /* slate-100に統一 */
+      --card:       #ffffff;
+      --border:     #e2e8f0;   /* slate-200に統一 */
+      --t1:         #1e293b;   /* slate-800に統一 */
+      --t2:         #475569;   /* slate-600 */
+      --t3:         #64748b;   /* slate-500 */
+      --red:        #ef4444;
+      --amber:      #f59e0b;
+      --blue:       #2563eb;
+      --fp:         'Noto Sans JP', sans-serif;
+      --fm:         'DM Mono', monospace;
+      --radius-card: 16px;
+      --shadow-card: 0 4px 20px rgba(0,0,0,.09);
+    }
+    body { font-family: var(--fp); background: var(--bg); color: var(--t1);
+           min-height: 100dvh; font-size: 14px; line-height: 1.6;
+           -webkit-font-smoothing: antialiased; }
+
+    /* ─ Header ─────────────────────────────────────────────── */
+    .hdr { background: var(--card); position: sticky; top: 0; z-index: 200;
+           box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(0,0,0,.06);
+           border-radius: 0 0 14px 14px; }
+    .hdr-top { display: flex; align-items: center; height: 56px; padding: 0 14px; gap: 10px; }
+    .hdr-back { width: 32px; height: 32px; background: var(--bg);
+                border-radius: 8px; display: flex; align-items: center; justify-content: center;
+                cursor: pointer; flex-shrink: 0; border: 1px solid var(--border);
+                -webkit-tap-highlight-color: transparent; }
+    .hdr-back:active { background: var(--border); }
+    .hdr-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .hdr-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: var(--t1); }
+    .hdr-sub { font-size: 10px; color: var(--t3); margin-top: 1px; font-weight: 500; }
+    .tabs { display: flex; border-top: 1px solid var(--border); }
+    .tab { flex: 1; padding: 10px 4px 11px; background: none; border: none;
+           color: var(--t3); font-family: var(--fp); font-size: 12px;
+           cursor: pointer; position: relative; transition: color .15s;
+           -webkit-tap-highlight-color: transparent; }
+    .tab.on { color: var(--green); font-weight: 700; }
+    .tab.on::after { content: ''; position: absolute; bottom: 0; left: 14%; width: 72%; height: 2.5px;
+                     background: var(--green); border-radius: 2px 2px 0 0; }
+
+    /* ─ Panes ───────────────────────────────────────────────── */
+    .pane { display: none; padding: 12px 12px 100px; max-width: 640px; margin: 0 auto; }
+    .pane.on { display: block; }
+
+    /* ─ Toolbar ─────────────────────────────────────────────── */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .tbar-meta { font-size: 11px; color: var(--t3); font-family: var(--fm); }
+    .btn-xs { display: flex; align-items: center; gap: 5px; padding: 6px 12px;
+              background: var(--card); border: 1px solid var(--border); border-radius: 7px;
+              font-family: var(--fp); font-size: 12px; color: var(--t2); cursor: pointer;
+              -webkit-tap-highlight-color: transparent; }
+    .btn-xs:active { background: var(--bg); }
+    .btn-xs.primary { background: var(--green); color: white; border-color: var(--green); }
+    .btn-xs.primary:active { background: var(--green-dark); }
+
+    /* ─ Sort toggle ─────────────────────────────────────────── */
+    .sort-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .sort-lbl { font-size: 11px; color: var(--t3); flex-shrink: 0; }
+    .sort-btns { display: flex; gap: 4px; }
+    .sort-btn { padding: 4px 10px; border-radius: 14px; font-size: 11px; font-family: var(--fp);
+                border: 1px solid var(--border); background: var(--card); color: var(--t2);
+                cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all .15s; }
+    .sort-btn:active { background: var(--bg); }
+    .sort-btn.on { background: var(--green); color: white; border-color: var(--green); font-weight: 600; }
+
+    /* ─ Property card ───────────────────────────────────────── */
+    .prop-card { background: var(--card); border-radius: var(--radius-card); margin-bottom: 10px;
+                 overflow: hidden; box-shadow: var(--shadow-card);
+                 border: 1.5px solid transparent; transition: border-color .18s; }
+    .prop-card.open { border-color: #c5dfd0; }
+    .prop-card.done-all { opacity: .75; }
+    .prop-hdr { display: flex; align-items: flex-start; padding: 13px 14px 10px;
+                cursor: pointer; gap: 11px; user-select: none;
+                -webkit-tap-highlight-color: transparent; }
+    .prop-hdr:active { background: #fafafa; }
+    .prop-icon { width: 36px; height: 36px; background: var(--green-light); border-radius: 9px;
+                 display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                 color: var(--green); margin-top: 1px;
+                 transition: background .18s, color .18s; }
+    .prop-card.open .prop-icon { background: var(--green); color: white; }
+    .prop-info { flex: 1; min-width: 0; }
+    .prop-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden;
+                 text-overflow: ellipsis; }
+    .prop-addr { font-size: 11px; color: var(--t3); margin-top: 1px;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* ミニ進捗バー（常時表示） */
+    .prop-mini-row { display: flex; align-items: center; gap: 7px; margin-top: 5px; }
+    .prop-mini-bg { flex: 1; max-width: 80px; height: 3px; background: var(--bg);
+                    border-radius: 2px; overflow: hidden; }
+    .prop-mini-fill { height: 100%; background: var(--green); border-radius: 2px;
+                      transition: width .35s ease; }
+    .prop-mini-lbl { font-family: var(--fm); font-size: 10px; color: var(--t3); }
+    .prop-dates { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .prop-date { font-size: 10px; color: var(--t2); display: flex; align-items: center; gap: 3px; }
+    .prop-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .prop-progress-badge { font-size: 11px; padding: 2px 9px; border-radius: 10px;
+                           background: var(--green-light); color: var(--green); font-weight: 600; }
+    .prop-done-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px;
+                       background: var(--border); color: var(--t3); }
+    .prop-arrow { width: 16px; height: 16px; color: var(--t3);
+                  transition: transform .22s ease; margin-top: 6px; }
+    .prop-card.open .prop-arrow { transform: rotate(90deg); }
+
+    /* ─ Phases container ────────────────────────────────────── */
+    .phases-wrap { display: none; border-top: 1px solid var(--border); }
+    .prop-card.open .phases-wrap { display: block; }
+
+    /* ─ Progress bar ────────────────────────────────────────── */
+    .prog-row { display: flex; align-items: center; padding: 8px 14px 6px; gap: 10px; }
+    .prog-bg { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width .35s ease; }
+    .prog-lbl { font-family: var(--fm); font-size: 11px; color: var(--t3); flex-shrink: 0; }
+
+    /* ─ Phase section ───────────────────────────────────────── */
+    .phase-sec { border-bottom: 1px solid var(--border); }
+    .phase-sec:last-child { border-bottom: none; }
+    .phase-hdr { display: flex; align-items: center; padding: 9px 14px 9px 12px; cursor: pointer;
+                 gap: 7px; background: var(--bg); user-select: none;
+                 -webkit-tap-highlight-color: transparent; }
+    .phase-sec.open .phase-hdr { background: #f0f6f2; }
+    .phase-hdr:active { background: var(--green-light); }
+    .phase-lbl { flex: 1; font-size: 11px; font-weight: 700; color: var(--t2);
+                 letter-spacing: .04em; text-transform: uppercase; }
+    .phase-lbl.done { color: var(--t3); text-decoration: line-through; }
+    .phase-cnt { font-family: var(--fm); font-size: 10px; color: var(--t3);
+                 background: white; border: 1px solid var(--border);
+                 padding: 1px 7px; border-radius: 10px; }
+    .phase-badge { font-size: 10px; padding: 1px 7px; background: var(--green-light);
+                   color: var(--green); border-radius: 8px; font-weight: 600; }
+    .phase-arr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; flex-shrink: 0; }
+    .phase-sec.open .phase-arr { transform: rotate(90deg); }
+
+    /* ─ Task list ───────────────────────────────────────────── */
+    .task-list { display: none; }
+    .phase-sec.open .task-list { display: block; }
+    .task-row { display: flex; align-items: flex-start; padding: 10px 14px 10px 18px;
+                gap: 10px; border-bottom: 1px solid var(--border); }
+    .task-row:last-child { border-bottom: none; }
+    .task-row.done .task-name { color: var(--t3); text-decoration: line-through; }
+    .chk { width: 19px; height: 19px; border: 2px solid var(--border); border-radius: 5px;
+           flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex;
+           align-items: center; justify-content: center; transition: all .15s;
+           background: white; -webkit-tap-highlight-color: transparent; }
+    .chk:hover:not(.on) { border-color: var(--green-mid); }
+    .chk.on { background: var(--green); border-color: var(--green); }
+    .chk svg { display: none; }
+    .chk.on svg { display: block; }
+    .task-body { flex: 1; min-width: 0; }
+    .task-name { font-size: 13px; line-height: 1.55; word-break: break-all; }
+    .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .task-id { font-family: var(--fm); font-size: 10px; color: var(--t3); }
+    .task-due { font-size: 11px; color: var(--t3); display: flex; align-items: center; gap: 3px; }
+    .task-due.late { color: var(--red); font-weight: 600; }
+    .pdot { width: 6px; height: 6px; background: var(--amber); border-radius: 50%;
+            flex-shrink: 0; margin-top: 5px; }
+
+    /* ─ Init button ─────────────────────────────────────────── */
+    .init-box { padding: 20px 14px; text-align: center; }
+    .init-box p { font-size: 12px; color: var(--t3); margin-top: 6px; }
+    .btn-init { padding: 10px 24px; background: var(--green); color: white; border: none;
+                border-radius: 8px; font-family: var(--fp); font-size: 13px; font-weight: 500;
+                cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .btn-init:disabled { opacity: .5; }
+    .btn-init:active { background: var(--green-dark); }
+
+    /* ─ Master tasks ────────────────────────────────────────── */
+    .m-group { background: var(--card); border-radius: var(--radius-card); margin-bottom: 10px;
+               overflow: hidden; box-shadow: var(--shadow-card); border: 1.5px solid var(--border); }
+    .m-ghdr { display: flex; align-items: center; padding: 11px 14px;
+              background: var(--green-light); cursor: pointer; gap: 8px;
+              -webkit-tap-highlight-color: transparent; user-select: none; }
+    .m-ghdr:active { background: #d0e9d8; }
+    .m-gname { flex: 1; font-size: 13px; font-weight: 700; color: var(--green); }
+    .m-gcnt { font-family: var(--fm); font-size: 11px; color: var(--green-mid); margin-right: 4px; }
+    .m-garr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; }
+    .m-group.open .m-garr { transform: rotate(90deg); }
+
+    /* ─ Drag and drop ────────────────────────────────────── */
+    .m-drag-handle { width: 18px; height: 18px; color: var(--t3); cursor: grab;
+                     display: flex; align-items: center; justify-content: center;
+                     flex-shrink: 0; user-select: none; }
+    .m-drag-handle:active { cursor: grabbing; }
+    .m-row.dragging { opacity: .5; background: var(--green-light); }
+    .m-row.drag-over { background: var(--border); }
+    .m-row[draggable="true"] { user-select: none; }
+
+    /* ─ Add task button (top toolbar) ────────────────────── */
+    .add-task-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px;
+                    background: var(--green); color: white; border: none; border-radius: 7px;
+                    font-family: var(--fp); font-size: 12px; cursor: pointer;
+                    -webkit-tap-highlight-color: transparent; }
+    .add-task-btn:active { background: var(--green-dark); }
+
+    /* ─ Master phase header (updated) ────────────────────── */
+    .m-ghdr-new { display: flex; align-items: center; padding: 11px 14px;
+                  background: white; cursor: pointer; gap: 10px;
+                  border-bottom: 1px solid var(--border);
+                  -webkit-tap-highlight-color: transparent; user-select: none; }
+    .m-ghdr-new:active { background: var(--bg); }
+    .m-gname-new { flex: 1; font-size: 11px; font-weight: 700; color: var(--t2);
+                   letter-spacing: .04em; text-transform: uppercase; }
+    .m-gcnt-new { font-family: var(--fm); font-size: 10px; color: var(--t3);
+                  background: var(--green-light); color: var(--green);
+                  padding: 1px 7px; border-radius: 8px; font-weight: 600; }
+    .m-ghedit { padding: 5px 7px; background: none; border: none;
+                border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+                justify-content: center; color: var(--t3);
+                -webkit-tap-highlight-color: transparent; }
+    .m-ghedit:hover { background: var(--bg); color: var(--t2); }
+    .m-ghedit:active { background: var(--border); }
+    .m-body { display: none; }
+    .m-group.open .m-body { display: block; }
+    .m-row { display: flex; align-items: center; padding: 9px 14px;
+             border-bottom: 1px solid var(--border); gap: 8px; }
+    .m-row:last-child { border-bottom: none; }
+    .m-ord { font-family: var(--fm); font-size: 10px; color: var(--t3);
+             width: 22px; flex-shrink: 0; text-align: right; }
+    .m-name { flex: 1; font-size: 13px; }
+    .m-name.off { color: var(--t3); text-decoration: line-through; }
+    .m-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .m-btn { width: 28px; height: 28px; background: none; border: 1px solid var(--border);
+             border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+             justify-content: center; color: var(--t3);
+             -webkit-tap-highlight-color: transparent; }
+    .m-btn:active { background: var(--bg); }
+    .m-btn.del:active { background: #fff0f0; color: var(--red); border-color: var(--red); }
+    /* Add task row */
+    .m-add-row { display: flex; padding: 8px 14px; border-top: 1px solid var(--border);
+                 gap: 6px; background: #fafcfb; }
+    .m-add-inp { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px;
+                 font-family: var(--fp); font-size: 12px; color: var(--t1); outline: none; }
+    .m-add-inp:focus { border-color: var(--green); }
+    .m-add-btn { padding: 6px 12px; background: var(--green); color: white; border: none;
+                 border-radius: 7px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+    /* Add phase button */
+    .add-phase-btn { width: 100%; padding: 11px; background: var(--card);
+                     border: 1.5px dashed var(--border); border-radius: 10px;
+                     color: var(--t3); font-family: var(--fp); font-size: 12px;
+                     cursor: pointer; display: flex; align-items: center;
+                     justify-content: center; gap: 6px; margin-top: 4px; }
+    .add-phase-btn:active { background: var(--bg); }
+
+    /* ─ History timeline ────────────────────────────────────── */
+    .h-card { background: var(--card); border-radius: 12px; overflow: hidden;
+              box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+    .h-row { display: flex; align-items: flex-start; gap: 12px;
+             padding: 13px 16px; border-bottom: 1px solid var(--border); }
+    .h-row:last-child { border-bottom: none; }
+    .h-dot-col { display: flex; flex-direction: column; align-items: center; padding-top: 3px; flex-shrink: 0; }
+    .h-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .h-line { width: 1px; flex: 1; background: var(--border); margin: 4px 0; min-height: 16px; }
+    .h-dot-add  { background: var(--green); }
+    .h-dot-del  { background: var(--red); }
+    .h-dot-name { background: var(--blue); }
+    .h-dot-phase{ background: #06b6d4; }
+    .h-dot-order{ background: var(--amber); }
+    .h-dot-misc { background: var(--t3); }
+    .h-body { flex: 1; min-width: 0; }
+    .h-time { font-family: var(--fm); font-size: 10px; color: var(--t3); margin-bottom: 3px; }
+    .h-task-name { font-size: 13px; font-weight: 500; word-break: break-all;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .h-chip { display: inline-flex; align-items: center; font-size: 10px; padding: 1px 7px;
+              border-radius: 4px; font-weight: 600; margin-left: 5px; }
+    .h-chip-add   { background: #dcfce7; color: #16a34a; }
+    .h-chip-del   { background: #fee2e2; color: var(--red); }
+    .h-chip-name  { background: #dbeafe; color: var(--blue); }
+    .h-chip-phase { background: #cffafe; color: #0e7490; }
+    .h-chip-order { background: #fef3c7; color: #b45309; }
+    .h-chip-misc  { background: var(--bg); color: var(--t2); }
+    .h-diff { display: flex; align-items: center; gap: 5px; margin-top: 3px; font-size: 11px; }
+    .h-before { color: var(--t3); text-decoration: line-through; }
+    .h-after  { color: var(--t1); font-weight: 600; }
+
+    /* ─ Spinner / empty ─────────────────────────────────────── */
+    .center { text-align: center; padding: 36px; color: var(--t3); }
+    .spin { display: inline-block; width: 22px; height: 22px;
+            border: 2px solid var(--border); border-top-color: var(--green);
+            border-radius: 50%; animation: spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .err { background: #fff5f5; border: 1px solid #fecaca; color: var(--red);
+           padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; }
+
+    /* ─ Modal ───────────────────────────────────────────────── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.45);
+                z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-bg.on { display: flex; }
+    .modal-sheet { background: var(--card); border-radius: 20px;
+                   width: 100%; max-width: 420px; padding: 0;
+                   box-shadow: 0 20px 60px rgba(0,0,0,.2); overflow: hidden; }
+    .modal-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+                  display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 15px; font-weight: 700; }
+    .modal-close { width: 28px; height: 28px; background: var(--bg); border: none;
+                   border-radius: 50%; cursor: pointer; font-size: 14px; color: var(--t2);
+                   display: flex; align-items: center; justify-content: center; }
+    .modal-body-wrap { padding: 20px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 10px; color: var(--t2); margin-bottom: 5px;
+                   font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .field input[type=text], .field input[type=number], .field select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: var(--fp); font-size: 14px; color: var(--t1); outline: none;
+      transition: border-color .18s, box-shadow .18s; }
+    .field input:focus, .field select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(0,104,55,.1); }
+    .chk-field { display: flex; align-items: center; gap: 8px; }
+    .chk-field input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--green); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+    .btn-modal { flex: 1; padding: 13px; border: none; border-radius: 12px; font-family: var(--fp);
+                 font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-modal.save { background: var(--green-dark); color: white; }
+    .btn-modal.save:active { background: var(--green); }
+    .btn-modal.cancel { background: var(--bg); color: var(--t2); border: 1px solid var(--border); }
+    .btn-modal.danger { background: #fff0f0; color: var(--red); }
+
+    /* ─ Priority panel ─────────────────────────────────────── */
+    .prio-panel { background: #fff5f5; border: 1.5px solid #fecaca;
+                  border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+    .prio-panel-hdr { display: flex; align-items: center; padding: 10px 14px;
+                      cursor: pointer; gap: 8px; user-select: none;
+                      -webkit-tap-highlight-color: transparent; }
+    .prio-panel-hdr:active { background: #fee2e2; }
+    .prio-panel-title { flex: 1; font-size: 12px; font-weight: 700; color: #991b1b;
+                        letter-spacing: .03em; display: flex; align-items: center; gap: 6px; }
+    .prio-cnt-badge { background: #dc2626; color: white; font-size: 10px; font-weight: 700;
+                      padding: 1px 7px; border-radius: 10px; font-family: var(--fm); }
+    .prio-panel-arr { width: 13px; height: 13px; color: #b91c1c; transition: transform .18s; flex-shrink: 0; }
+    .prio-panel.open .prio-panel-arr { transform: rotate(90deg); }
+    .prio-body { display: none; border-top: 1px solid #fecaca; }
+    .prio-panel.open .prio-body { display: block; }
+    .prio-row { display: flex; align-items: flex-start; gap: 10px;
+                padding: 9px 14px; border-bottom: 1px solid #fee2e2; }
+    .prio-row:last-child { border-bottom: none; }
+    .prio-row.done .prio-task-name { color: var(--t3); text-decoration: line-through; }
+    .prio-prop { font-size: 10px; color: #b91c1c; font-family: var(--fm);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                 max-width: 90px; flex-shrink: 0; }
+    .prio-task-name { flex: 1; font-size: 12px; min-width: 0; word-break: break-all; line-height: 1.5; }
+    .prio-phase-tag { font-size: 10px; color: var(--t3); white-space: nowrap; flex-shrink: 0; }
+    /* ─ Diamond priority button ─────────────────────────────── */
+    .star-btn { width: 24px; height: 24px; background: none; border: none;
+                flex-shrink: 0; cursor: pointer; display: flex; align-items: center;
+                justify-content: center; color: var(--border); margin-top: 1px;
+                -webkit-tap-highlight-color: transparent; transition: color .15s; }
+    .star-btn.on { color: #dc2626; }
+    .star-btn:active { transform: scale(1.3); }
+
+    /* ─ Toast ───────────────────────────────────────────────── */
+    .toast { position: fixed; bottom: 24px; left: 50%;
+             transform: translateX(-50%) translateY(80px);
+             background: var(--t1); color: white; padding: 9px 18px;
+             border-radius: 20px; font-size: 13px; z-index: 400;
+             transition: transform .26s cubic-bezier(.34,1.56,.64,1);
+             white-space: nowrap; pointer-events: none; }
+    .toast.on { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────────────────────── -->
+<header class="hdr">
+  <div class="hdr-top">
+    <button class="hdr-back" onclick="goToDashboard()" title="ダッシュボードへ戻る">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="2.5">
+        <polyline points="15,18 9,12 15,6"/>
+      </svg>
+    </button>
+    <div class="hdr-info">
+      <div class="hdr-title">タスク管理</div>
+      <div class="hdr-sub">全現場タスク一元管理</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab on"  onclick="switchTab('props',this)">物件一覧</button>
+    <button class="tab"     onclick="switchTab('master',this)">マスタータスク</button>
+    <button class="tab"     onclick="switchTab('history',this)">変更履歴</button>
+  </nav>
+</header>
+
+<!-- ─── 物件一覧 ─────────────────────────────────────────────── -->
+<section id="pane-props" class="pane on">
+  <div class="toolbar">
+    <span class="tbar-meta" id="lbl-upd">読み込み中…</span>
+    <button class="btn-xs" onclick="loadProperties()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>更新
+    </button>
+  </div>
+  <div class="sort-bar">
+    <span class="sort-lbl">並び順：</span>
+    <div class="sort-btns">
+      <button class="sort-btn" id="sort-btn-handover" onclick="setSortOrder('handover')">引渡し順</button>
+      <button class="sort-btn" id="sort-btn-start"    onclick="setSortOrder('start')">着工日順</button>
+      <button class="sort-btn" id="sort-btn-name"     onclick="setSortOrder('name')">名前順</button>
+    </div>
+  </div>
+  <!-- 優先タスクパネル -->
+  <div id="prio-panel" class="prio-panel open" style="display:none">
+    <div class="prio-panel-hdr" onclick="togglePrioPanel()">
+      <div class="prio-panel-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#dc2626" stroke="none">
+          <polygon points="12,2 22,12 12,22 2,12"/>
+        </svg>
+        優先タスク
+        <span class="prio-cnt-badge" id="prio-cnt">0</span>
+      </div>
+      <svg class="prio-panel-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9,6 15,12 9,18"/>
+      </svg>
+    </div>
+    <div class="prio-body" id="prio-body"></div>
+  </div>
+  <div id="props-list"><div class="center"><div class="spin"></div></div></div>
+  <div id="hidden-props-note" style="display:none;text-align:center;font-size:11px;color:var(--t3);padding:6px 0 12px;"></div>
+</section>
+
+<!-- ─── マスタータスク ───────────────────────────────────────── -->
+<section id="pane-master" class="pane">
+  <div class="toolbar">
+    <span class="tbar-meta" id="lbl-master">全現場共通 マスタータスク</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="add-task-btn" onclick="openAddTaskModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>+ タスクを追加
+      </button>
+      <button class="btn-xs" onclick="openAddPhase()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>工程を追加
+      </button>
+      <button class="btn-xs" onclick="loadMaster()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>更新
+      </button>
+    </div>
+  </div>
+  <div id="master-list"><div class="center"><div class="spin"></div></div></div>
+</section>
+
+<!-- ─── 変更履歴 ─────────────────────────────────────────────── -->
+<section id="pane-history" class="pane">
+  <div class="toolbar">
+    <span class="tbar-meta">マスタータスク変更履歴 最大100件</span>
+    <button class="btn-xs" onclick="loadHistory()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>更新
+    </button>
+  </div>
+  <div id="history-list"><div class="center"><div class="spin"></div></div></div>
+</section>
+
+<!-- ─── Modal (add/edit master task & phase) ─────────────────── -->
+<div class="modal-bg" id="modal" onclick="modalBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-title-txt">タスクを追加</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body-wrap" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  Config
+// ═══════════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwLo2VCUvfu0XVGzuni7A1AyqES9oAkC6Yap_LaKh_2ljOzAmzaFkVwNcYynz9G1zf-/exec';
+// ダッシュボードURL（必要に応じて変更してください）
+const DASHBOARD_URL = localStorage.getItem('dashboardUrl') || 'index.html';
+function goToDashboard() { window.location.href = DASHBOARD_URL; }
+
+const PHASE_ORDER = [
+  '現場FB','図面FB','地鎮祭','地縄立会い','生産移管','施工計画説明',
+  '遣り方検査','配筋検査','型枠検査','基礎検査','建て方','構造検査',
+  '構造立会い','雨仕舞い検査','木完検査','木完立会い','竣工検査','竣工立会い','引渡し',
+];
+
+// ═══════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════
+let taskCache   = {};   // { propName: [tasks] }
+let propData    = [];   // from Notion
+let masterData  = [];
+let phaseList   = [...PHASE_ORDER];
+let masterInit  = false;
+let historyInit = false;
+let propSortOrder = 'handover'; // 'handover' | 'start' | 'name'
+
+// ═══════════════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════════════
+async function api(params) {
+  const qs = Object.entries(params)
+    .map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const res = await fetch(GAS_URL + '?' + qs);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'APIエラー');
+  return json.data;
+}
+
+// ═══════════════════════════════════════════════════════
+//  Tab switch
+// ═══════════════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('pane-' + name).classList.add('on');
+  if (name === 'master'  && !masterInit)  loadMaster();
+  if (name === 'history' && !historyInit) loadHistory();
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  物件一覧
+// ═══════════════════════════════════════════════════════
+async function loadProperties() {
+  const el = document.getElementById('props-list');
+  el.innerHTML = '<div class="center"><div class="spin"></div></div>';
+  document.getElementById('lbl-upd').textContent = '読み込み中…';
+  try {
+    propData = await api({ mode: 'getProperties' });
+    renderProps(propData);
+    document.getElementById('lbl-upd').textContent = '更新: ' + now();
+  } catch(e) {
+    el.innerHTML = `<div class="err">物件の読み込みに失敗しました<br><small>${esc(e.message)}</small></div>`;
+  }
+}
+
+function setSortOrder(order) {
+  propSortOrder = order;
+  // ボタンのon状態を更新
+  ['handover','start','name'].forEach(k => {
+    const btn = document.getElementById('sort-btn-' + k);
+    if (btn) btn.classList.toggle('on', k === order);
+  });
+  renderProps(propData);
+}
+
+function renderProps(props) {
+  const el = document.getElementById('props-list');
+  if (!props || props.length === 0) {
+    el.innerHTML = '<div class="center"><p style="font-size:13px;margin-top:8px">物件が見つかりません</p></div>';
+    return;
+  }
+  // 引渡し日から7日以上経過した物件は非表示
+  const today = new Date(); today.setHours(0,0,0,0);
+  const limit = 7 * 24 * 60 * 60 * 1000;
+  const visible  = props.filter(p => {
+    if (!p.handover) return true;
+    return (today - new Date(p.handover)) <= limit;
+  });
+  const hiddenCnt = props.length - visible.length;
+
+  // 選択された並び順でソート（未設定は末尾）
+  const sorted = [...visible].sort((a, b) => {
+    if (propSortOrder === 'name') {
+      return (a.name || '').localeCompare(b.name || '', 'ja');
+    } else if (propSortOrder === 'start') {
+      if (!a.start && !b.start) return 0;
+      if (!a.start) return 1;
+      if (!b.start) return -1;
+      return a.start.localeCompare(b.start);
+    } else { // 'handover'（デフォルト）
+      if (!a.handover && !b.handover) return 0;
+      if (!a.handover) return 1;
+      if (!b.handover) return -1;
+      return a.handover.localeCompare(b.handover);
+    }
+  });
+  el.innerHTML = sorted.map(p => propCardHTML(p)).join('');
+  // 非表示件数の表示
+  const note = document.getElementById('hidden-props-note');
+  if (note) {
+    note.style.display = hiddenCnt > 0 ? 'block' : 'none';
+    note.textContent   = `引渡し済み ${hiddenCnt}件を非表示中`;
+  }
+}
+
+function propCardHTML(p) {
+  const cid         = 'pc-' + slug(p.name);
+  const startFmt    = p.start    ? fmtDate(p.start)    : '';
+  const frameFmt    = p.frame    ? fmtDate(p.frame)    : '';
+  const handoverFmt = p.handover ? fmtDate(p.handover) : '';
+  const cal = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`;
+  return `
+<div class="prop-card" id="${cid}" data-prop="${esc(p.name)}" data-alldone="false">
+  <div class="prop-hdr" onclick="toggleProp('${cid}')">
+    <div class="prop-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+    </div>
+    <div class="prop-info">
+      <div class="prop-name">${esc(p.name)}</div>
+      ${p.city ? `<div class="prop-addr">${esc(p.city)}</div>` : ''}
+      <div class="prop-mini-row">
+        <div class="prop-mini-bg"><div class="prop-mini-fill" id="${cid}-mpb" style="width:0%"></div></div>
+        <span class="prop-mini-lbl" id="${cid}-mpl">―</span>
+      </div>
+      ${(startFmt || frameFmt || handoverFmt) ? `
+      <div class="prop-dates">
+        ${startFmt    ? `<span class="prop-date">${cal}着工 ${startFmt}</span>`  : ''}
+        ${frameFmt    ? `<span class="prop-date">${cal}建方 ${frameFmt}</span>`    : ''}
+        ${handoverFmt ? `<span class="prop-date">${cal}引渡 ${handoverFmt}</span>` : ''}
+      </div>` : ''}
+    </div>
+    <div class="prop-right">
+      ${p.progress ? `<span class="prop-progress-badge">${esc(p.progress)}</span>` : ''}
+      <svg class="prop-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9,6 15,12 9,18"/>
+      </svg>
+    </div>
+  </div>
+  <div class="phases-wrap" id="${cid}-pw">
+    <div class="center" style="padding:20px"><div class="spin"></div></div>
+  </div>
+</div>`;
+}
+
+async function toggleProp(cid) {
+  const card = document.getElementById(cid);
+  const wasOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  if (!wasOpen && !taskCache[card.dataset.prop]) {
+    await loadPropTasks(card.dataset.prop, cid);
+  }
+}
+
+async function loadPropTasks(propName, cid) {
+  const wrap = document.getElementById(cid + '-pw');
+  wrap.innerHTML = '<div class="center" style="padding:20px"><div class="spin"></div></div>';
+  try {
+    const tasks = await api({ mode: 'getTasks', property: propName });
+    taskCache[propName] = tasks;
+    renderPropTasks(propName, cid, tasks, wrap);
+  } catch(e) {
+    wrap.innerHTML = `<div class="err" style="margin:12px">${esc(e.message)}</div>`;
+  }
+}
+
+function renderPropTasks(propName, cid, tasks, wrap) {
+  if (!tasks || tasks.length === 0) {
+    wrap.innerHTML = `
+<div class="init-box">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9aa3ad" stroke-width="1.5">
+    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+    <line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+  </svg>
+  <p>タスクが未登録です</p>
+  <button class="btn-init" id="bi-${slug(propName)}"
+    onclick="initProp('${esc(propName)}','${cid}',this)">
+    マスターからタスクを一括生成
+  </button>
+</div>`;
+    return;
+  }
+
+  const phaseMap = groupBy(tasks, 'phase');
+  const phases   = sortByPhase(Object.keys(phaseMap));
+  const total    = tasks.length;
+  const done     = tasks.filter(t => t.done).length;
+  const pct      = total > 0 ? Math.round(done/total*100) : 0;
+  const allDone  = done === total;
+
+  // 完了バッジをカードに反映
+  const card = document.getElementById(cid);
+  card.dataset.alldone = String(allDone);
+  if (allDone) {
+    const right = card.querySelector('.prop-right');
+    if (!right.querySelector('.prop-done-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'prop-done-badge';
+      badge.textContent = '全完了';
+      right.insertBefore(badge, right.firstChild);
+    }
+    card.classList.add('done-all');
+  }
+
+  // ミニ進捗バーを更新（カードヘッダー）
+  const mpb = document.getElementById(cid + '-mpb');
+  const mpl = document.getElementById(cid + '-mpl');
+  if (mpb) mpb.style.width = pct + '%';
+  if (mpl) mpl.textContent = `${pct}%`;
+
+  wrap.innerHTML = `
+<div class="prog-row">
+  <div class="prog-bg" id="${cid}-pb"><div class="prog-fill" style="width:${pct}%"></div></div>
+  <span class="prog-lbl" id="${cid}-pl">${done}/${total}</span>
+</div>
+${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}`;
+
+  refreshPrioPanel();
+}
+
+function phaseSecHTML(propName, cid, phase, tasks) {
+  const sorted    = [...tasks].sort((a,b) => a.order - b.order);
+  const done      = sorted.filter(t => t.done).length;
+  const allDone   = done === sorted.length;
+  const phid      = cid + '-' + slug(phase);
+  return `
+<div class="phase-sec" id="${phid}">
+  <div class="phase-hdr" onclick="togglePhase('${phid}')">
+    <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
+    <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
+    <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
+    <svg class="phase-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="9,6 15,12 9,18"/>
+    </svg>
+  </div>
+  <div class="task-list">
+    ${sorted.map(t => taskRowHTML(t, propName, cid)).join('')}
+  </div>
+</div>`;
+}
+
+function togglePhase(phid) {
+  document.getElementById(phid).classList.toggle('open');
+}
+
+function taskRowHTML(task, propName, cid) {
+  const today  = new Date().toISOString().slice(0,10);
+  const late   = task.due && !task.done && task.due < today;
+  return `
+<div class="task-row${task.done?' done':''}" id="tk-${task.id}"
+  data-prop="${esc(propName)}" data-cid="${cid}" data-priority="${task.priority}">
+  <div class="chk${task.done?' on':''}" onclick="toggleTask('${esc(task.id)}','${esc(propName)}','${cid}')">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
+      <polyline points="20,6 9,17 4,12"/>
+    </svg>
+  </div>
+  <div class="task-body">
+    <div class="task-name">${esc(task.name)}</div>
+    <div class="task-meta">
+      <span class="task-id">${esc(task.id)}</span>
+      ${task.due ? `<span class="task-due${late?' late':''}">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>${esc(task.due)}</span>` : ''}
+    </div>
+  </div>
+  <button class="star-btn${task.priority?' on':''}" title="優先タスクに設定"
+    onclick="togglePriority('${esc(task.id)}','${esc(propName)}','${cid}')">
+    <svg width="13" height="13" viewBox="0 0 24 24"
+      fill="${task.priority?'#dc2626':'none'}" stroke="${task.priority?'#dc2626':'currentColor'}" stroke-width="2.5">
+      <polygon points="12,2 22,12 12,22 2,12"/>
+    </svg>
+  </button>
+</div>`;
+}
+
+// ─ タスク チェック ────────────────────────────────────────────
+async function toggleTask(id, propName, cid) {
+  const row  = document.getElementById('tk-' + id);
+  const chk  = row.querySelector('.chk');
+  const was  = chk.classList.contains('on');
+  const next = !was;
+
+  row.classList.toggle('done', next);
+  chk.classList.toggle('on', next);
+
+  const cached = taskCache[propName];
+  const t = cached && cached.find(x => x.id === id);
+  if (t) t.done = next;
+
+  refreshPhaseHdr(row);
+  refreshProgBar(propName, cid);
+  checkAllDone(propName, cid);
+  refreshPrioPanel();
+
+  try {
+    await api({ mode:'updateTask', id, field:'done', value:String(next) });
+    showToast(next ? '✓ 完了にしました' : '未完了に戻しました');
+  } catch(e) {
+    row.classList.toggle('done', was);
+    chk.classList.toggle('on', was);
+    if (t) t.done = was;
+    refreshPhaseHdr(row);
+    refreshProgBar(propName, cid);
+    checkAllDone(propName, cid);
+    showToast('エラー: 更新できませんでした');
+  }
+}
+
+function refreshPhaseHdr(row) {
+  const sec = row.closest('.phase-sec');
+  if (!sec) return;
+  const all   = sec.querySelectorAll('.task-row').length;
+  const done  = sec.querySelectorAll('.task-row.done').length;
+  const isAll = done === all;
+  const phid  = sec.id;
+  const lbl   = sec.querySelector('.phase-lbl');
+  const cnt   = document.getElementById(phid + '-cnt');
+  const badge = document.getElementById(phid + '-badge');
+  if (lbl)   lbl.classList.toggle('done', isAll);
+  if (cnt)   cnt.textContent = `${done}/${all}`;
+  if (badge) { badge.className = isAll ? 'phase-badge' : ''; badge.textContent = isAll ? '完了' : ''; }
+}
+
+function refreshProgBar(propName, cid) {
+  const tasks = taskCache[propName];
+  if (!tasks) return;
+  const total = tasks.length, done = tasks.filter(t=>t.done).length;
+  const pct   = total > 0 ? Math.round(done/total*100) : 0;
+  const pb  = document.getElementById(cid + '-pb');
+  const pl  = document.getElementById(cid + '-pl');
+  const mpb = document.getElementById(cid + '-mpb');
+  const mpl = document.getElementById(cid + '-mpl');
+  if (pb)  pb.querySelector('.prog-fill').style.width = pct + '%';
+  if (pl)  pl.textContent = `${done}/${total}`;
+  if (mpb) mpb.style.width = pct + '%';
+  if (mpl) mpl.textContent = `${pct}%`;
+}
+
+// ─ 優先タスク パネル ──────────────────────────────────────────
+const PRIO_CACHE_KEY = 'prioTasksCache';
+
+function prioPanelRowHTML(t) {
+  return `
+<div class="prio-row${t.done?' done':''}" id="prio-${t.id}">
+  <div class="chk${t.done?' on':''}" style="width:17px;height:17px;border-radius:4px;flex-shrink:0;margin-top:2px"
+    onclick="toggleTask('${esc(t.id)}','${esc(t.propName)}','pc-${slug(t.propName)}')">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
+      <polyline points="20,6 9,17 4,12"/>
+    </svg>
+  </div>
+  <div class="prio-task-name">${esc(t.name)}</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
+    <span class="prio-prop">${esc(t.propName)}</span>
+    <span class="prio-phase-tag">${esc(t.phase)}</span>
+  </div>
+</div>`;
+}
+
+function refreshPrioPanel() {
+  const panel    = document.getElementById('prio-panel');
+  const body     = document.getElementById('prio-body');
+  const cntBadge = document.getElementById('prio-cnt');
+  if (!panel) return;
+
+  // 全物件のキャッシュから未完了優先タスクを集約
+  const rows = [];
+  Object.entries(taskCache).forEach(([propName, tasks]) => {
+    tasks.forEach(t => {
+      if (t.priority && !t.done) rows.push({ ...t, propName });
+    });
+  });
+
+  // localStorageに保存（次回リロード時に復元）
+  if (Object.keys(taskCache).length > 0) {
+    try { localStorage.setItem(PRIO_CACHE_KEY, JSON.stringify(rows)); } catch(e) {}
+  }
+
+  // 件数バッジ・表示
+  cntBadge.textContent = rows.length;
+  panel.style.display  = rows.length > 0 ? '' : 'none';
+  if (rows.length === 0) return;
+  body.innerHTML = rows.map(prioPanelRowHTML).join('');
+}
+
+function restorePrioPanelFromCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(PRIO_CACHE_KEY) || '[]');
+    if (cached.length === 0) return;
+    const panel    = document.getElementById('prio-panel');
+    const body     = document.getElementById('prio-body');
+    const cntBadge = document.getElementById('prio-cnt');
+    cntBadge.textContent = cached.length;
+    panel.style.display  = '';
+    body.innerHTML = cached.map(prioPanelRowHTML).join('');
+  } catch(e) {}
+}
+
+function togglePrioPanel() {
+  document.getElementById('prio-panel').classList.toggle('open');
+}
+
+// ─ 優先トグル ─────────────────────────────────────────────────
+async function togglePriority(id, propName, cid) {
+  const row   = document.getElementById('tk-' + id);
+  if (!row) return;
+  const btn   = row.querySelector('.star-btn');
+  const was   = btn.classList.contains('on');
+  const next  = !was;
+
+  // UIを即座に更新
+  btn.classList.toggle('on', next);
+  const svg = btn.querySelector('svg');
+  svg.setAttribute('fill', next ? '#f59e0b' : 'none');
+  svg.setAttribute('stroke', next ? '#f59e0b' : 'currentColor');
+  row.dataset.priority = String(next);
+
+  const cached = taskCache[propName];
+  const t = cached && cached.find(x => x.id === id);
+  if (t) t.priority = next;
+
+  refreshPrioPanel();
+
+  try {
+    await api({ mode:'updateTask', id, field:'priority', value:String(next) });
+    showToast(next ? '◆ 優先タスクに設定しました' : '優先を解除しました');
+  } catch(e) {
+    // ロールバック
+    btn.classList.toggle('on', was);
+    svg.setAttribute('fill', was ? '#f59e0b' : 'none');
+    svg.setAttribute('stroke', was ? '#f59e0b' : 'currentColor');
+    if (t) t.priority = was;
+    refreshPrioPanel();
+    showToast('エラー: ' + e.message);
+  }
+}
+
+function checkAllDone(propName, cid) {
+  const tasks = taskCache[propName];
+  if (!tasks || tasks.length === 0) return;
+  const allDone = tasks.every(t => t.done);
+  const card = document.getElementById(cid);
+  card.dataset.alldone = String(allDone);
+  card.classList.toggle('done-all', allDone);
+  const right = card.querySelector('.prop-right');
+  let badge = right.querySelector('.prop-done-badge');
+  if (allDone && !badge) {
+    badge = document.createElement('span');
+    badge.className = 'prop-done-badge';
+    badge.textContent = '全完了';
+    right.insertBefore(badge, right.firstChild);
+  } else if (!allDone && badge) {
+    badge.remove();
+  }
+}
+
+// ─ 物件タスク初期化 ──────────────────────────────────────────
+async function initProp(propName, cid, btn) {
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  try {
+    const r = await api({ mode:'initProperty', property:propName });
+    showToast(`${r.count} 件のタスクを生成しました`);
+    delete taskCache[propName];
+    await loadPropTasks(propName, cid);
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'マスターからタスクを一括生成';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  マスタータスク
+// ═══════════════════════════════════════════════════════
+async function loadMaster() {
+  masterInit = true;
+  const el = document.getElementById('master-list');
+  el.innerHTML = '<div class="center"><div class="spin"></div></div>';
+  try {
+    // フェーズ一覧とタスクを並行取得
+    const [tasks, phases] = await Promise.all([
+      api({ mode:'getMasterTasks', active:'false' }),  // 無効含む全件
+      api({ mode:'getPhases' }),
+    ]);
+    masterData = tasks;
+    phaseList  = phases.length > 0 ? phases : [...PHASE_ORDER];
+    renderMaster(tasks);
+    document.getElementById('lbl-master').textContent =
+      `マスタータスク ${tasks.filter(t=>t.active).length}件`;
+  } catch(e) {
+    el.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  }
+}
+
+function renderMaster(tasks) {
+  const el = document.getElementById('master-list');
+
+  // 再描画前に開いているグループのIDを記録
+  const openGroups = new Set(
+    [...el.querySelectorAll('.m-group.open')].map(g => g.id)
+  );
+
+  // phaseListに存在するが tasks にないフェーズも含めて表示
+  const phaseMap = groupBy(tasks, 'phase');
+  const allPhases = [...new Set([...sortByPhase(Object.keys(phaseMap)), ...phaseList])];
+  const phases = sortByPhase(allPhases);
+
+  el.innerHTML = phases.map(ph => {
+    const pts = (phaseMap[ph] || []).sort((a,b) => a.order - b.order);
+    const gid = 'mg-' + slug(ph);
+    return `
+<div class="m-group${openGroups.has(gid) ? ' open' : ''}" id="${gid}">
+  <div class="m-ghdr-new" onclick="toggleMGroup('${gid}')">
+    <span class="m-gname-new">${esc(ph)}</span>
+    <span class="m-gcnt-new">${pts.filter(t=>t.active).length}件</span>
+    <button class="m-ghedit" onclick="event.stopPropagation();openEditPhase('${esc(ph)}')" title="工程名を編集">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>
+    <svg class="m-garr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="9,6 15,12 9,18"/>
+    </svg>
+  </div>
+  <div class="m-body" id="${gid}-body">
+    ${pts.map(t => masterRowHTML(t)).join('')}
+  </div>
+</div>`;
+  }).join('');
+}
+
+function toggleMGroup(gid) {
+  document.getElementById(gid).classList.toggle('open');
+}
+
+function masterRowHTML(task) {
+  return `
+<div class="m-row" id="mr-${task.id}" data-id="${esc(task.id)}" draggable="true"
+  ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"
+  ondragover="handleDragOver(event)" ondrop="handleDrop(event)"
+  ondragleave="handleDragLeave(event)">
+  <div class="m-drag-handle" title="ドラッグして並び替え">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+      <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+      <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+    </svg>
+  </div>
+  <span class="m-ord">${task.order}</span>
+  <span class="m-name${!task.active?' off':''}">${esc(task.name)}</span>
+  ${task.priority ? '<div class="pdot"></div>' : ''}
+  <div class="m-actions">
+    <button class="m-btn" title="編集" onclick="openEditTask('${esc(task.id)}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>
+    <button class="m-btn del" title="削除" onclick="deleteMasterTask('${esc(task.id)}','${esc(task.name)}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4h6v2"/>
+      </svg>
+    </button>
+  </div>
+</div>`;
+}
+
+// ─ Drag & Drop ────────────────────────────────────────────────
+let draggedTask = null;
+let dragSourcePhase = null;
+
+function handleDragStart(e) {
+  draggedTask = e.currentTarget;
+  dragSourcePhase = null;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+}
+
+function handleDragEnd(e) {
+  if (draggedTask) draggedTask.classList.remove('dragging');
+  document.querySelectorAll('.m-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+  draggedTask = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (draggedTask && e.currentTarget.classList.contains('m-row') && e.currentTarget !== draggedTask) {
+    e.currentTarget.classList.add('drag-over');
+  }
+}
+
+function handleDragLeave(e) {
+  if (e.currentTarget.classList.contains('m-row')) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+
+async function handleDrop(e) {
+  e.preventDefault();
+  if (!draggedTask) return;
+  const dropTarget = e.currentTarget;
+  if (!dropTarget.classList.contains('m-row') || dropTarget === draggedTask) return;
+
+  const draggedId = draggedTask.dataset.id;
+  const targetId = dropTarget.dataset.id;
+  const draggedTask_obj = masterData.find(t => t.id === draggedId);
+  const targetTask = masterData.find(t => t.id === targetId);
+
+  if (!draggedTask_obj || !targetTask) return;
+
+  // 同じフェーズ内での移動
+  if (draggedTask_obj.phase === targetTask.phase) {
+    await reorderTasksInPhase(draggedTask_obj, targetTask, draggedTask_obj.phase);
+  } else {
+    // 別フェーズへの移動
+    await moveTaskToPhase(draggedTask_obj, targetTask.phase);
+  }
+
+  dropTarget.classList.remove('drag-over');
+}
+
+async function reorderTasksInPhase(draggedTask_obj, targetTask, phase) {
+  const oldOrder = draggedTask_obj.order;
+  const newOrder = targetTask.order;
+  draggedTask_obj.order = newOrder;
+  targetTask.order = oldOrder;
+
+  try {
+    await Promise.all([
+      api({ mode:'updateMasterTask', id:draggedTask_obj.id, field:'order', value:String(newOrder) }),
+      api({ mode:'updateMasterTask', id:targetTask.id, field:'order', value:String(oldOrder) }),
+    ]);
+    renderMaster(masterData);
+    showToast('並び順を変更しました');
+  } catch(e) {
+    draggedTask_obj.order = oldOrder;
+    targetTask.order = newOrder;
+    showToast('エラー: ' + e.message);
+  }
+}
+
+async function moveTaskToPhase(taskToMove, newPhase) {
+  const oldPhase = taskToMove.phase;
+  const oldOrder = taskToMove.order;
+  taskToMove.phase = newPhase;
+
+  // 新フェーズでの最大orderを取得
+  const maxOrder = Math.max(0, ...masterData.filter(t => t.phase === newPhase).map(t => t.order));
+  taskToMove.order = maxOrder + 1;
+
+  try {
+    await api({ mode:'updateMasterTask', id:taskToMove.id, field:'phase', value:newPhase });
+    await api({ mode:'updateMasterTask', id:taskToMove.id, field:'order', value:String(taskToMove.order) });
+    renderMaster(masterData);
+    showToast(`「${taskToMove.name}」を「${newPhase}」に移動しました`);
+  } catch(e) {
+    taskToMove.phase = oldPhase;
+    taskToMove.order = oldOrder;
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ タスク削除 ─────────────────────────────────────────────────
+async function deleteMasterTask(id, name) {
+  if (!confirm(`「${name}」を削除しますか？\nこの操作は元に戻せません。`)) return;
+  try {
+    await api({ mode:'deleteMasterTask', id });
+    masterData = masterData.filter(t => t.id !== id);
+    renderMaster(masterData);
+    showToast('削除しました');
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ Modal: タスク追加（新） ────────────────────────────────────
+function openAddTaskModal() {
+  const phaseList_sorted = sortByPhase(phaseList);
+  document.getElementById('modal-title-txt').textContent = 'タスクを追加';
+  document.getElementById('modal-body').innerHTML = `
+<div class="field">
+  <label>タスク名</label>
+  <input type="text" id="f-name" placeholder="タスク名を入力" autofocus>
+</div>
+<div class="field">
+  <label>工程</label>
+  <select id="f-phase">
+    ${phaseList_sorted.map(ph=>`<option value="${esc(ph)}">${esc(ph)}</option>`).join('')}
+  </select>
+</div>
+<div class="modal-actions">
+  <button class="btn-modal cancel" onclick="closeModal()">キャンセル</button>
+  <button class="btn-modal save" onclick="saveAddTaskSimple()">追加</button>
+</div>`;
+  document.getElementById('modal').classList.add('on');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+async function saveAddTaskSimple() {
+  const name  = document.getElementById('f-name').value.trim();
+  const phase = document.getElementById('f-phase').value;
+  if (!name) { showToast('タスク名を入力してください'); return; }
+  try {
+    const maxOrder = Math.max(0, ...masterData.filter(t=>t.phase===phase).map(t=>t.order));
+    const order = maxOrder + 1;
+    const r = await api({ mode:'addMasterTask', name, phase, order:String(order), priority:'false' });
+    masterData.push({ id:r.id, name, phase, priority:false, order, active:true });
+    renderMaster(masterData);
+    closeModal();
+    showToast('追加しました');
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ Modal: タスク編集（簡素版） ────────────────────────────────
+function openEditTask(id) {
+  const task = masterData.find(t => t.id === id);
+  if (!task) return;
+  document.getElementById('modal-title-txt').textContent = 'タスクを編集';
+  document.getElementById('modal-body').innerHTML = `
+<div class="field">
+  <label>タスク名</label>
+  <input type="text" id="f-name" value="${esc(task.name)}" autofocus>
+</div>
+<div class="modal-actions">
+  <button class="btn-modal cancel" onclick="closeModal()">キャンセル</button>
+  <button class="btn-modal save" onclick="saveEditTaskSimple('${esc(id)}')">保存</button>
+</div>`;
+  document.getElementById('modal').classList.add('on');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+async function saveEditTaskSimple(id) {
+  const task  = masterData.find(t => t.id === id);
+  if (!task) return;
+  const name   = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('タスク名を入力してください'); return; }
+  try {
+    await api({ mode:'updateMasterTask', id, field:'name', value:name });
+    task.name = name;
+    renderMaster(masterData);
+    closeModal();
+    showToast('保存しました');
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ Modal: 工程追加 ────────────────────────────────────────────
+function openAddPhase() {
+  document.getElementById('modal-title-txt').textContent = '工程を追加';
+  document.getElementById('modal-body').innerHTML = `
+<div class="field">
+  <label>工程名</label>
+  <input type="text" id="f-pname" placeholder="例: 中間検査" autofocus>
+</div>
+<div class="modal-actions">
+  <button class="btn-modal cancel" onclick="closeModal()">キャンセル</button>
+  <button class="btn-modal save" onclick="saveAddPhase()">追加</button>
+</div>`;
+  document.getElementById('modal').classList.add('on');
+  setTimeout(() => document.getElementById('f-pname').focus(), 100);
+}
+
+async function saveAddPhase() {
+  const name = document.getElementById('f-pname').value.trim();
+  if (!name) { showToast('工程名を入力してください'); return; }
+  try {
+    await api({ mode:'addPhase', name });
+    if (!phaseList.includes(name)) phaseList.push(name);
+    closeModal();
+    renderMaster(masterData);
+    // 新工程グループを自動展開
+    const newGid = 'mg-' + slug(name);
+    const newGroup = document.getElementById(newGid);
+    if (newGroup) newGroup.classList.add('open');
+    showToast(`工程「${name}」を追加しました`);
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ Modal: 工程名編集 ──────────────────────────────────────────
+function openEditPhase(phase) {
+  document.getElementById('modal-title-txt').textContent = '工程名を変更';
+  document.getElementById('modal-body').innerHTML = `
+<div class="field">
+  <label>現在の工程名</label>
+  <p style="font-size:14px;font-weight:600;padding:8px 0">${esc(phase)}</p>
+</div>
+<div class="field">
+  <label>新しい工程名</label>
+  <input type="text" id="f-newphase" value="${esc(phase)}" autofocus>
+</div>
+<p style="font-size:11px;color:#9aa3ad;margin-top:-8px">
+  ※ マスタータスク・物件タスク一覧の工程名もすべて更新されます
+</p>
+<div class="modal-actions">
+  <button class="btn-modal cancel" onclick="closeModal()">キャンセル</button>
+  <button class="btn-modal save" onclick="saveEditPhase('${esc(phase)}')">変更</button>
+</div>`;
+  document.getElementById('modal').classList.add('on');
+}
+
+async function saveEditPhase(oldName) {
+  const newName = document.getElementById('f-newphase').value.trim();
+  if (!newName || newName === oldName) { closeModal(); return; }
+  try {
+    const r = await api({ mode:'renamePhase', oldName, newName });
+    phaseList = phaseList.map(p => p === oldName ? newName : p);
+    masterData.forEach(t => { if (t.phase === oldName) t.phase = newName; });
+    // タスクキャッシュも更新
+    Object.values(taskCache).forEach(tasks => {
+      tasks.forEach(t => { if (t.phase === oldName) t.phase = newName; });
+    });
+    renderMaster(masterData);
+    closeModal();
+    showToast(`「${oldName}」→「${newName}」に変更しました（${r.masterCount}件更新）`);
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+  }
+}
+
+// ─ Modal close ───────────────────────────────────────────────
+function closeModal() {
+  document.getElementById('modal').classList.remove('on');
+}
+function modalBgClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+// ═══════════════════════════════════════════════════════
+//  変更履歴
+// ═══════════════════════════════════════════════════════
+async function loadHistory() {
+  historyInit = true;
+  const el = document.getElementById('history-list');
+  el.innerHTML = '<div class="center"><div class="spin"></div></div>';
+  try {
+    const hist = await api({ mode:'getHistory', limit:'100', masterOnly:'true' });
+    if (!hist || hist.length === 0) {
+      el.innerHTML = '<div class="center"><p style="font-size:13px;margin-top:8px">変更履歴がありません</p></div>';
+      return;
+    }
+    const TYPE_MAP = {
+      'マスタータスク追加': { lbl:'タスク追加',  dot:'h-dot-add',   chip:'h-chip-add' },
+      'マスタータスク削除': { lbl:'タスク削除',  dot:'h-dot-del',   chip:'h-chip-del' },
+      'マスター.name'    : { lbl:'タスク名変更', dot:'h-dot-name',  chip:'h-chip-name' },
+      'マスター.phase'   : { lbl:'工程変更',    dot:'h-dot-phase', chip:'h-chip-phase' },
+      'マスター.order'   : { lbl:'順番変更',    dot:'h-dot-order', chip:'h-chip-order' },
+      'マスター.active'  : { lbl:'有効/無効',   dot:'h-dot-misc',  chip:'h-chip-misc' },
+      'マスター.priority': { lbl:'優先変更',    dot:'h-dot-order', chip:'h-chip-order' },
+      '工程名変更'       : { lbl:'工程名変更',  dot:'h-dot-phase', chip:'h-chip-phase' },
+    };
+    const isLast = i => i === hist.length - 1;
+    el.innerHTML = `<div class="h-card">${hist.map((h, i) => {
+      const t = TYPE_MAP[h.field] || { lbl: h.field, dot:'h-dot-misc', chip:'h-chip-misc' };
+      const afterDisplay = h.after === 'true' ? '有効'
+                         : h.after === 'false' ? '無効'
+                         : h.after || '―';
+      const hasDiff = h.field !== 'マスタータスク追加' && h.field !== 'マスタータスク削除';
+      const beforeDisplay = h.before === 'true' ? '有効'
+                          : h.before === 'false' ? '無効'
+                          : h.before || '―';
+      return `<div class="h-row">
+  <div class="h-dot-col">
+    <div class="h-dot ${t.dot}"></div>
+    ${!isLast(i) ? '<div class="h-line"></div>' : ''}
+  </div>
+  <div class="h-body">
+    <div class="h-time">${fmtTime(h.timestamp)}</div>
+    <div class="h-task-name">${esc(h.taskName || h.after || '―')}<span class="h-chip ${t.chip}">${t.lbl}</span></div>
+    ${hasDiff ? `<div class="h-diff">
+      <span class="h-before">${esc(beforeDisplay)}</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,6 15,12 9,18"/></svg>
+      <span class="h-after">${esc(afterDisplay)}</span>
+    </div>` : ''}
+  </div>
+</div>`;
+    }).join('')}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  Utils
+// ═══════════════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function slug(s) {
+  return encodeURIComponent(String(s||'')).replace(/%/g,'_');
+}
+function now() {
+  return new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDate(s) {
+  if (!s) return '';
+  try {
+    const d = new Date(s);
+    return d.getFullYear() + '.' +
+           String(d.getMonth()+1).padStart(2,'0') + '.' +
+           String(d.getDate()).padStart(2,'0');
+  } catch(e) { return s; }
+}
+function fmtTime(ts) {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}) + ' ' +
+           d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return String(ts); }
+}
+function groupBy(arr, key) {
+  return arr.reduce((m, item) => {
+    (m[item[key]] = m[item[key]] || []).push(item);
+    return m;
+  }, {});
+}
+function sortByPhase(phases) {
+  return phases.sort((a,b) => {
+    const ai = PHASE_ORDER.indexOf(a), bi = PHASE_ORDER.indexOf(b);
+    return (ai<0?99:ai) - (bi<0?99:bi);
+  });
+}
+
+let toastTmr;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => el.classList.remove('on'), 2600);
+}
+
+// ═══════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════
+restorePrioPanelFromCache(); // リロード直後にキャッシュから優先タスクを復元
+setSortOrder('handover'); // デフォルトは引渡し順（ボタンの初期状態セット）
+loadProperties();
+</script>
+</body>
+</html>
