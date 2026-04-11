@@ -1819,14 +1819,13 @@
                 display: none;
             }
 
-            /* スマホ: パディングをコンパクトに・上端を揃える */
+            /* スマホ: パディングをコンパクトに */
             .greeting-content {
-                padding: 0 14px 8px 12px;
-                gap: 10px;
-                align-items: flex-start;
+                padding: 0 14px 6px 12px;
+                gap: 8px;
             }
 
-            /* 日付側: 縮まないように固定 */
+            /* 日付側: 縮まないように固定（折り返し防止） */
             .greeting-top {
                 flex-shrink: 0;
             }
@@ -1846,11 +1845,9 @@
                 padding: 2px 7px;
             }
 
-            /* コメント側: 残りの幅を使う */
             .greeting-bottom {
-                flex: 1;
+                max-width: 55%;
                 min-width: 0;
-                max-width: none;
             }
 
             .greeting-comment {
@@ -1859,7 +1856,6 @@
                 -webkit-line-clamp: 3;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
-                word-break: break-word;
             }
 
             .grid-2col {
