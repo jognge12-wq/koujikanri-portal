@@ -496,19 +496,9 @@
 
         .date-main-row {
             display: flex;
-            align-items: baseline;
-            gap: 8px;
-            flex-direction: row;
-        }
-
-        /* 時刻（日付と同じスタイルで統一） */
-        .clock-mini {
-            font-size: 18px;
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: 0.3px;
-            line-height: 1;
-            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+            align-items: flex-start;
+            gap: 3px;
+            flex-direction: column;
         }
 
         /* 日付 */
@@ -518,6 +508,18 @@
             color: #ffffff;
             letter-spacing: 0.3px;
             text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+
+        /* 時刻（日付の下に配置） */
+        .clock-mini {
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 0.5px;
+            line-height: 1;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+            font-family: 'DM Mono', monospace;
         }
 
         /* 六曜・暦注タグ行 */
@@ -1837,8 +1839,8 @@
             }
 
             .date-main-row {
-                flex-wrap: nowrap;
-                gap: 6px;
+                flex-direction: column;
+                gap: 2px;
             }
 
             .date-main {
@@ -1848,7 +1850,7 @@
             }
 
             .clock-mini {
-                font-size: 13px;
+                font-size: 11px;
                 white-space: nowrap;
             }
 
@@ -1954,7 +1956,7 @@
             }
 
             .clock-mini {
-                font-size: 12px;
+                font-size: 10px;
             }
 
             .card-title {
@@ -2010,6 +2012,11 @@
         .portal-stat-num {
             font-family: 'DM Mono', monospace; font-size: 22px;
             font-weight: 700; color: var(--primary); line-height: 1;
+            display: flex; align-items: baseline; gap: 1px;
+        }
+        .portal-stat-unit {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 13px; font-weight: 700; color: var(--primary);
         }
         .portal-stat-label {
             font-size: 11px; color: var(--text2); font-weight: 500; margin-top: 3px;
@@ -3046,11 +3053,11 @@
         <!-- ステータスサマリー -->
         <div class="portal-status-bar" id="homeStatusBar">
             <div class="portal-stat" onclick="switchTab('properties')">
-                <div class="portal-stat-num" id="homeStatShikakari">—</div>
+                <div class="portal-stat-num"><span id="homeStatShikakari">—</span><span class="portal-stat-unit">件</span></div>
                 <div class="portal-stat-label">仕掛り中</div>
             </div>
             <div class="portal-stat" onclick="switchTab('properties')">
-                <div class="portal-stat-num" id="homeStatPrecon">—</div>
+                <div class="portal-stat-num"><span id="homeStatPrecon">—</span><span class="portal-stat-unit">件</span></div>
                 <div class="portal-stat-label">着工前</div>
             </div>
         </div>
@@ -3846,8 +3853,8 @@
             const activeShikakari = properties.filter(p => p.shinchoku !== '引渡し');
             const s = document.getElementById('homeStatShikakari');
             const p = document.getElementById('homeStatPrecon');
-            if (s) s.textContent = activeShikakari.length + '件';
-            if (p) p.textContent = preconProperties.length + '件';
+            if (s) s.textContent = activeShikakari.length;
+            if (p) p.textContent = preconProperties.length;
         }
 
         function updateDate() {
