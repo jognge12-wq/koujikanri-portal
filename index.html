@@ -144,10 +144,42 @@
             z-index: 99;
         }
 
-        .top-bar-title {
-            font-size: 14px;
+        .top-bar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-bar-brand-icon {
+            width: 28px;
+            height: 28px;
+            background-color: var(--primary);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .top-bar-brand-icon svg {
+            width: 15px;
+            height: 15px;
+            stroke: #ffffff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .top-bar-brand-name {
+            font-size: 13px;
             font-weight: 600;
             color: var(--text1);
+            letter-spacing: 0.1px;
+        }
+
+        .top-bar-title {
+            display: none;
         }
 
         .hamburger {
@@ -2897,13 +2929,18 @@
     </nav>
 
     <div class="top-bar">
-        <button class="hamburger" id="hamburger">
+        <div class="top-bar-brand">
+            <div class="top-bar-brand-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <span class="top-bar-brand-name">施工管理ポータル</span>
+        </div>
+        <span class="top-bar-title" id="topBarTitle" aria-hidden="true">ダッシュボード</span>
+        <button class="hamburger" id="hamburger" aria-label="メニューを開く">
             <span></span>
             <span></span>
             <span></span>
         </button>
-        <span class="top-bar-title" id="topBarTitle">ダッシュボード</span>
-        <div style="width: 24px;"></div>
     </div>
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
@@ -4228,7 +4265,9 @@
                         mainEl.style.visibility = '';
                         mainEl.style.minHeight = '';
                     }
-                    window.scrollTo(0, scrollY);
+                    // 初回ロード時は必ずトップへ（iOS PWAがスクロール位置を復元する問題の対策）
+                    window.scrollTo(0, window._initialLoadDone ? scrollY : 0);
+                    window._initialLoadDone = true;
                 });
 
                 // タスクタブ・週間タブを次回表示時に再レンダリング（データが変わったため）
@@ -6429,9 +6468,11 @@
         // iOS Safari: 遅延してもう一度スクロール（レンダリング後にずれる対策）
         setTimeout(function() { window.scrollTo(0, 0); }, 100);
         setTimeout(function() { window.scrollTo(0, 0); }, 300);
+        setTimeout(function() { window.scrollTo(0, 0); }, 800);
         // iOS standaloneモード用: DOMContentLoaded後にも再度
         if (window.navigator.standalone) {
             setTimeout(function() { window.scrollTo(0, 0); }, 500);
+            setTimeout(function() { window.scrollTo(0, 0); }, 1200);
         }
 
         // ページ離脱前にタブ状態を確実に保存（iOS PWAリロード対策）
