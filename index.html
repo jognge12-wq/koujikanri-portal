@@ -2102,17 +2102,6 @@
             width: 100%; height: calc(100vh - 180px); min-height: 520px;
             border: none; display: block;
         }
-        /* iframeの右上に別タブリンクをオーバーレイ */
-        .genba-newtab-btn {
-            position: absolute; top: 14px; right: 14px; z-index: 10;
-            display: flex; align-items: center; gap: 5px;
-            padding: 5px 11px; border-radius: 7px;
-            background: rgba(0,0,0,.12); backdrop-filter: blur(4px);
-            color: var(--text1); font-size: 11px; font-weight: 600;
-            text-decoration: none; border: 1px solid var(--border2);
-            transition: background .15s;
-        }
-        .genba-newtab-btn:hover { background: rgba(0,0,0,.20); }
         /* 現場タスク: 物件カード */
         .genba-prop-card {
             background: var(--surface); border: 1px solid var(--border);
@@ -5352,12 +5341,6 @@
             const taskUrl = 'task-management.html';
             return `<div class="genba-iframe-outer">
                 <iframe src="${taskUrl}" class="genba-iframe"></iframe>
-                <a href="${taskUrl}" target="_blank" class="genba-newtab-btn">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>別タブで開く
-                </a>
             </div>`;
         }
 
