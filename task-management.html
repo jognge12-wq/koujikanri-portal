@@ -315,6 +315,7 @@
             border: 2px solid var(--border); border-top-color: var(--green);
             border-radius: 50%; animation: spin .6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .icon-spin { animation: spin .8s linear infinite; }
     .err { background: #fff5f5; border: 1px solid #fecaca; color: var(--red);
            padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; }
 
@@ -420,12 +421,20 @@
 <section id="pane-props" class="pane on">
   <div class="toolbar">
     <span class="tbar-meta" id="lbl-upd">読み込み中…</span>
-    <button class="btn-xs" onclick="loadProperties()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-      </svg>更新
-    </button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn-xs" id="btn-sync-all" onclick="refreshAllTasks()">
+        <svg id="sync-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>タスク同期
+      </button>
+      <button class="btn-xs" onclick="loadProperties()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>物件更新
+      </button>
+    </div>
   </div>
   <div class="sort-bar">
     <span class="sort-lbl">並び順：</span>
@@ -537,13 +546,22 @@ let propSortOrder = 'handover'; // 'handover' | 'start' | 'name'
 // ═══════════════════════════════════════════════════════
 //  API
 // ═══════════════════════════════════════════════════════
-async function api(params) {
+async function api(params, timeoutMs = 20000) {
   const qs = Object.entries(params)
     .map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
-  const res = await fetch(GAS_URL + '?' + qs);
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'APIエラー');
-  return json.data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(GAS_URL + '?' + qs, { signal: controller.signal });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'APIエラー');
+    return json.data;
+  } catch(e) {
+    if (e.name === 'AbortError') throw new Error('タイムアウト：時間がかかっています。再度タップしてください');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -558,6 +576,45 @@ function switchTab(name, btn) {
   if (name === 'history' && !historyInit) loadHistory();
 }
 
+
+// ═══════════════════════════════════════════════════════
+//  全物件タスク同期
+// ═══════════════════════════════════════════════════════
+async function refreshAllTasks() {
+  const btn  = document.getElementById('btn-sync-all');
+  const icon = document.getElementById('sync-icon');
+  if (btn) btn.disabled = true;
+  if (icon) icon.classList.add('icon-spin');
+
+  const cards = [...document.querySelectorAll('#props-list .prop-card')];
+  if (!cards.length) {
+    showToast('先に物件を読み込んでください');
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('icon-spin');
+    return;
+  }
+
+  let done = 0;
+  await Promise.all(cards.map(async card => {
+    const propName = card.dataset.prop;
+    const cid = card.id;
+    try {
+      const tasks = await api({ mode: 'getTasks', property: propName });
+      taskCache[propName] = tasks;
+      // 展開中のカードは再レンダリング
+      if (card.classList.contains('open')) {
+        const wrap = document.getElementById(cid + '-pw');
+        if (wrap) renderPropTasks(propName, cid, tasks, wrap);
+      }
+    } catch(e) { /* 個別エラーは無視して続行 */ }
+    done++;
+  }));
+
+  refreshPrioPanel();
+  if (btn) btn.disabled = false;
+  if (icon) icon.classList.remove('icon-spin');
+  showToast(`✓ ${done}件の物件を同期しました`);
+}
 
 // ═══════════════════════════════════════════════════════
 //  物件一覧
@@ -688,7 +745,11 @@ async function loadPropTasks(propName, cid) {
     taskCache[propName] = tasks;
     renderPropTasks(propName, cid, tasks, wrap);
   } catch(e) {
-    wrap.innerHTML = `<div class="err" style="margin:12px">${esc(e.message)}</div>`;
+    // エラー時はキャッシュを消して再タップで再試行できるようにする
+    delete taskCache[propName];
+    wrap.innerHTML = `<div class="err" style="margin:12px;cursor:pointer" onclick="loadPropTasks('${esc(propName)}','${cid}')">
+      ⚠ ${esc(e.message)}<br><span style="font-size:10px;color:var(--t3)">タップして再試行</span>
+    </div>`;
   }
 }
 
@@ -1033,18 +1094,26 @@ function refreshPrioPanel() {
   const cntBadge = document.getElementById('prio-cnt');
   if (!panel) return;
 
-  // 全物件のキャッシュから未完了優先タスクを集約
-  const rows = [];
-  Object.entries(taskCache).forEach(([propName, tasks]) => {
-    tasks.forEach(t => {
-      if (t.priority && !t.done) rows.push({ ...t, propName });
+  // ロード済み物件から最新の優先タスクを取得
+  const loadedProps = new Set(Object.keys(taskCache));
+  const freshRows = [];
+  loadedProps.forEach(propName => {
+    (taskCache[propName] || []).forEach(t => {
+      if (t.priority && !t.done) freshRows.push({ ...t, propName });
     });
   });
 
-  // localStorageに保存（次回リロード時に復元）
-  if (Object.keys(taskCache).length > 0) {
-    try { localStorage.setItem(PRIO_CACHE_KEY, JSON.stringify(rows)); } catch(e) {}
-  }
+  // 未ロード物件はlocalStorageのデータを維持（マージ）
+  let staleRows = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRIO_CACHE_KEY) || '[]');
+    staleRows = saved.filter(r => !loadedProps.has(r.propName));
+  } catch(e) {}
+
+  const rows = [...freshRows, ...staleRows];
+
+  // localStorageに保存
+  try { localStorage.setItem(PRIO_CACHE_KEY, JSON.stringify(rows)); } catch(e) {}
 
   // 件数バッジ・表示
   cntBadge.textContent = rows.length;
