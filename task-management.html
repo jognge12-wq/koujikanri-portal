@@ -790,6 +790,8 @@ function toggleDone(phid) {
     const doneCount = sec.querySelectorAll('.task-row.done').length;
     lbl.textContent = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
   }
+  // 表示時は工程を展開、非表示時は折りたたむ
+  sec.classList.toggle('open', !isHidden);
 }
 
 function updatePhaseDoneToggle(cid) {
@@ -799,7 +801,7 @@ function updatePhaseDoneToggle(cid) {
   const btn = document.getElementById(cid + '-pdtbtn');
   const lbl = document.getElementById(cid + '-pdtlbl');
   if (!btn) return;
-  btn.style.display = count > 0 ? '' : 'none';
+  btn.style.display = count > 0 ? 'inline-flex' : 'none';
   if (lbl && count > 0) {
     const isHidden = wrap.classList.contains('hide-done-phases');
     lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
