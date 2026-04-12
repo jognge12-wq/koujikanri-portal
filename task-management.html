@@ -35,11 +35,7 @@
            box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(0,0,0,.06);
            border-radius: 0 0 14px 14px; }
     .hdr-top { display: flex; align-items: center; height: 56px; padding: 0 14px; gap: 10px; }
-    .hdr-back { width: 32px; height: 32px; background: var(--bg);
-                border-radius: 8px; display: flex; align-items: center; justify-content: center;
-                cursor: pointer; flex-shrink: 0; border: 1px solid var(--border);
-                -webkit-tap-highlight-color: transparent; }
-    .hdr-back:active { background: var(--border); }
+
     .hdr-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
     .hdr-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: var(--t1); }
     .hdr-sub { font-size: 10px; color: var(--t3); margin-top: 1px; font-weight: 500; }
@@ -402,11 +398,7 @@
 <!-- ─── Header ──────────────────────────────────────────────── -->
 <header class="hdr">
   <div class="hdr-top">
-    <button class="hdr-back" onclick="goToDashboard()" title="ダッシュボードへ戻る">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="2.5">
-        <polyline points="15,18 9,12 15,6"/>
-      </svg>
-    </button>
+
     <div class="hdr-info">
       <div class="hdr-title">タスク管理</div>
       <div class="hdr-sub">全現場タスク一元管理</div>
@@ -524,9 +516,6 @@
 //  Config
 // ═══════════════════════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwLo2VCUvfu0XVGzuni7A1AyqES9oAkC6Yap_LaKh_2ljOzAmzaFkVwNcYynz9G1zf-/exec';
-// ダッシュボードURL（必要に応じて変更してください）
-const DASHBOARD_URL = localStorage.getItem('dashboardUrl') || 'index.html';
-function goToDashboard() { window.location.href = DASHBOARD_URL; }
 
 const PHASE_ORDER = [
   '現場FB','図面FB','地鎮祭','地縄立会い','生産移管','施工計画説明',
