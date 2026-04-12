@@ -852,14 +852,14 @@ function phaseSecHTML(propName, cid, phase, tasks) {
   const allDone   = done === sorted.length;
   const phid      = cid + '-' + slug(phase);
   return `
-<div class="phase-sec hide-done${allDone?' phase-all-done':''}" id="${phid}">
+<div class="phase-sec${allDone?' phase-all-done':''}" id="${phid}">
   <div class="phase-hdr" onclick="togglePhase('${phid}')">
     <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
     <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
     <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
     <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? 'display:block' : 'display:none'}"
       onclick="event.stopPropagation();toggleDone('${phid}')">
-      <span id="${phid}-dtlbl">${done > 0 ? `完了${done}件を表示` : ''}</span>
+      <span id="${phid}-dtlbl">${done > 0 ? `完了${done}件を非表示` : ''}</span>
     </button>
     <button class="phase-all-btn" id="${phid}-allbtn"
       onclick="event.stopPropagation();checkAllPhase('${phid}','${esc(propName)}','${cid}')">
