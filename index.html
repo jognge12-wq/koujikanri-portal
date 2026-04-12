@@ -1866,10 +1866,6 @@
             #preconCard { order: 1; }
             #shikakariCard { order: 2; }
 
-            /* スマホ: タスクグリッド順（Google Tasks→優先タスク） */
-            #gtaskCard { order: 1; }
-            #priorityTaskCard { order: 2; }
-
             /* スマホ: プルダウン式 */
             .collapsible-card .card-toggle {
                 cursor: pointer;
@@ -3149,139 +3145,9 @@
         const CHECK_ORDER  = ['棟札', '鎮物', '先外', '改良', '外構'];
         const CHECK_LABELS = { '棟札': '棟札', '鎮物': '鎮め物', '先外': '先外', '改良': '改良', '外構': '外構' };
 
-        let properties = [
-            {id: 1, name: '箕浦Y様', location: '大垣市', shinchoku: '竣工',
-             notionId: '2f86ad84622180dface2e782fee9d04d',
-             dates: {着工: '2025/12/03', 建方: '2026/01/22', 引渡: '2026/04/13'},
-             checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
-            {id: 2, name: '木股C様', location: '養老町', shinchoku: '工事中',
-             notionId: '2f86ad846221806e9ab7fe484a153fa0',
-             dates: {着工: '2026/01/21', 建方: '2026/02/27', 引渡: '2026/06/20'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
-            {id: 3, name: '小林Y・T様', location: '瑞穂市', shinchoku: '竣工',
-             notionId: '2f86ad846221809f83d6cd52ea6259f6',
-             dates: {着工: '2025/11/21', 建方: '2026/01/15', 引渡: '2026/05/23'},
-             checks: {棟札: true, 改良: true, 外構: true, 先外: true, 鎮物: true}},
-            {id: 4, name: '柴田S・S様', location: '岐阜市', shinchoku: '竣工',
-             notionId: '2f86ad84622180bdb338d025d925e96f',
-             dates: {着工: '2025/12/11', 建方: '2026/01/24', 引渡: '2026/04/25'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 5, name: '藤本A様', location: '本巣市', shinchoku: '工事中',
-             notionId: '2f86ad84622180ebabfedab3c920dcdb',
-             dates: {着工: '2026/03/06', 建方: '2026/04/15', 引渡: '2026/07/03'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 6, name: '髙橋T・A様', location: '本巣市', shinchoku: '工事中',
-             notionId: '2f86ad84622180f6a1ebd584c21a03d0',
-             dates: {着工: '2026/03/09', 建方: '2026/04/13', 引渡: '2026/07/27'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
-            {id: 7, name: '北角O様', location: '池田町', shinchoku: '引渡し',
-             notionId: '2f86ad8462218018bb0dc152838eda87',
-             dates: {着工: '2025/10/27', 建方: '2025/12/05', 引渡: '2026/02/21'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 8, name: '森瀬S・M様', location: '各務原市', shinchoku: '工事中',
-             notionId: '2f86ad846221802cb583ff2d9851900d',
-             dates: {着工: '2026/01/05', 建方: '2026/02/13', 引渡: '2026/05/31'},
-             checks: {棟札: false, 改良: false, 外構: true, 先外: true, 鎮物: false}},
-            {id: 9, name: '野尻K様', location: '岐阜市', shinchoku: '竣工',
-             notionId: '2f86ad846221804f9467ce44c37ef610',
-             dates: {着工: '2025/11/01', 建方: '2026/01/16', 引渡: '2026/05/02'},
-             checks: {棟札: true, 改良: true, 外構: true, 先外: false, 鎮物: false}},
-            {id: 10, name: '山田H様', location: '瑞穂市', shinchoku: '工事中',
-             notionId: '2f86ad84622180dd98c1f4de9ae7019c',
-             dates: {着工: '2026/03/16', 建方: '2026/04/27', 引渡: '2026/09/26'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: true, 鎮物: true}},
-            {id: 11, name: '野田H様', location: '関市', shinchoku: '工事中',
-             notionId: '2f86ad8462218055955afea896a7ec1c',
-             dates: {着工: '2025/12/20', 建方: '2026/02/17', 引渡: '2026/05/30'},
-             checks: {棟札: true, 改良: false, 外構: true, 先外: false, 鎮物: true}},
-            {id: 12, name: '川地M・H様', location: '岐阜市', shinchoku: '工事中',
-             notionId: '2f86ad846221806094e2da63f463a518',
-             dates: {着工: '2026/02/05', 建方: '2026/03/13', 引渡: '2026/06/06'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}},
-            {id: 13, name: '福田A・M様', location: '各務原市', shinchoku: '工事中',
-             notionId: '2f86ad846221802787ddea39e4bb1e1c',
-             dates: {着工: '2026/01/08', 建方: '2026/02/24', 引渡: '2026/05/23'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: true, 鎮物: true}},
-            {id: 14, name: '入野E様', location: '羽島市', shinchoku: '引渡し',
-             notionId: '2f86ad84622180dd9807d88c1e9934c2',
-             dates: {着工: '2025/10/18', 建方: '2025/11/18', 引渡: '2026/02/14'},
-             checks: {棟札: true, 改良: true, 外構: false, 先外: false, 鎮物: true}},
-            {id: 15, name: '竹中I様', location: '大垣市', shinchoku: '引渡し',
-             notionId: '2f86ad84622180af82acd1483f0bdee4',
-             dates: {着工: '2025/11/01', 建方: '2025/12/18', 引渡: '2026/03/29'},
-             checks: {棟札: true, 改良: false, 外構: false, 先外: false, 鎮物: true}}
-        ];
-
-        // 着工前物件データ
-        let preconProperties = [
-            {id: 101, name: '瓜田N様', location: '岐阜市', shinchoku: '着工前',
-             notionId: '2fd6ad846221802e81defa915614561e',
-             dates: {着工: '2026/06/29', 建方: '2026/08/06', 引渡: '2026/11/25'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 102, name: '三谷T様', location: '大垣市', shinchoku: '着工前',
-             notionId: '31e6ad8462218047b1c7d3944f09b224',
-             dates: {着工: '2026/08/01', 建方: '2026/09/08', 引渡: '2027/04/03'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 103, name: '長澤K様', location: '関ヶ原町', shinchoku: '着工前',
-             notionId: '2f86ad846221805a8fb5ed0d20874e3e',
-             dates: {着工: '2026/05/13', 建方: '2026/06/25', 引渡: '2026/09/25'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
-            {id: 104, name: '柳瀬S・M様', location: '垂井町', shinchoku: '着工前',
-             notionId: '31e6ad846221804dbb67fe34629ffb79',
-             dates: {着工: '2026/06/01', 建方: '2026/07/09', 引渡: '2026/10/31'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 105, name: '大山S・M様', location: '大垣市', shinchoku: '着工前',
-             notionId: '2f86ad8462218068bd9ff57eb6477e46',
-             dates: {着工: '2026/04/28', 建方: '2026/06/15', 引渡: '2026/09/12'},
-             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
-            {id: 106, name: '佐藤Y様', location: '養老町', shinchoku: '着工前',
-             notionId: '3006ad8462218021b8fee65422781533',
-             dates: {着工: '2026/05/15', 建方: '2026/06/29', 引渡: '2026/09/25'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: true, 鎮物: false}},
-            {id: 107, name: '伊藤N様', location: '輪之内町', shinchoku: '着工前',
-             notionId: '2f86ad84622180f2a902f7df85f591c5',
-             dates: {着工: '2026/05/22', 建方: '2026/07/09', 引渡: '2026/09/29'},
-             checks: {棟札: false, 改良: false, 外構: false, 先外: false, 鎮物: false}},
-            {id: 108, name: '浅井T様', location: '大垣市', shinchoku: '着工前',
-             notionId: '31e6ad84622180779085db1278392672',
-             dates: {着工: '2026/08/01', 建方: '2026/09/24', 引渡: '2026/12/20'},
-             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}},
-            {id: 109, name: '藤本S様用', location: '大垣市', shinchoku: '着工前',
-             notionId: '31e6ad84622180e19007dc9c226a7ad1',
-             dates: {着工: '2026/06/01', 建方: '2026/07/28', 引渡: '2027/04/03'},
-             checks: {棟札: false, 改良: true, 外構: true, 先外: true, 鎮物: false}},
-            {id: 110, name: '大井M・Y様', location: '大垣市', shinchoku: '着工前',
-             notionId: '2f86ad8462218060b9c6dc0a0c756d70',
-             dates: {着工: '2026/04/28', 建方: '2026/06/18', 引渡: '2026/10/01'},
-             checks: {棟札: false, 改良: true, 外構: false, 先外: false, 鎮物: false}}
-        ];
-
-        // 優先タスク（Notionビュー「全現場共通タスクのビュー」から取得）
-        // フィルタ: 優先=YES, 完了=NO / 物件名でグループ化
-        // priorityTasksUpdatedAt と priorityTasks は scheduled task "sync-priority-tasks" が自動更新する
-        let priorityTasksUpdatedAt = '2026-04-09 05:09';
-        let priorityTasks = [
-            // 柴田S・S様（竣工検査）引渡し2026-04-25まで16日→amber ※2026-04-09 05:09時点
-            {id: 1, notionPageId: '2f86ad84622181709659e5eb9e023bb3', title: '完了検査・性能評価検査の完了報告', property: '柴田S・S様', propertyNotionId: '2f86ad84622180bdb338d025d925e96f', stage: '竣工検査', status: 'amber', completed: false},
-            // 藤本A様（工事中：基礎検査）建方2026-04-15まで6日→amber ※2026-04-09 05:09時点
-            {id: 2, notionPageId: '2f86ad84622181568010effddae56bba', title: '建性②：構造検査日時の確認※申込みは生産事務が行う', property: '藤本A様', propertyNotionId: '2f86ad84622180ebabfedab3c920dcdb', stage: '基礎検査', status: 'amber', completed: false},
-            // 野田H様（工事中：木完検査）引渡し2026-05-30まで51日→green ※2026-04-09 05:09時点
-            {id: 3, notionPageId: '2f86ad846221815ea9efdcd7ace479a6', title: '安全日誌の記載', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 4, notionPageId: '2f86ad8462218179aaa4f06c322671c9', title: 'BCのPBビスピッチ確認・記録', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 5, notionPageId: '2f86ad84622181d3816ff1e2294de536', title: '追加変更の覚書の有無の確認', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 6, notionPageId: '2f86ad8462218116b63cd0709fcec20d', title: '実績入力：足場解体', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            {id: 7, notionPageId: '2f86ad84622181fa87c0f9ac8f89243b', title: '図面提出', property: '野田H様', propertyNotionId: '2f86ad8462218055955afea896a7ec1c', stage: '木完検査', status: 'green', completed: false},
-            // 大山S・M様（着工前：地縄立会い→地鎮祭フェーズ）着工2026-04-28まで19日→green ※2026-04-09 05:09時点
-            {id: 8, notionPageId: '2f86ad846221810a8ce2e2cfbb9f1432', title: '奉献酒の用意', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
-            {id: 9, notionPageId: '2f86ad84622181fc87edeeeb5b34e06b', title: '鎮め物を業者へ渡す', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地鎮祭', status: 'green', completed: false},
-            {id: 10, notionPageId: '2f86ad846221812099dee399d72778c6', title: '立会いノートの伝言板アップ', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 11, notionPageId: '2f86ad84622181329190de4fada39d87', title: '引継ぎ会日時の依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 12, notionPageId: '2f86ad846221813fb46ff697d45a8258', title: '立会い完了・施工計画説明日時の共有・カレンダー共有', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 13, notionPageId: '2f86ad84622181f0b021cd88273ac0d7', title: '施工計画説明の日時決定', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 14, notionPageId: '2f86ad84622181859213fcb1961da45d', title: '遣り方検査の日程依頼', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 15, notionPageId: '2f86ad846221813eaea9e79cc56004df', title: '実績入力：地縄立会い', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false},
-            {id: 16, notionPageId: '2f86ad84622181e287fac2f12900e620', title: 'ショールームの予約', property: '大山S・M様', propertyNotionId: '2f86ad8462218068bd9ff57eb6477e46', stage: '地縄立会い', status: 'green', completed: false}
-        ];
+        // 物件データ（GAS APIから動的取得。初期値は空）
+        let properties = [];
+        let preconProperties = [];
 
         const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
@@ -3383,53 +3249,13 @@
             });
         })();
 
-        // ===== 着工・引渡しデータ（Googleカレンダーから取得） =====
-        // 着工: 「全日予定」カレンダーの「〜様邸本体着工」イベント
-        // 引渡し: 「時間指定予定」カレンダーの「🔑〜様邸引渡し」イベント
-        // ※スケジュールタスクで自動更新（最終同期: 2026/4/9）
-        // [自動更新 2026-04-06 16:03] 着工21件・引渡し27件確認済み・差分なし・配列最新
-        // [自動更新 2026-04-07 06:17] 着工21件・引渡しカレンダー0件（既存27件維持）・差分なし・タイムスタンプのみ更新
-        // [自動更新 2026-04-08 05:01] 着工21件・引渡しカレンダー0件（既存27件維持）・差分なし・タイムスタンプのみ更新
-        // [自動更新 2026-04-09 05:01] 着工21件・引渡しカレンダー0件（既存27件維持）・scheduleEvents:永佳高校入学式(04/06)追加
-
-        // 着工済み実績（今日以前の「本体着工」イベント）
-        let startedProperties = [
-            { name: '森瀬様', date: '1/5' },
-            { name: '福田様', date: '1/8' },
-            { name: '木股様', date: '1/21' },
-            { name: '川地様', date: '2/5' },
-            { name: '藤本様', date: '3/6' },
-            { name: '髙橋様', date: '3/9' },
-            { name: '山田様', date: '3/16' }
-        ];
-
-        // 今月着工予定（当月の「本体着工」イベント）
-        let monthlyStarts = [
-            { name: '大山様', date: '4/28' },
-            { name: '大井様', date: '4/28' }
-        ];
-
-        // 引渡し済み実績（今日以前の「引渡し」イベント）
-        let deliveredProperties = [
-            { name: '國枝様', date: '1/23' },
-            { name: '入野様', date: '2/14' },
-            { name: '北角様', date: '2/21' },
-            { name: '竹中様', date: '3/28' }
-        ];
-
-        // 今月引渡し予定（当月の「引渡し」イベント）
-        let monthlyDeliveries = [
-            { name: '箕浦様', date: '4/13' },
-            { name: '柴田様', date: '4/25' }
-        ];
-
-        // 年間着工棟数（Googleカレンダー「本体着工」イベントから月別集計）
-        // 1月:3, 2月:1, 3月:3, 4月:2, 5月:5, 6月:4, 7月:0, 8月:2, 9月:0, 10月:1, 11月:0, 12月:0
-        let yearlyStartCounts = [3, 1, 3, 2, 5, 4, 0, 2, 0, 1, 0, 0];
-
-        // 年間引渡し棟数（Googleカレンダー「引渡し」イベントから月別集計）
-        // 1月:1, 2月:2, 3月:1, 4月:2, 5月:5, 6月:2, 7月:2, 8月:0, 9月:6, 10月:4, 11月:1, 12月:1
-        let yearlyDeliveryCounts = [1, 2, 1, 2, 5, 2, 2, 0, 6, 4, 1, 1];
+        // ===== 着工・引渡しデータ（Notion日付プロパティから動的取得） =====
+        let startedProperties = [];
+        let monthlyStarts = [];
+        let deliveredProperties = [];
+        let monthlyDeliveries = [];
+        let yearlyStartCounts = [0,0,0,0,0,0,0,0,0,0,0,0];
+        let yearlyDeliveryCounts = [0,0,0,0,0,0,0,0,0,0,0,0];
 
         function renderGoogleTasks() {
             const container = document.getElementById('gtaskList');
@@ -3559,63 +3385,10 @@
                 });
         }
 
-        // データ整合性チェック（Notion物件 vs カレンダーイベントの不一致を検出）
+        // データ整合性チェック（Notionデータ統一のため簡略化）
         function validateData() {
-            const alerts = [];
-            const now = new Date();
-            const thisMonth = now.getMonth();
-            const thisYear = now.getFullYear();
-
-            // 苗字を抽出するヘルパー（Notion形式「藤本A様」→「藤本」、カレンダー形式「藤本様」→「藤本」）
-            function extractSurname(name) {
-                return name.replace(/様$/, '').replace(/[A-Z・]+$/, '').trim();
-            }
-
-            // 苗字ベースで一致判定（Notion名 vs カレンダー名の形式差を吸収）
-            function nameMatch(notionName, calName) {
-                return extractSurname(notionName) === extractSurname(calName);
-            }
-
-            // 着工前物件の着工日が今月なのにmonthlyStartsに含まれていないケースを検出
-            preconProperties.forEach(p => {
-                if (p.dates && p.dates.着工) {
-                    const d = new Date(p.dates.着工);
-                    if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) {
-                        const found = monthlyStarts.some(s => nameMatch(p.name, s.name));
-                        if (!found) {
-                            alerts.push(`${p.name}（着工 ${p.dates.着工}）がカレンダーの今月着工予定に見つかりません`);
-                        }
-                    }
-                }
-            });
-
-            // 仕掛り物件の引渡し日が今月なのにmonthlyDeliveriesに含まれていないケースを検出
-            properties.forEach(p => {
-                if (p.dates && p.dates.引渡) {
-                    const d = new Date(p.dates.引渡);
-                    if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) {
-                        const found = monthlyDeliveries.some(s => nameMatch(p.name, s.name));
-                        if (!found) {
-                            alerts.push(`${p.name}（引渡 ${p.dates.引渡}）がカレンダーの今月引渡し予定に見つかりません`);
-                        }
-                    }
-                }
-            });
-
-            // アラート表示
-            if (alerts.length > 0) {
-                const alertArea = document.createElement('div');
-                alertArea.className = 'data-alert';
-                alertArea.innerHTML = `
-                    <div class="data-alert-header">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        データ不一致の可能性
-                    </div>
-                    ${alerts.map(a => `<div class="data-alert-item">${a}</div>`).join('')}
-                `;
-                const syncBar = document.querySelector('[id="globalSyncTime"]').parentElement;
-                syncBar.parentElement.insertBefore(alertArea, syncBar.nextSibling);
-            }
+            // 着工・引渡しスケジュールと物件ボードが同一Notionソースになったため
+            // GCal vs Notion の不一致チェックは不要
         }
 
         // ===== ツール画面遷移ヘルパー =====
@@ -3659,7 +3432,6 @@
             // 各初期化は独立してエラー隔離し、1つコケても他が動くようにする
             const _safe = function(name, fn) { try { fn(); } catch(e) { console.warn('[init] ' + name + ' skipped:', e && e.message || e); } };
             _safe('renderProperties',     renderProperties);
-            _safe('renderTasks',          renderTasks);
             _safe('renderGoogleTasks',    renderGoogleTasks);
             _safe('updateHomeStats',      updateHomeStats);
             _safe('renderHandoverTitle',  renderHandoverTitle);
@@ -4139,12 +3911,6 @@
                 const data = await res.json();
                 if (!data.success) throw new Error(data.message || 'GAS APIエラー');
 
-                // 優先タスク更新
-                if (Array.isArray(data.priorityTasks)) {
-                    priorityTasks = data.priorityTasks;
-                    priorityTasksUpdatedAt = data.timestamp || '';
-                }
-
                 // カレンダーデータ更新
                 if (data.calendarData) {
                     const c = data.calendarData;
@@ -4186,6 +3952,22 @@
                     }
                 }
 
+                // Notion物件データ更新（物件ボード動的取得）
+                if (Array.isArray(data.notionProperties) && data.notionProperties.length > 0) {
+                    properties.length = 0;
+                    preconProperties.length = 0;
+                    data.notionProperties.forEach(function(p) {
+                        if (p.shinchoku === '着工前') {
+                            preconProperties.push(p);
+                        } else {
+                            properties.push(p);
+                        }
+                    });
+                    // 物件タブを次回表示時に再レンダリング
+                    var _propTab = document.getElementById('tab-properties');
+                    if (_propTab) _propTab.dataset.rendered = '';
+                }
+
                 // Google Tasks更新（GASからリアルタイム取得）
                 if (Array.isArray(data.googleTasks) && data.googleTasks.length > 0) {
                     googleTasks.length = 0;
@@ -4207,11 +3989,11 @@
                     mainEl.style.visibility = 'hidden';
                     mainEl.style.minHeight = mainEl.offsetHeight + 'px';
                 }
-                renderTasks();
                 renderScheduleSection();
                 renderMonthTable();
                 renderStatusCards();
                 renderGoogleTasks();
+                updateHomeStats();
                 requestAnimationFrame(function() {
                     if (mainEl) {
                         mainEl.style.visibility = '';
@@ -4279,76 +4061,6 @@
                 location.href = base + '?r=' + Date.now(); // 未設定 → キャッシュバイパスリロード
             }
         }, 60 * 60 * 1000);
-
-        function renderTasks() {
-            const t = document.getElementById('filterTabs');
-            if (!t) return; // ホームタブに優先タスクUIがないバージョンでは何もしない
-            // 優先タスクがある物件名だけをタブに表示（件数付き）
-            const propNames = [...new Set(priorityTasks.map(pt => pt.property))];
-            const total = priorityTasks.length;
-            const isPC = window.innerWidth > 768;
-            // PC: 物件名タブを先に、「全て」を末尾に / スマホ: 「全て」を先頭に
-            if (isPC && propNames.length > 0) {
-                const firstName = propNames[0];
-                t.innerHTML = propNames.map((name, i) => {
-                    const cnt = priorityTasks.filter(pt => pt.property === name).length;
-                    const cls = i === 0 ? 'filter-tab active' : 'filter-tab';
-                    return `<div class="${cls}" data-filter="${name}">${name} <span class="tab-count">${cnt}</span></div>`;
-                }).join('') + `<div class="filter-tab" data-filter="all">全て <span class="tab-count">${total}</span></div>`;
-                renderTaskItems(firstName);
-            } else {
-                t.innerHTML = `<div class="filter-tab active" data-filter="all">全て <span class="tab-count">${total}</span></div>` +
-                    propNames.map(name => {
-                        const cnt = priorityTasks.filter(pt => pt.property === name).length;
-                        return `<div class="filter-tab" data-filter="${name}">${name} <span class="tab-count">${cnt}</span></div>`;
-                    }).join('');
-                renderTaskItems('all');
-            }
-            t.querySelectorAll('.filter-tab').forEach(tab => tab.addEventListener('click', () => {
-                t.querySelectorAll('.filter-tab').forEach(x => x.classList.remove('active'));
-                tab.classList.add('active');
-                renderTaskItems(tab.dataset.filter);
-            }));
-            // カード件数表示
-            const countEl = document.getElementById('priorityTaskCount');
-            if (countEl) countEl.textContent = `${total}件`;
-            // タスク一覧の開閉
-            const toggle = document.getElementById('taskListToggle');
-            const list = document.getElementById('taskList');
-            const chevron = document.getElementById('taskListChevron');
-            const label = document.getElementById('taskListToggleLabel');
-            // PC: デフォルト開く / スマホ: デフォルト閉じる
-            if (isPC && list) {
-                list.style.display = 'block';
-                chevron.style.transform = 'rotate(180deg)';
-                label.textContent = 'タスクを閉じる';
-            }
-            if (toggle && list) {
-                toggle.addEventListener('click', () => {
-                    const isOpen = list.style.display !== 'none';
-                    list.style.display = isOpen ? 'none' : 'block';
-                    chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-                    label.textContent = isOpen ? 'タスクを表示' : 'タスクを閉じる';
-                });
-            }
-        }
-
-        function renderTaskItems(filter) {
-            const l = document.getElementById('taskList');
-            const filtered = filter === 'all' ? priorityTasks : priorityTasks.filter(t => t.property === filter);
-            if (filtered.length === 0) {
-                l.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">優先タスクはありません</div>';
-                return;
-            }
-            l.innerHTML = filtered.map(t => `
-                <div class="task-item" data-task-id="${t.id}">
-                    <div class="task-content">
-                        <div class="task-title">${t.title}</div>
-                        <div class="task-property">${t.property}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
 
         function getDayOfWeek(dateStr) {
             const now = new Date();
