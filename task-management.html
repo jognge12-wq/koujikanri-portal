@@ -565,6 +565,7 @@ function restoreTaskCacheToUI() {
     const cid = 'pc-' + slug(propName);
     refreshProgBar(propName, cid);
     checkAllDone(propName, cid);
+    updatePhaseDoneToggle(cid, propName);
   });
   refreshPrioPanel();
 }
@@ -841,7 +842,7 @@ function renderPropTasks(propName, cid, tasks, wrap) {
 ${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}`;
 
   // prop-hdrの完了工程ボタンを初期化
-  updatePhaseDoneToggle(cid);
+  updatePhaseDoneToggle(cid, propName);
 
   refreshPrioPanel();
 }
@@ -891,16 +892,26 @@ function toggleDone(phid) {
   sec.classList.toggle('open', !isHidden);
 }
 
-function updatePhaseDoneToggle(cid) {
-  const wrap = document.getElementById(cid + '-pw');
-  if (!wrap) return;
-  const count = wrap.querySelectorAll('.phase-sec.phase-all-done').length;
+// キャッシュデータから完了工程数を計算（カード折りたたみ時にも対応）
+function countDonePhasesFromCache(propName) {
+  const tasks = taskCache[propName];
+  if (!tasks || tasks.length === 0) return 0;
+  const phaseMap = groupBy(tasks, 'phase');
+  return Object.values(phaseMap).filter(ts => ts.every(t => t.done)).length;
+}
+
+function updatePhaseDoneToggle(cid, propName) {
   const btn = document.getElementById(cid + '-pdtbtn');
   const lbl = document.getElementById(cid + '-pdtlbl');
   if (!btn) return;
+  const wrap = document.getElementById(cid + '-pw');
+  // DOMにフェーズが展開されていればDOMから、なければキャッシュから計算
+  const domCount = wrap ? wrap.querySelectorAll('.phase-sec.phase-all-done').length : 0;
+  const count = domCount > 0 ? domCount
+              : (propName ? countDonePhasesFromCache(propName) : 0);
   btn.style.display = count > 0 ? 'block' : 'none';
   if (lbl && count > 0) {
-    const isHidden = wrap.classList.contains('hide-done-phases');
+    const isHidden = wrap && wrap.classList.contains('hide-done-phases');
     lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
   }
 }
@@ -939,7 +950,7 @@ async function checkAllPhase(phid, propName, cid) {
   refreshProgBar(propName, cid);
   checkAllDone(propName, cid);
   refreshPrioPanel();
-  updatePhaseDoneToggle(cid);
+  updatePhaseDoneToggle(cid, propName);
   saveTaskCache();
 
   // API一括送信
@@ -972,7 +983,9 @@ function toggleDonePhases(cid) {
   const wrap = document.getElementById(cid + '-pw');
   if (!wrap) return;
   wrap.classList.toggle('hide-done-phases');
-  updatePhaseDoneToggle(cid);
+  const card = document.getElementById(cid);
+  const propName = card ? card.dataset.prop : undefined;
+  updatePhaseDoneToggle(cid, propName);
 }
 
 function taskRowHTML(task, propName, cid) {
@@ -1089,7 +1102,11 @@ function refreshPhaseHdr(row) {
   }
   // 完了工程トグルボタン（物件レベル）を更新
   const cid = row.dataset?.cid;
-  if (cid) updatePhaseDoneToggle(cid);
+  if (cid) {
+    const card = document.getElementById(cid);
+    const propName = card ? card.dataset.prop : undefined;
+    updatePhaseDoneToggle(cid, propName);
+  }
 }
 
 function refreshProgBar(propName, cid) {
@@ -1209,6 +1226,7 @@ function checkAllDone(propName, cid) {
   if (!tasks || tasks.length === 0) return;
   const allDone = tasks.every(t => t.done);
   const card = document.getElementById(cid);
+  if (!card) return;
   card.dataset.alldone = String(allDone);
   card.classList.toggle('done-all', allDone);
   const right = card.querySelector('.prop-right');
