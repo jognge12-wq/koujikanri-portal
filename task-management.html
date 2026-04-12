@@ -158,23 +158,22 @@
                 gap: 10px; border-bottom: 1px solid var(--border); }
     .task-row:last-child { border-bottom: none; }
     .task-row.done .task-name { color: var(--t3); text-decoration: line-through; }
-    /* 完了タスク非表示: デフォルトで done を隠す */
+    /* 完了タスク非表示 */
     .phase-sec.hide-done .task-row.done { display: none; }
-    .done-toggle-row { padding: 6px 14px 6px 18px; border-top: 1px solid var(--border); }
-    .done-toggle-btn { background: none; border: none; cursor: pointer; font-size: 11px;
-                       color: var(--green-mid); font-family: var(--fp); padding: 4px 0;
-                       display: flex; align-items: center; gap: 4px;
-                       -webkit-tap-highlight-color: transparent; }
-    .done-toggle-btn:active { opacity: .7; }
-    /* 完了工程非表示: デフォルトで完了済み工程を隠す */
+    /* 完了工程非表示 */
     .phases-wrap.hide-done-phases .phase-sec.phase-all-done { display: none; }
-    .phase-done-toggle-row { padding: 8px 14px; border-top: 1px solid var(--border);
-                              background: var(--bg); }
-    .phase-done-toggle-btn { background: none; border: none; cursor: pointer; font-size: 11px;
-                              color: var(--green-mid); font-family: var(--fp); padding: 4px 0;
-                              display: flex; align-items: center; gap: 4px;
-                              -webkit-tap-highlight-color: transparent; }
-    .phase-done-toggle-btn:active { opacity: .7; }
+    /* 物件ヘッダー内：完了工程トグルボタン */
+    .prop-done-phases-btn { display: none; background: var(--bg); border: 1px solid var(--border);
+                             border-radius: 10px; padding: 3px 8px; font-size: 10px; color: var(--t3);
+                             cursor: pointer; font-family: var(--fp); white-space: nowrap;
+                             -webkit-tap-highlight-color: transparent; }
+    .prop-done-phases-btn:active { background: var(--green-light); color: var(--green); border-color: var(--green-mid); }
+    /* 工程ヘッダー内：完了タスクトグルボタン */
+    .phase-done-btn { background: none; border: none; cursor: pointer; font-size: 10px;
+                      color: var(--green-mid); font-family: var(--fp); padding: 2px 4px;
+                      flex-shrink: 0; white-space: nowrap;
+                      -webkit-tap-highlight-color: transparent; }
+    .phase-done-btn:active { opacity: .7; }
     .chk { width: 19px; height: 19px; border: 2px solid var(--border); border-radius: 5px;
            flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex;
            align-items: center; justify-content: center; transition: all .15s;
@@ -365,7 +364,7 @@
     .prio-cnt-badge { background: #dc2626; color: white; font-size: 10px; font-weight: 700;
                       padding: 1px 7px; border-radius: 10px; font-family: var(--fm); }
     .prio-panel-arr { width: 13px; height: 13px; color: #b91c1c; transition: transform .18s; flex-shrink: 0; }
-    .prio-panel.open .prio-panel-arr { transform: rotate(90deg); }
+    .prio-panel.open .prio-panel-arr { transform: rotate(180deg); }
     .prio-body { display: none; border-top: 1px solid #fecaca; }
     .prio-panel.open .prio-body { display: block; }
     .prio-row { display: flex; align-items: flex-start; gap: 10px;
@@ -437,7 +436,7 @@
     </div>
   </div>
   <!-- 優先タスクパネル -->
-  <div id="prio-panel" class="prio-panel open" style="display:none">
+  <div id="prio-panel" class="prio-panel" style="display:none">
     <div class="prio-panel-hdr" onclick="togglePrioPanel()">
       <div class="prio-panel-title">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="#dc2626" stroke="none">
@@ -657,6 +656,10 @@ function propCardHTML(p) {
     </div>
     <div class="prop-right">
       ${p.progress ? `<span class="prop-progress-badge">${esc(p.progress)}</span>` : ''}
+      <button class="prop-done-phases-btn" id="${cid}-pdtbtn"
+        onclick="event.stopPropagation();toggleDonePhases('${cid}')">
+        <span id="${cid}-pdtlbl"></span>
+      </button>
       <svg class="prop-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="6,9 12,15 18,9"/>
       </svg>
@@ -733,28 +736,15 @@ function renderPropTasks(propName, cid, tasks, wrap) {
   if (mpb) mpb.style.width = pct + '%';
   if (mpl) mpl.textContent = `${pct}%`;
 
-  // 完了工程の数を計算
-  const allDonePhases = phases.filter(ph => {
-    const pts = phaseMap[ph];
-    return pts.length > 0 && pts.filter(t => t.done).length === pts.length;
-  });
-  const phaseDoneToggle = allDonePhases.length > 0 ? `
-<div class="phase-done-toggle-row" id="${cid}-pdtr">
-  <button class="phase-done-toggle-btn" onclick="toggleDonePhases('${cid}')">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline id="${cid}-pdtarr" points="6,9 12,15 18,9"/>
-    </svg>
-    <span id="${cid}-pdtlbl">完了工程${allDonePhases.length}件を非表示</span>
-  </button>
-</div>` : '';
-
   wrap.innerHTML = `
 <div class="prog-row">
   <div class="prog-bg" id="${cid}-pb"><div class="prog-fill" style="width:${pct}%"></div></div>
   <span class="prog-lbl" id="${cid}-pl">${pct}%</span>
 </div>
-${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}
-${phaseDoneToggle}`;
+${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}`;
+
+  // prop-hdrの完了工程ボタンを初期化
+  updatePhaseDoneToggle(cid);
 
   refreshPrioPanel();
 }
@@ -764,21 +754,16 @@ function phaseSecHTML(propName, cid, phase, tasks) {
   const done      = sorted.filter(t => t.done).length;
   const allDone   = done === sorted.length;
   const phid      = cid + '-' + slug(phase);
-  const doneToggle = done > 0 ? `
-  <div class="done-toggle-row" id="${phid}-dtr">
-    <button class="done-toggle-btn" onclick="toggleDone('${phid}')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="6,9 12,15 18,9"/>
-      </svg>
-      <span id="${phid}-dtlbl">完了${done}件を表示</span>
-    </button>
-  </div>` : '';
   return `
 <div class="phase-sec hide-done${allDone?' phase-all-done':''}" id="${phid}">
   <div class="phase-hdr" onclick="togglePhase('${phid}')">
     <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
     <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
     <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
+    <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? '' : 'display:none'}"
+      onclick="event.stopPropagation();toggleDone('${phid}')">
+      <span id="${phid}-dtlbl">${done > 0 ? (allDone ? `完了${done}件` : `完了${done}件を表示`) : ''}</span>
+    </button>
     <button class="phase-all-btn" id="${phid}-allbtn"
       onclick="event.stopPropagation();checkAllPhase('${phid}','${esc(propName)}','${cid}')">
       ${allDone?'全解除':'全完了'}
@@ -789,7 +774,6 @@ function phaseSecHTML(propName, cid, phase, tasks) {
   </div>
   <div class="task-list">
     ${sorted.map(t => taskRowHTML(t, propName, cid)).join('')}
-    ${doneToggle}
   </div>
 </div>`;
 }
@@ -802,15 +786,9 @@ function toggleDone(phid) {
   const sec = document.getElementById(phid);
   const lbl = document.getElementById(phid + '-dtlbl');
   const isHidden = sec.classList.toggle('hide-done');
-  // ラベルとアイコンを更新
-  const btn = lbl ? lbl.closest('.done-toggle-btn') : null;
   if (lbl) {
     const doneCount = sec.querySelectorAll('.task-row.done').length;
     lbl.textContent = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
-  }
-  if (btn) {
-    const svg = btn.querySelector('svg polyline');
-    if (svg) svg.setAttribute('points', isHidden ? '6,9 12,15 18,9' : '6,15 12,9 18,15');
   }
 }
 
@@ -818,34 +796,14 @@ function updatePhaseDoneToggle(cid) {
   const wrap = document.getElementById(cid + '-pw');
   if (!wrap) return;
   const count = wrap.querySelectorAll('.phase-sec.phase-all-done').length;
-  let pdtr = document.getElementById(cid + '-pdtr');
-
-  if (count === 0) {
-    if (pdtr) pdtr.style.display = 'none';
-    return;
-  }
-
-  // ボタンが存在しない場合は動的に生成して追加
-  if (!pdtr) {
-    pdtr = document.createElement('div');
-    pdtr.className = 'phase-done-toggle-row';
-    pdtr.id = cid + '-pdtr';
-    pdtr.innerHTML = `
-<button class="phase-done-toggle-btn" onclick="toggleDonePhases('${cid}')">
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <polyline id="${cid}-pdtarr" points="6,9 12,15 18,9"/>
-  </svg>
-  <span id="${cid}-pdtlbl"></span>
-</button>`;
-    wrap.appendChild(pdtr);
-  }
-
-  pdtr.style.display = '';
+  const btn = document.getElementById(cid + '-pdtbtn');
   const lbl = document.getElementById(cid + '-pdtlbl');
-  const arr = document.getElementById(cid + '-pdtarr');
-  const isHidden = wrap.classList.contains('hide-done-phases');
-  if (lbl) lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
-  if (arr) arr.setAttribute('points', isHidden ? '6,9 12,15 18,9' : '6,15 12,9 18,15');
+  if (!btn) return;
+  btn.style.display = count > 0 ? '' : 'none';
+  if (lbl && count > 0) {
+    const isHidden = wrap.classList.contains('hide-done-phases');
+    lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
+  }
 }
 
 async function checkAllPhase(phid, propName, cid) {
@@ -912,16 +870,8 @@ async function checkAllPhase(phid, propName, cid) {
 function toggleDonePhases(cid) {
   const wrap = document.getElementById(cid + '-pw');
   if (!wrap) return;
-  const lbl = document.getElementById(cid + '-pdtlbl');
-  const arr = document.getElementById(cid + '-pdtarr');
-  const isHidden = wrap.classList.toggle('hide-done-phases');
-  if (lbl) {
-    const count = wrap.querySelectorAll('.phase-sec.phase-all-done').length;
-    lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
-  }
-  if (arr) {
-    arr.setAttribute('points', isHidden ? '6,9 12,15 18,9' : '6,15 12,9 18,15');
-  }
+  wrap.classList.toggle('hide-done-phases');
+  updatePhaseDoneToggle(cid);
 }
 
 function taskRowHTML(task, propName, cid) {
@@ -1006,9 +956,11 @@ function refreshPhaseHdr(row) {
   // 全完了/全解除ボタンテキストを更新
   const allBtn = document.getElementById(phid + '-allbtn');
   if (allBtn) allBtn.textContent = isAll ? '全解除' : '全完了';
-  // 完了タスクトグルラベルを更新
+  // 完了タスクトグルボタンを更新（phase-hdr内）
+  const dtbtn = document.getElementById(phid + '-dtbtn');
   const dtlbl = document.getElementById(phid + '-dtlbl');
-  if (dtlbl) {
+  if (dtbtn) dtbtn.style.display = done > 0 ? '' : 'none';
+  if (dtlbl && done > 0) {
     const isHide = sec.classList.contains('hide-done');
     dtlbl.textContent = isHide ? `完了${done}件を表示` : `完了${done}件を非表示`;
   }
