@@ -113,24 +113,26 @@
                        background: var(--border); color: var(--t3); }
     .prop-arrow { width: 16px; height: 16px; color: var(--t3);
                   transition: transform .22s ease; margin-top: 6px; }
-    .prop-card.open .prop-arrow { transform: rotate(90deg); }
+    .prop-card.open .prop-arrow { transform: rotate(180deg); }
 
     /* ─ Phases container ────────────────────────────────────── */
     .phases-wrap { display: none; border-top: 1px solid var(--border); }
     .prop-card.open .phases-wrap { display: block; }
 
     /* ─ Progress bar ────────────────────────────────────────── */
-    .prog-row { display: flex; align-items: center; padding: 8px 14px 6px; gap: 10px; }
-    .prog-bg { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
-    .prog-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width .35s ease; }
-    .prog-lbl { font-family: var(--fm); font-size: 11px; color: var(--t3); flex-shrink: 0; }
+    .prog-row { display: flex; align-items: center; padding: 10px 14px 8px; gap: 10px; }
+    .prog-bg { flex: 1; height: 8px; background: #dde8e2; border-radius: 4px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width .4s ease;
+                 min-width: 0; }
+    .prog-lbl { font-family: var(--fm); font-size: 12px; color: var(--green); font-weight: 600;
+                flex-shrink: 0; min-width: 40px; text-align: right; }
 
     /* ─ Phase section ───────────────────────────────────────── */
     .phase-sec { border-bottom: 1px solid var(--border); }
     .phase-sec:last-child { border-bottom: none; }
-    .phase-hdr { display: flex; align-items: center; padding: 9px 14px 9px 12px; cursor: pointer;
+    .phase-hdr { display: flex; align-items: center; padding: 13px 14px 13px 12px; cursor: pointer;
                  gap: 7px; background: var(--bg); user-select: none;
-                 -webkit-tap-highlight-color: transparent; }
+                 -webkit-tap-highlight-color: transparent; min-height: 48px; }
     .phase-sec.open .phase-hdr { background: #f0f6f2; }
     .phase-hdr:active { background: var(--green-light); }
     .phase-lbl { flex: 1; font-size: 11px; font-weight: 700; color: var(--t2);
@@ -142,7 +144,7 @@
     .phase-badge { font-size: 10px; padding: 1px 7px; background: var(--green-light);
                    color: var(--green); border-radius: 8px; font-weight: 600; }
     .phase-arr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; flex-shrink: 0; }
-    .phase-sec.open .phase-arr { transform: rotate(90deg); }
+    .phase-sec.open .phase-arr { transform: rotate(180deg); }
 
     /* ─ Task list ───────────────────────────────────────────── */
     .task-list { display: none; }
@@ -151,6 +153,14 @@
                 gap: 10px; border-bottom: 1px solid var(--border); }
     .task-row:last-child { border-bottom: none; }
     .task-row.done .task-name { color: var(--t3); text-decoration: line-through; }
+    /* 完了タスク非表示: デフォルトで done を隠す */
+    .phase-sec.hide-done .task-row.done { display: none; }
+    .done-toggle-row { padding: 6px 14px 6px 18px; border-top: 1px solid var(--border); }
+    .done-toggle-btn { background: none; border: none; cursor: pointer; font-size: 11px;
+                       color: var(--green-mid); font-family: var(--fp); padding: 4px 0;
+                       display: flex; align-items: center; gap: 4px;
+                       -webkit-tap-highlight-color: transparent; }
+    .done-toggle-btn:active { opacity: .7; }
     .chk { width: 19px; height: 19px; border: 2px solid var(--border); border-radius: 5px;
            flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex;
            align-items: center; justify-content: center; transition: all .15s;
@@ -187,15 +197,16 @@
     .m-gname { flex: 1; font-size: 13px; font-weight: 700; color: var(--green); }
     .m-gcnt { font-family: var(--fm); font-size: 11px; color: var(--green-mid); margin-right: 4px; }
     .m-garr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; }
-    .m-group.open .m-garr { transform: rotate(90deg); }
+    .m-group.open .m-garr { transform: rotate(180deg); }
 
     /* ─ Drag and drop ────────────────────────────────────── */
-    .m-drag-handle { width: 18px; height: 18px; color: var(--t3); cursor: grab;
+    .m-drag-handle { width: 36px; height: 40px; color: var(--t3); cursor: grab;
                      display: flex; align-items: center; justify-content: center;
-                     flex-shrink: 0; user-select: none; }
+                     flex-shrink: 0; user-select: none; touch-action: none; }
     .m-drag-handle:active { cursor: grabbing; }
-    .m-row.dragging { opacity: .5; background: var(--green-light); }
-    .m-row.drag-over { background: var(--border); }
+    .m-row.dragging { opacity: .4; }
+    /* drag-over: 挿入位置を上線で示す */
+    .m-row.drag-insert { border-top: 2.5px solid var(--green); background: var(--green-light); }
     .m-row[draggable="true"] { user-select: none; }
 
     /* ─ Add task button (top toolbar) ────────────────────── */
@@ -232,10 +243,10 @@
     .m-name { flex: 1; font-size: 13px; }
     .m-name.off { color: var(--t3); text-decoration: line-through; }
     .m-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    .m-btn { width: 28px; height: 28px; background: none; border: 1px solid var(--border);
-             border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+    .m-btn { width: 40px; height: 40px; background: none; border: 1px solid var(--border);
+             border-radius: 8px; cursor: pointer; display: flex; align-items: center;
              justify-content: center; color: var(--t3);
-             -webkit-tap-highlight-color: transparent; }
+             -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .m-btn:active { background: var(--bg); }
     .m-btn.del:active { background: #fff0f0; color: var(--red); border-color: var(--red); }
     /* Add task row */
@@ -422,7 +433,7 @@
         <span class="prio-cnt-badge" id="prio-cnt">0</span>
       </div>
       <svg class="prio-panel-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="9,6 15,12 9,18"/>
+        <polyline points="6,9 12,15 18,9"/>
       </svg>
     </div>
     <div class="prio-body" id="prio-body"></div>
@@ -633,7 +644,7 @@ function propCardHTML(p) {
     <div class="prop-right">
       ${p.progress ? `<span class="prop-progress-badge">${esc(p.progress)}</span>` : ''}
       <svg class="prop-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="9,6 15,12 9,18"/>
+        <polyline points="6,9 12,15 18,9"/>
       </svg>
     </div>
   </div>
@@ -711,7 +722,7 @@ function renderPropTasks(propName, cid, tasks, wrap) {
   wrap.innerHTML = `
 <div class="prog-row">
   <div class="prog-bg" id="${cid}-pb"><div class="prog-fill" style="width:${pct}%"></div></div>
-  <span class="prog-lbl" id="${cid}-pl">${done}/${total}</span>
+  <span class="prog-lbl" id="${cid}-pl">${pct}%</span>
 </div>
 ${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}`;
 
@@ -723,24 +734,50 @@ function phaseSecHTML(propName, cid, phase, tasks) {
   const done      = sorted.filter(t => t.done).length;
   const allDone   = done === sorted.length;
   const phid      = cid + '-' + slug(phase);
+  const doneToggle = done > 0 ? `
+  <div class="done-toggle-row" id="${phid}-dtr">
+    <button class="done-toggle-btn" onclick="toggleDone('${phid}')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="6,9 12,15 18,9"/>
+      </svg>
+      <span id="${phid}-dtlbl">完了${done}件を表示</span>
+    </button>
+  </div>` : '';
   return `
-<div class="phase-sec" id="${phid}">
+<div class="phase-sec hide-done" id="${phid}">
   <div class="phase-hdr" onclick="togglePhase('${phid}')">
     <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
     <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
     <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
     <svg class="phase-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="9,6 15,12 9,18"/>
+      <polyline points="6,9 12,15 18,9"/>
     </svg>
   </div>
   <div class="task-list">
     ${sorted.map(t => taskRowHTML(t, propName, cid)).join('')}
+    ${doneToggle}
   </div>
 </div>`;
 }
 
 function togglePhase(phid) {
   document.getElementById(phid).classList.toggle('open');
+}
+
+function toggleDone(phid) {
+  const sec = document.getElementById(phid);
+  const lbl = document.getElementById(phid + '-dtlbl');
+  const isHidden = sec.classList.toggle('hide-done');
+  // ラベルとアイコンを更新
+  const btn = lbl ? lbl.closest('.done-toggle-btn') : null;
+  if (lbl) {
+    const doneCount = sec.querySelectorAll('.task-row.done').length;
+    lbl.textContent = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
+  }
+  if (btn) {
+    const svg = btn.querySelector('svg polyline');
+    if (svg) svg.setAttribute('points', isHidden ? '6,9 12,15 18,9' : '6,15 12,9 18,15');
+  }
 }
 
 function taskRowHTML(task, propName, cid) {
@@ -1021,7 +1058,7 @@ function renderMaster(tasks) {
       </svg>
     </button>
     <svg class="m-garr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="9,6 15,12 9,18"/>
+      <polyline points="6,9 12,15 18,9"/>
     </svg>
   </div>
   <div class="m-body" id="${gid}-body">
@@ -1090,19 +1127,21 @@ function handleDragEnd(e) {
 function handleDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.m-row.drag-insert').forEach(el => el.classList.remove('drag-insert'));
   if (draggedTask && e.currentTarget.classList.contains('m-row') && e.currentTarget !== draggedTask) {
-    e.currentTarget.classList.add('drag-over');
+    e.currentTarget.classList.add('drag-insert');
   }
 }
 
 function handleDragLeave(e) {
   if (e.currentTarget.classList.contains('m-row')) {
-    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-insert');
   }
 }
 
 async function handleDrop(e) {
   e.preventDefault();
+  document.querySelectorAll('.m-row.drag-insert').forEach(el => el.classList.remove('drag-insert'));
   if (!draggedTask) return;
   const dropTarget = e.currentTarget;
   if (!dropTarget.classList.contains('m-row') || dropTarget === draggedTask) return;
@@ -1114,33 +1153,41 @@ async function handleDrop(e) {
 
   if (!draggedTask_obj || !targetTask) return;
 
-  // 同じフェーズ内での移動
   if (draggedTask_obj.phase === targetTask.phase) {
     await reorderTasksInPhase(draggedTask_obj, targetTask, draggedTask_obj.phase);
   } else {
-    // 別フェーズへの移動
     await moveTaskToPhase(draggedTask_obj, targetTask.phase);
   }
-
-  dropTarget.classList.remove('drag-over');
 }
 
 async function reorderTasksInPhase(draggedTask_obj, targetTask, phase) {
-  const oldOrder = draggedTask_obj.order;
-  const newOrder = targetTask.order;
-  draggedTask_obj.order = newOrder;
-  targetTask.order = oldOrder;
+  // swap → insert: ドラッグ先の直前に挿入
+  let phaseTasks = masterData.filter(t => t.phase === phase).sort((a,b) => a.order - b.order);
+  const oldOrders = phaseTasks.map(t => ({ id: t.id, order: t.order }));
+
+  phaseTasks = phaseTasks.filter(t => t.id !== draggedTask_obj.id);
+  const targetIdx = phaseTasks.findIndex(t => t.id === targetTask.id);
+  phaseTasks.splice(targetIdx, 0, draggedTask_obj);
+
+  // 連番で order を再割り当て
+  const updates = [];
+  phaseTasks.forEach((t, i) => {
+    const newOrder = i + 1;
+    if (t.order !== newOrder) {
+      updates.push({ task: t, newOrder });
+      t.order = newOrder;
+    }
+  });
 
   try {
-    await Promise.all([
-      api({ mode:'updateMasterTask', id:draggedTask_obj.id, field:'order', value:String(newOrder) }),
-      api({ mode:'updateMasterTask', id:targetTask.id, field:'order', value:String(oldOrder) }),
-    ]);
+    await Promise.all(updates.map(u =>
+      api({ mode:'updateMasterTask', id:u.task.id, field:'order', value:String(u.newOrder) })
+    ));
     renderMaster(masterData);
     showToast('並び順を変更しました');
   } catch(e) {
-    draggedTask_obj.order = oldOrder;
-    targetTask.order = newOrder;
+    // 失敗時: order を元に戻す
+    oldOrders.forEach(o => { const t = masterData.find(t => t.id === o.id); if(t) t.order = o.order; });
     showToast('エラー: ' + e.message);
   }
 }
