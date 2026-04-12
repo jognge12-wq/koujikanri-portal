@@ -4286,10 +4286,7 @@
                 renderPropertiesTab();
                 document.getElementById('tab-properties').dataset.rendered = '1';
             }
-            // 物件タブに切り替えるたびにNotion同期（2回目以降）
-            if (tab === 'properties' && document.getElementById('tab-properties').dataset.rendered) {
-                fetchPropertyChecks();
-            }
+            // 物件データはfetchLiveDataで自動取得（rendered フラグは fetchLiveData でリセット）
             if (tab === 'tasks' && !document.getElementById('tab-tasks').dataset.rendered) {
                 renderTasksTab();
                 document.getElementById('tab-tasks').dataset.rendered = '1';
@@ -4872,22 +4869,12 @@
                 <div class="filter-tabs prop-mobile-tabs" id="propFilterTabs" style="display:flex;align-items:center;">
                     <div class="filter-tab active" data-pfilter="shikakari">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
                     <div class="filter-tab" data-pfilter="precon">着工前 <span class="tab-count">${preconProperties.length}</span></div>
-                    <button id="propSyncBtn" onclick="refreshPropertyChecks()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px;">
-                        <svg id="propSyncIcon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                        同期
-                    </button>
                 </div>
                 <div id="propTabList" class="prop-mobile-list"></div>
                 <!-- PC: 左右分割（スマホでは非表示） -->
                 <div class="prop-split-wrap">
                     <div class="prop-split-col">
-                        <div class="prop-split-head" style="display:flex;align-items:center;justify-content:space-between;">
-                            <span>仕掛り <span class="tab-count">${activeShikakari.length}</span></span>
-                            <button onclick="refreshPropertyChecks()" title="Notionから最新データを取得" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:2px 4px;font-size:11px;display:flex;align-items:center;gap:3px;">
-                                <svg id="propSyncIconPc" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                                Notion同期
-                            </button>
-                        </div>
+                        <div class="prop-split-head">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
                         <div id="propShikakariList">${buildPropItems(sortedShikakari)}</div>
                     </div>
                     <div class="prop-split-col">
@@ -4913,8 +4900,7 @@
                 renderMobilePropList(tab.dataset.pfilter);
             });
 
-            // タブ表示時にNotionから最新チェックデータを自動取得
-            fetchPropertyChecks();
+            // 物件データはfetchLiveDataで自動取得済み
         }
 
         // ===== タスクタブ (チェックボックスなし) =====
