@@ -55,6 +55,8 @@
     /* ─ Panes ───────────────────────────────────────────────── */
     .pane { display: none; padding: 12px 12px 100px; max-width: 640px; margin: 0 auto; }
     .pane.on { display: block; }
+    @media (min-width: 768px)  { .pane { max-width: 860px;  padding: 16px 24px 100px; } }
+    @media (min-width: 1024px) { .pane { max-width: 1100px; padding: 20px 32px 100px; } }
 
     /* ─ Toolbar ─────────────────────────────────────────────── */
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -426,7 +428,7 @@
         <svg id="sync-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-        </svg>タスク同期
+        </svg>優先タスク同期
       </button>
       <button class="btn-xs" onclick="loadProperties()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -543,6 +545,30 @@ let masterInit  = false;
 let historyInit = false;
 let propSortOrder = 'handover'; // 'handover' | 'start' | 'name'
 
+const TASK_CACHE_KEY = 'taskCacheV1';
+let _saveCacheTimer;
+function saveTaskCache() {
+  clearTimeout(_saveCacheTimer);
+  _saveCacheTimer = setTimeout(() => {
+    try { localStorage.setItem(TASK_CACHE_KEY, JSON.stringify(taskCache)); } catch(e) {}
+  }, 600);
+}
+function restoreTaskCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TASK_CACHE_KEY) || 'null');
+    if (saved && typeof saved === 'object') Object.assign(taskCache, saved);
+  } catch(e) {}
+}
+// カード描画後にキャッシュからミニバー・完了バッジ・優先パネルを復元
+function restoreTaskCacheToUI() {
+  Object.entries(taskCache).forEach(([propName, tasks]) => {
+    const cid = 'pc-' + slug(propName);
+    refreshProgBar(propName, cid);
+    checkAllDone(propName, cid);
+  });
+  refreshPrioPanel();
+}
+
 // ═══════════════════════════════════════════════════════
 //  API
 // ═══════════════════════════════════════════════════════
@@ -610,10 +636,11 @@ async function refreshAllTasks() {
     done++;
   }));
 
+  saveTaskCache();
   refreshPrioPanel();
   if (btn) btn.disabled = false;
   if (icon) icon.classList.remove('icon-spin');
-  showToast(`✓ ${done}件の物件を同期しました`);
+  showToast(`✓ 優先タスクを同期しました（${done}件）`);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -626,6 +653,7 @@ async function loadProperties() {
   try {
     propData = await api({ mode: 'getProperties' });
     renderProps(propData);
+    restoreTaskCacheToUI();  // キャッシュからミニバー・優先パネルを復元
     document.getElementById('lbl-upd').textContent = '更新: ' + now();
   } catch(e) {
     el.innerHTML = `<div class="err">物件の読み込みに失敗しました<br><small>${esc(e.message)}</small></div>`;
@@ -732,8 +760,15 @@ async function toggleProp(cid) {
   const card = document.getElementById(cid);
   const wasOpen = card.classList.contains('open');
   card.classList.toggle('open');
-  if (!wasOpen && !taskCache[card.dataset.prop]) {
-    await loadPropTasks(card.dataset.prop, cid);
+  if (!wasOpen) {
+    const propName = card.dataset.prop;
+    const wrap = document.getElementById(cid + '-pw');
+    if (taskCache[propName]) {
+      // キャッシュあり → APIを呼ばずそのままレンダリング
+      renderPropTasks(propName, cid, taskCache[propName], wrap);
+    } else {
+      await loadPropTasks(propName, cid);
+    }
   }
 }
 
@@ -744,6 +779,7 @@ async function loadPropTasks(propName, cid) {
     const tasks = await api({ mode: 'getTasks', property: propName });
     taskCache[propName] = tasks;
     renderPropTasks(propName, cid, tasks, wrap);
+    saveTaskCache();
   } catch(e) {
     // エラー時はキャッシュを消して再タップで再試行できるようにする
     delete taskCache[propName];
@@ -904,6 +940,7 @@ async function checkAllPhase(phid, propName, cid) {
   checkAllDone(propName, cid);
   refreshPrioPanel();
   updatePhaseDoneToggle(cid);
+  saveTaskCache();
 
   // API一括送信
   try {
@@ -1007,6 +1044,7 @@ async function toggleTask(id, propName, cid) {
   refreshProgBar(propName, cid);
   checkAllDone(propName, cid);
   refreshPrioPanel();
+  saveTaskCache();
 
   try {
     await api({ mode:'updateTask', id, field:'done', value:String(next) });
@@ -1018,6 +1056,7 @@ async function toggleTask(id, propName, cid) {
     refreshPhaseHdr(row);
     refreshProgBar(propName, cid);
     checkAllDone(propName, cid);
+    saveTaskCache();
     showToast('エラー: 更新できませんでした');
   }
 }
@@ -1094,25 +1133,15 @@ function refreshPrioPanel() {
   const cntBadge = document.getElementById('prio-cnt');
   if (!panel) return;
 
-  // ロード済み物件から最新の優先タスクを取得
-  const loadedProps = new Set(Object.keys(taskCache));
-  const freshRows = [];
-  loadedProps.forEach(propName => {
-    (taskCache[propName] || []).forEach(t => {
-      if (t.priority && !t.done) freshRows.push({ ...t, propName });
+  // taskCacheから全物件の優先タスクを集約（taskCacheはlocalStorageで永続化済み）
+  const rows = [];
+  Object.entries(taskCache).forEach(([propName, tasks]) => {
+    (tasks || []).forEach(t => {
+      if (t.priority && !t.done) rows.push({ ...t, propName });
     });
   });
 
-  // 未ロード物件はlocalStorageのデータを維持（マージ）
-  let staleRows = [];
-  try {
-    const saved = JSON.parse(localStorage.getItem(PRIO_CACHE_KEY) || '[]');
-    staleRows = saved.filter(r => !loadedProps.has(r.propName));
-  } catch(e) {}
-
-  const rows = [...freshRows, ...staleRows];
-
-  // localStorageに保存
+  // 後方互換のため PRIO_CACHE_KEY にも保存
   try { localStorage.setItem(PRIO_CACHE_KEY, JSON.stringify(rows)); } catch(e) {}
 
   // 件数バッジ・表示
@@ -1159,6 +1188,7 @@ async function togglePriority(id, propName, cid) {
   if (t) t.priority = next;
 
   refreshPrioPanel();
+  saveTaskCache();
 
   try {
     await api({ mode:'updateTask', id, field:'priority', value:String(next) });
@@ -1693,8 +1723,9 @@ function showToast(msg) {
 // ═══════════════════════════════════════════════════════
 //  Init
 // ═══════════════════════════════════════════════════════
-restorePrioPanelFromCache(); // リロード直後にキャッシュから優先タスクを復元
-setSortOrder('handover'); // デフォルトは引渡し順（ボタンの初期状態セット）
+restoreTaskCache();          // タスクキャッシュをlocalStorageから復元
+restorePrioPanelFromCache(); // 優先パネルを即時表示（物件読み込み前）
+setSortOrder('handover');
 loadProperties();
 </script>
 </body>
