@@ -760,9 +760,9 @@ function phaseSecHTML(propName, cid, phase, tasks) {
     <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
     <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
     <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
-    <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? '' : 'display:none'}"
+    <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? 'display:block' : 'display:none'}"
       onclick="event.stopPropagation();toggleDone('${phid}')">
-      <span id="${phid}-dtlbl">${done > 0 ? (allDone ? `完了${done}件` : `完了${done}件を表示`) : ''}</span>
+      <span id="${phid}-dtlbl">${done > 0 ? `完了${done}件を表示` : ''}</span>
     </button>
     <button class="phase-all-btn" id="${phid}-allbtn"
       onclick="event.stopPropagation();checkAllPhase('${phid}','${esc(propName)}','${cid}')">
@@ -801,7 +801,7 @@ function updatePhaseDoneToggle(cid) {
   const btn = document.getElementById(cid + '-pdtbtn');
   const lbl = document.getElementById(cid + '-pdtlbl');
   if (!btn) return;
-  btn.style.display = count > 0 ? 'inline-flex' : 'none';
+  btn.style.display = count > 0 ? 'block' : 'none';
   if (lbl && count > 0) {
     const isHidden = wrap.classList.contains('hide-done-phases');
     lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
@@ -842,6 +842,7 @@ async function checkAllPhase(phid, propName, cid) {
   refreshProgBar(propName, cid);
   checkAllDone(propName, cid);
   refreshPrioPanel();
+  updatePhaseDoneToggle(cid);
 
   // API一括送信
   try {
@@ -909,7 +910,27 @@ function taskRowHTML(task, propName, cid) {
 
 // ─ タスク チェック ────────────────────────────────────────────
 async function toggleTask(id, propName, cid) {
-  const row  = document.getElementById('tk-' + id);
+  const row = document.getElementById('tk-' + id);
+
+  // 優先パネルから呼び出し時など、カードが開いていない場合
+  if (!row) {
+    const cached = taskCache[propName];
+    const t = cached && cached.find(x => x.id === id);
+    const was = t ? t.done : false;
+    const next = !was;
+    if (t) t.done = next;
+    refreshPrioPanel();
+    try {
+      await api({ mode:'updateTask', id, field:'done', value:String(next) });
+      showToast(next ? '✓ 完了にしました' : '未完了に戻しました');
+    } catch(e) {
+      if (t) t.done = was;
+      refreshPrioPanel();
+      showToast('エラー: 更新できませんでした');
+    }
+    return;
+  }
+
   const chk  = row.querySelector('.chk');
   const was  = chk.classList.contains('on');
   const next = !was;
@@ -961,7 +982,7 @@ function refreshPhaseHdr(row) {
   // 完了タスクトグルボタンを更新（phase-hdr内）
   const dtbtn = document.getElementById(phid + '-dtbtn');
   const dtlbl = document.getElementById(phid + '-dtlbl');
-  if (dtbtn) dtbtn.style.display = done > 0 ? '' : 'none';
+  if (dtbtn) dtbtn.style.display = done > 0 ? 'block' : 'none';
   if (dtlbl && done > 0) {
     const isHide = sec.classList.contains('hide-done');
     dtlbl.textContent = isHide ? `完了${done}件を表示` : `完了${done}件を非表示`;
