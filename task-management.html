@@ -744,12 +744,9 @@ function renderPropTasks(propName, cid, tasks, wrap) {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline id="${cid}-pdtarr" points="6,9 12,15 18,9"/>
     </svg>
-    <span id="${cid}-pdtlbl">完了工程${allDonePhases.length}件を表示</span>
+    <span id="${cid}-pdtlbl">完了工程${allDonePhases.length}件を非表示</span>
   </button>
 </div>` : '';
-
-  // デフォルトで完了工程を非表示
-  wrap.classList.add('hide-done-phases');
 
   wrap.innerHTML = `
 <div class="prog-row">
@@ -820,14 +817,35 @@ function toggleDone(phid) {
 function updatePhaseDoneToggle(cid) {
   const wrap = document.getElementById(cid + '-pw');
   if (!wrap) return;
-  const lbl  = document.getElementById(cid + '-pdtlbl');
-  const pdtr = document.getElementById(cid + '-pdtr');
   const count = wrap.querySelectorAll('.phase-sec.phase-all-done').length;
-  if (lbl) {
-    const isHidden = wrap.classList.contains('hide-done-phases');
-    lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
+  let pdtr = document.getElementById(cid + '-pdtr');
+
+  if (count === 0) {
+    if (pdtr) pdtr.style.display = 'none';
+    return;
   }
-  if (pdtr) pdtr.style.display = count > 0 ? '' : 'none';
+
+  // ボタンが存在しない場合は動的に生成して追加
+  if (!pdtr) {
+    pdtr = document.createElement('div');
+    pdtr.className = 'phase-done-toggle-row';
+    pdtr.id = cid + '-pdtr';
+    pdtr.innerHTML = `
+<button class="phase-done-toggle-btn" onclick="toggleDonePhases('${cid}')">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline id="${cid}-pdtarr" points="6,9 12,15 18,9"/>
+  </svg>
+  <span id="${cid}-pdtlbl"></span>
+</button>`;
+    wrap.appendChild(pdtr);
+  }
+
+  pdtr.style.display = '';
+  const lbl = document.getElementById(cid + '-pdtlbl');
+  const arr = document.getElementById(cid + '-pdtarr');
+  const isHidden = wrap.classList.contains('hide-done-phases');
+  if (lbl) lbl.textContent = isHidden ? `完了工程${count}件を表示` : `完了工程${count}件を非表示`;
+  if (arr) arr.setAttribute('points', isHidden ? '6,9 12,15 18,9' : '6,15 12,9 18,15');
 }
 
 async function checkAllPhase(phid, propName, cid) {
