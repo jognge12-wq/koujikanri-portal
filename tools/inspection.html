@@ -172,15 +172,15 @@ const GAS_CONFIG = {
           <option value="">物件を選択してください</option>
         </select>
 
-        <!-- 登録番号（インライン） -->
+        <!-- 設計交付番号（インライン） -->
         <div id="project-info" class="hidden mt-3">
 
-          <!-- 登録番号あり：表示モード -->
+          <!-- 設計交付番号あり：表示モード -->
           <div id="reg-has-value" class="hidden">
             <div class="px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">登録番号</span>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">設計交付番号</span>
                   <span id="reg-value-display" class="font-mono font-bold text-sm text-sfc-primary"></span>
                 </div>
                 <button onclick="startEditReg()"
@@ -205,7 +205,7 @@ const GAS_CONFIG = {
           <!-- 未設定 or 編集中：入力モード -->
           <div id="reg-edit-section" class="hidden">
             <div class="flex items-center gap-1.5 mb-2 px-0.5">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">登録番号</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">設計交付番号</span>
               <span id="reg-unset-badge" class="text-[10px] font-bold text-amber-500">（未設定）</span>
             </div>
             <div class="flex gap-2">
@@ -533,7 +533,7 @@ async function autoDeleteCompletedProjects() {
 /* ============================================================
    物件リスト描画
    - 竣工完了は非表示
-   - 登録番号（着工）順にソート、未設定は末尾
+   - 設計交付番号（着工）順にソート、未設定は末尾
 ============================================================ */
 function renderProjectList() {
   const select = document.getElementById('project-select');
@@ -545,7 +545,7 @@ function renderProjectList() {
     .sort((a, b) => {
       if (a.reg && b.reg) return a.reg.localeCompare(b.reg);
       if (!a.reg && !b.reg) return a.name.localeCompare(b.name, 'ja');
-      return a.reg ? -1 : 1; // 登録番号あり → 前、なし → 末尾
+      return a.reg ? -1 : 1; // 設計交付番号あり → 前、なし → 末尾
     });
 
   sorted.forEach(p => {
@@ -580,7 +580,7 @@ function renderButtons() {
 }
 
 /* ============================================================
-   登録番号 インライン表示・編集
+   設計交付番号 インライン表示・編集
 ============================================================ */
 function updateRegDisplay() {
   const info     = document.getElementById('project-info');
@@ -629,7 +629,7 @@ function cancelEditReg() {
 
 async function saveInlineReg() {
   const reg = document.getElementById('inline-reg-input').value.trim();
-  if (!reg) { alert('登録番号を入力してください'); return; }
+  if (!reg) { alert('設計交付番号を入力してください'); return; }
   setLoading(true, 'データを保存中...');
   currentProject.reg = reg;
   try {
@@ -658,7 +658,7 @@ function onProjectChange(id) {
     el.style.pointerEvents = isSelected ? 'auto' : 'none';
   });
 
-  // 登録番号表示
+  // 設計交付番号表示
   if (isSelected) {
     updateRegDisplay();
     updateButtonStates();
@@ -807,9 +807,11 @@ function selectType(type, restoreState = true) {
   const kakuninSection = document.getElementById('kakunin-section');
   if (extraInfo) {
     if (type === '竣工') {
-      extraInfo.classList.remove('hidden');
-      sekkeiSection.classList.remove('hidden');
+      // 設計交付番号 = 登録番号（既入力済み）なので追加入力不要
+      extraInfo.classList.add('hidden');
+      sekkeiSection.classList.add('hidden');
       kakuninSection.classList.add('hidden');
+      document.getElementById('sekkei-number').value = '';
       document.getElementById('kakunin-number').value = '';
     } else if (type === '完了検査') {
       extraInfo.classList.remove('hidden');
@@ -908,9 +910,7 @@ function checkReady() {
   const dateVal      = document.getElementById('inspection-date').value;
   const sekkeiNum    = document.getElementById('sekkei-number')?.value?.trim();
   const kakuninNum   = document.getElementById('kakunin-number')?.value?.trim();
-  const extraOk      = currentType === '竣工'    ? !!sekkeiNum  :
-                       currentType === '完了検査' ? !!kakuninNum :
-                       true;
+  const extraOk      = currentType === '完了検査' ? !!kakuninNum : true;
   const isReady      = currentProject && currentProject.reg && currentType && dateVal && extraOk;
   const isPastDate   = dateVal && dateVal <= todayStr;
 
@@ -1104,10 +1104,11 @@ async function executeRequest() {
   const startTime    = document.getElementById('start-time').value;
   const isDelegate   = document.getElementById('delegate-check').checked;
   const isPastDate   = date <= todayStr;
-  const isKanryo     = currentType === '完了検査';   // 完了検査
-  const isShunko     = currentType === '竣工';       // 竣工検査
-  const sekkeiNumber  = isShunko  ? (document.getElementById('sekkei-number')?.value?.trim()  || '') : '';
-  const kakuninNumber = isKanryo  ? (document.getElementById('kakunin-number')?.value?.trim() || '') : '';
+  const isKanryo      = currentType === '完了検査';   // 完了検査
+  const isShunko      = currentType === '竣工';       // 竣工検査
+  // 設計交付番号 = 登録番号（既入力済みの reg を使用）、完了検査のみ確認交付番号を別途入力
+  const sekkeiNumber  = currentProject.reg || '';
+  const kakuninNumber = isKanryo ? (document.getElementById('kakunin-number')?.value?.trim() || '') : '';
   const [, mm, dd]   = date.split('-');
   const processLabel = GAS_CONFIG.PROCESS_LABELS[currentType] || `${currentType}`;
 
@@ -1157,11 +1158,9 @@ async function executeRequest() {
     currentProject.times[currentType]    = startTime;
 
     try {
-      const delegateNotes = isShunko
-        ? `登録番号: ${currentProject.reg}\n設計交付番号: ${sekkeiNumber}\n代理人が申込み`
-        : isKanryo
-        ? `登録番号: ${currentProject.reg}\n確認交付番号: ${kakuninNumber}\n代理人が申込み`
-        : `登録番号: ${currentProject.reg}\n代理人が申込み`;
+      const delegateNotes = isKanryo
+        ? `確認交付番号: ${kakuninNumber}\n代理人が申込み`
+        : `設計交付番号: ${sekkeiNumber}\n代理人が申込み`;
       const payload = {
         action:          'submitInspection',
         propertyName:    currentProject.name,
@@ -1174,8 +1173,8 @@ async function executeRequest() {
         recipientEmail:  '',
         skipEmail:       true,
         officeType:      isKanryo ? 'gifu' : undefined,
-        sekkeiNumber:    isShunko ? sekkeiNumber : undefined,
-        kanryoNumber:    isKanryo ? kakuninNumber : undefined,
+        sekkeiNumber:    !isKanryo ? sekkeiNumber  : undefined,
+        kanryoNumber:    isKanryo  ? kakuninNumber : undefined,
         isUpdate:        isChange,
         previousDate:    prevDate,
         senderName:      GAS_CONFIG.SENDER.name,
@@ -1231,12 +1230,13 @@ async function executeRequest() {
       prevDateLabel = `${parseInt(pm)}/${parseInt(pd)}(${pdc})`;
     }
 
-    // 備考に番号情報を付加
-    const numNote = isShunko  ? `\n設計交付番号: ${sekkeiNumber}` :
-                    isKanryo  ? `\n確認交付番号: ${kakuninNumber}` : '';
+    // 備考（完了検査は確認交付番号のみ、それ以外は設計交付番号）
+    const baseNote = isKanryo
+      ? `確認交付番号: ${kakuninNumber}`
+      : `設計交付番号: ${sekkeiNumber}`;
     const mainNotes = isChange
-      ? `登録番号: ${currentProject.reg}${numNote}\n※ 検査日程変更: ${prevDateLabel} → ${dateLabel} ${startTime}`
-      : `登録番号: ${currentProject.reg}${numNote}`;
+      ? `${baseNote}\n※ 検査日程変更: ${prevDateLabel} → ${dateLabel} ${startTime}`
+      : baseNote;
 
     const payload = {
       action:          'submitInspection',
@@ -1252,8 +1252,8 @@ async function executeRequest() {
       senderPhone:     GAS_CONFIG.SENDER.phone,
       bccEmail:        GAS_CONFIG.SENDER.bcc,
       officeType:      isKanryo ? 'gifu' : undefined,
-      sekkeiNumber:    isShunko ? sekkeiNumber  : undefined,
-      kanryoNumber:    isKanryo ? kakuninNumber : undefined,
+      sekkeiNumber:    !isKanryo ? sekkeiNumber  : undefined,
+      kanryoNumber:    isKanryo  ? kakuninNumber : undefined,
       isUpdate:        isChange,
       previousDate:    prevDate,
       notes:           mainNotes,
@@ -1298,7 +1298,7 @@ async function executeRequest() {
 function executeLegacyMode(date, startTime) {
   const processLabel = GAS_CONFIG.PROCESS_LABELS[currentType] || `${currentType}検査`;
   const subject = `【検査依頼】${currentProject.name} ${processLabel}`;
-  const body    = `物件：${currentProject.name}\n登録番号：${currentProject.reg}\n検査種別：${processLabel}\n日時：${date} ${startTime}〜`;
+  const body    = `物件：${currentProject.name}\n設計交付番号：${currentProject.reg}\n検査種別：${processLabel}\n日時：${date} ${startTime}〜`;
   currentProject.history[currentType] = date;
   if (!currentProject.times) currentProject.times = {};
   currentProject.times[currentType] = startTime;
