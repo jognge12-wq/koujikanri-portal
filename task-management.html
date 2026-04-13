@@ -590,6 +590,7 @@ const HIDDEN_PROGRESS_VALUES = ['引渡し'];
 // ═══════════════════════════════════════════════════════
 let taskCache   = {};   // { propName: [tasks] }
 let propData    = [];   // from Notion
+let propDataLoadedAt = 0; // 最終ロード時刻（物件メニューとの同期チェック用）
 let masterData  = [];
 let phaseList   = [...PHASE_ORDER];
 let masterInit  = false;
@@ -755,6 +756,7 @@ async function loadProperties() {
   document.getElementById('lbl-upd').textContent = '読み込み中…';
   try {
     propData = await api({ mode: 'getProperties' });
+    propDataLoadedAt = Date.now();
     renderProps(propData);
     restoreTaskCacheToUI();  // キャッシュからミニバー・優先パネルを復元
     document.getElementById('lbl-upd').textContent = '更新: ' + now();
@@ -2071,6 +2073,15 @@ loadDisplayState();          // 表示状態（非表示フィルタ・工程開
 restorePrioPanelFromCache(); // 優先パネルを即時表示（物件読み込み前）
 setSortOrder('handover');
 loadProperties();
+
+// 物件メニューで進捗が変更されたらタスクメニューの物件リストを自動で再読み込み
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  try {
+    const invalidatedAt = parseInt(localStorage.getItem('propDataInvalidatedAt') || '0');
+    if (invalidatedAt > propDataLoadedAt) loadProperties();
+  } catch(_) {}
+});
 </script>
 </body>
 </html>

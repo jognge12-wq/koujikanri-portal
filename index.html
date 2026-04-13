@@ -783,20 +783,31 @@
             white-space: nowrap;
         }
         .pcf-status {
-            font-size: 9px;
-            font-weight: 600;
-            color: var(--text2);
-            padding: 2px 7px;
-            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text1);
+            padding: 5px 10px;
+            border-radius: 8px;
             background: var(--surface2);
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
             flex-shrink: 0;
             cursor: pointer;
             font-family: 'Noto Sans JP', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            transition: background .15s;
+            transition: background .15s, border-color .15s;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
         }
-        .pcf-status:active { background: var(--border); }
+        .pcf-status::after {
+            content: '▾';
+            font-size: 9px;
+            opacity: 0.5;
+            line-height: 1;
+        }
+        .pcf-status:active { background: var(--border); border-color: var(--primary); }
         /* Notion リンク（カード下部） */
         .pcf-footer {
             margin-top: 6px;
@@ -2094,6 +2105,33 @@
                 gap: 16px;
                 align-items: start;
             }
+        }
+        /* ===== 引渡し済みセクション ===== */
+        .prop-delivered-hdr {
+            font-size: 12px; font-weight: 700; color: var(--text2);
+            padding: 10px 12px 6px; display: flex; align-items: center; gap: 6px;
+        }
+        .prop-delivered-toggle {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; font-size: 12px; font-weight: 700; color: var(--text1);
+            background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; margin-bottom: 8px; -webkit-tap-highlight-color: transparent;
+        }
+        .prop-delivered-toggle .arr { transition: transform .2s; }
+        .prop-delivered-toggle.open .arr { transform: rotate(180deg); }
+        .prop-delivered-card {
+            background: var(--surface); border-radius: 8px; border-left: 3px solid #9ca3af;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 8px 10px; margin-bottom: 6px;
+        }
+        .prop-delivered-card-name {
+            font-size: 12px; font-weight: 700; color: var(--text1);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .prop-delivered-card-meta { font-size: 10px; color: var(--text3); margin-top: 3px; }
+        /* PC専用: 引渡し済みトグル（スマホはタブで制御） */
+        .prop-delivered-wrap { display: none; }
+        @media (min-width: 900px) {
+            .prop-delivered-wrap { display: block; margin-top: 12px; }
         }
         /* ===== 物件タブ: PC左右分割 ===== */
         .prop-split-wrap { display: none; }
@@ -4177,12 +4215,40 @@
 
         function renderStatusCards() {
 
+            // ─ 当日の着工・引渡しをGASリストに補完（GASが当日を除外している場合の対策）─
+            (function supplementToday() {
+                const now = new Date();
+                const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const todayFmt = `${now.getMonth()+1}/${now.getDate()}`;
+                function addIfMissing(list, name) {
+                    if (!list.find(x => x.name === name && x.date === todayFmt)) {
+                        list.unshift({ name, date: todayFmt });
+                    }
+                }
+                const allProps = [...(properties || []), ...(preconProperties || [])];
+                allProps.forEach(p => {
+                    if (!p.dates) return;
+                    // 着工
+                    if (p.dates.着工) {
+                        const d = new Date(p.dates.着工); d.setHours(0,0,0,0);
+                        if (d.getTime() === todayMs) addIfMissing(monthlyStarts, p.name);
+                    }
+                    // 引渡し
+                    if (p.dates.引渡) {
+                        const d = new Date(p.dates.引渡); d.setHours(0,0,0,0);
+                        if (d.getTime() === todayMs) addIfMissing(monthlyDeliveries, p.name);
+                    }
+                });
+            })();
+
             const chevronSvg = '<svg class="status-card-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
 
             function buildListHtml(items, emptyText, markDone) {
                 if (items.length === 0) return `<div class="status-card-empty">${emptyText}</div>`;
                 const now = new Date();
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                // 翌日から「済」表示にする（当日は「予定」として表示）
+                const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
                 return items.map(d => {
                     const parts = d.date.split('/');
                     const itemDate = new Date(now.getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
@@ -4932,6 +4998,8 @@
                 const json = await res.json();
                 if (!json.ok) throw new Error(json.error);
                 showSyncToast(`✓ 進捗を「${progress}」に変更しました`);
+                // タスクメニューに変更を通知（visibilitychange で再読み込みさせる）
+                try { localStorage.setItem('propDataInvalidatedAt', String(Date.now())); } catch(_) {}
 
                 // 「引渡し」になったら物件カードをリストから除去
                 if (progress === '引渡し') {
@@ -5039,8 +5107,15 @@
                 <div class="filter-tabs prop-mobile-tabs" id="propFilterTabs" style="display:flex;align-items:center;">
                     <div class="filter-tab active" data-pfilter="shikakari">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
                     <div class="filter-tab" data-pfilter="precon">着工前 <span class="tab-count">${preconProperties.length}</span></div>
+                    <div class="filter-tab" data-pfilter="delivered">引渡し済み</div>
                 </div>
+                <!-- スマホ: 仕掛り/着工前リスト -->
                 <div id="propTabList" class="prop-mobile-list"></div>
+                <!-- スマホ: 引渡し済みセクション -->
+                <div id="propDeliveredMobile" class="prop-mobile-list" style="display:none">
+                    <div class="filter-tabs" id="propYearTabsMob" style="margin-bottom:10px;"></div>
+                    <div id="propDeliveredListMob"></div>
+                </div>
                 <!-- PC: 左右分割（スマホでは非表示） -->
                 <div class="prop-split-wrap">
                     <div class="prop-split-col">
@@ -5052,13 +5127,33 @@
                         <div id="propPreconList">${buildPropItems(sortedPrecon)}</div>
                     </div>
                 </div>
+                <!-- PC: 引渡し済みセクション（トグル） -->
+                <div class="prop-delivered-wrap">
+                    <button class="prop-delivered-toggle" id="propDeliveredToggleBtn" onclick="toggleDeliveredSection()">
+                        <span>📦 引渡し済み物件</span>
+                        <svg class="arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div id="propDeliveredPC" style="display:none">
+                        <div class="filter-tabs" id="propYearTabsPC" style="margin-bottom:10px;"></div>
+                        <div id="propDeliveredListPC" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;"></div>
+                    </div>
+                </div>
             </div>`;
 
             // スマホ用タブ切り替え
             function renderMobilePropList(filter) {
-                const list = filter === 'shikakari' ? sortedShikakari : sortedPrecon;
-                const listEl = document.getElementById('propTabList');
-                if (listEl) { listEl.innerHTML = buildPropItems(list); }
+                const tabList = document.getElementById('propTabList');
+                const delivMob = document.getElementById('propDeliveredMobile');
+                if (filter === 'delivered') {
+                    if (tabList) tabList.style.display = 'none';
+                    if (delivMob) delivMob.style.display = '';
+                    loadDeliveredProperties('mob');
+                } else {
+                    if (tabList) tabList.style.display = '';
+                    if (delivMob) delivMob.style.display = 'none';
+                    const list = filter === 'shikakari' ? sortedShikakari : sortedPrecon;
+                    if (tabList) tabList.innerHTML = buildPropItems(list);
+                }
             }
             renderMobilePropList('shikakari');
 
@@ -5071,6 +5166,102 @@
             });
 
             // 物件データはfetchLiveDataで自動取得済み
+        }
+
+        // ===== 引渡し済み物件 機能 =====
+        let _deliveredCache = null; // { year: [{name,city,handover,notionPageId}] }
+
+        async function loadDeliveredProperties(view) {
+            // キャッシュがあれば再利用
+            if (_deliveredCache) { renderDeliveredGroups(_deliveredCache, view); return; }
+
+            const listId = view === 'mob' ? 'propDeliveredListMob' : 'propDeliveredListPC';
+            const yearId = view === 'mob' ? 'propYearTabsMob' : 'propYearTabsPC';
+            const listEl = document.getElementById(listId);
+            const yearEl = document.getElementById(yearId);
+            if (!listEl) return;
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;"><div class="spin"></div></div>';
+            if (yearEl) yearEl.innerHTML = '';
+
+            try {
+                const gasUrl = getGasTaskUrl();
+                const res = await fetch(`${gasUrl}?mode=getProperties`);
+                const json = await res.json();
+                if (!json.ok) throw new Error(json.error);
+                const delivered = (json.data || []).filter(p => p.progress === '引渡し');
+                // 年度別グループ化（新しい年から順に）
+                const groups = {};
+                delivered.forEach(p => {
+                    const yr = p.handover ? p.handover.split('-')[0] : '年不明';
+                    if (!groups[yr]) groups[yr] = [];
+                    groups[yr].push(p);
+                });
+                // 各年内を引渡し日の降順に並べる
+                Object.values(groups).forEach(g => g.sort((a, b) => (b.handover || '') < (a.handover || '') ? -1 : 1));
+                _deliveredCache = groups;
+                renderDeliveredGroups(groups, view);
+            } catch(e) {
+                if (listEl) listEl.innerHTML = `<div class="err" style="padding:12px">⚠ ${e.message}</div>`;
+            }
+        }
+
+        function renderDeliveredGroups(groups, view) {
+            const listId = view === 'mob' ? 'propDeliveredListMob' : 'propDeliveredListPC';
+            const yearId = view === 'mob' ? 'propYearTabsMob' : 'propYearTabsPC';
+            const listEl = document.getElementById(listId);
+            const yearEl = document.getElementById(yearId);
+            if (!listEl) return;
+
+            const years = Object.keys(groups).sort((a, b) => b - a); // 新しい年順
+            if (years.length === 0) { listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">引渡し済み物件はありません</div>'; return; }
+
+            // 年タブ
+            if (yearEl) {
+                yearEl.innerHTML = years.map((yr, i) => {
+                    const cnt = groups[yr].length;
+                    return `<div class="filter-tab${i===0?' active':''}" data-yr="${yr}" onclick="selectDeliveredYear('${yr}','${view}')">${yr}年 <span class="tab-count">${cnt}</span></div>`;
+                }).join('');
+            }
+            // 最新年を表示
+            renderDeliveredYear(groups, years[0], view);
+        }
+
+        function selectDeliveredYear(yr, view) {
+            const yearId = view === 'mob' ? 'propYearTabsMob' : 'propYearTabsPC';
+            const yearEl = document.getElementById(yearId);
+            if (yearEl) {
+                yearEl.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.yr === yr));
+            }
+            if (_deliveredCache) renderDeliveredYear(_deliveredCache, yr, view);
+        }
+
+        function renderDeliveredYear(groups, yr, view) {
+            const listId = view === 'mob' ? 'propDeliveredListMob' : 'propDeliveredListPC';
+            const listEl = document.getElementById(listId);
+            if (!listEl) return;
+            const props = groups[yr] || [];
+            if (props.length === 0) { listEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;">' + yr + '年の引渡しはありません</div>'; return; }
+            listEl.innerHTML = props.map(p => {
+                const notionId = p.notionPageId || '';
+                const dateStr = p.handover ? p.handover.replace(/-/g, '/') : '';
+                return `<div class="prop-delivered-card">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                        <div class="prop-delivered-card-name">${p.name}</div>
+                        ${notionId ? `<a href="https://www.notion.so/${notionId}" target="_blank" rel="noopener" style="font-size:9px;color:var(--primary);text-decoration:none;flex-shrink:0;" onclick="event.stopPropagation();">Notion↗</a>` : ''}
+                    </div>
+                    <div class="prop-delivered-card-meta">${[p.city, dateStr ? '引渡し: ' + dateStr : ''].filter(Boolean).join('　')}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleDeliveredSection() {
+            const btn = document.getElementById('propDeliveredToggleBtn');
+            const content = document.getElementById('propDeliveredPC');
+            if (!btn || !content) return;
+            const isOpen = content.style.display !== 'none';
+            content.style.display = isOpen ? 'none' : '';
+            btn.classList.toggle('open', !isOpen);
+            if (!isOpen) loadDeliveredProperties('pc');
         }
 
         // ===== タスクタブ (チェックボックスなし) =====
