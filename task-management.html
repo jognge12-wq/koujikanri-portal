@@ -107,6 +107,25 @@
     .prop-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
     .prop-progress-badge { font-size: 11px; padding: 2px 9px; border-radius: 10px;
                            background: var(--green-light); color: var(--green); font-weight: 600; }
+    /* 進捗モーダル */
+    .progress-modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.45);
+                         z-index: 310; display: none; align-items: flex-end; justify-content: center; }
+    .progress-modal-bg.on { display: flex; }
+    .progress-sheet { background: var(--card); border-radius: 20px 20px 0 0;
+                      width: 100%; max-width: 480px; padding: 0 0 env(safe-area-inset-bottom);
+                      box-shadow: 0 -8px 32px rgba(0,0,0,.15); }
+    .progress-sheet-head { padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+                           display: flex; align-items: center; justify-content: space-between; }
+    .progress-sheet-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+    .progress-sheet-sub { font-size: 11px; color: var(--t3); margin-top: 2px; }
+    .progress-option-list { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .progress-option { display: flex; align-items: center; padding: 12px 14px; border-radius: 10px;
+                       font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
+                       background: var(--card); color: var(--t1); font-family: var(--fp);
+                       -webkit-tap-highlight-color: transparent; transition: all .15s; gap: 10px; }
+    .progress-option:active { background: var(--bg); }
+    .progress-option.current { border-color: var(--green); background: var(--green-light); color: var(--green); }
+    .progress-option-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .prop-done-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px;
                        background: var(--border); color: var(--t3); }
     .prop-arrow { width: 16px; height: 16px; color: var(--t3);
@@ -375,8 +394,23 @@
     .prio-panel.open .prio-panel-arr { transform: rotate(180deg); }
     .prio-body { display: none; border-top: 1px solid #fecaca; }
     .prio-panel.open .prio-body { display: block; }
+    /* ─ 優先タスク グループ ──────────────────────────────────── */
+    .prio-group { border-bottom: 1px solid #fecaca; }
+    .prio-group:last-child { border-bottom: none; }
+    .prio-group-hdr { display: flex; align-items: center; gap: 8px;
+                      padding: 10px 14px; cursor: pointer; user-select: none;
+                      -webkit-tap-highlight-color: transparent; }
+    .prio-group-hdr:active { background: #fff1f1; }
+    .prio-group-name { flex: 1; font-size: 12px; font-weight: 700; color: #991b1b;
+                       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prio-group-cnt { font-size: 10px; background: #dc2626; color: #fff;
+                      border-radius: 10px; padding: 1px 6px; font-weight: 600; flex-shrink: 0; }
+    .prio-group-arr { transition: transform .2s; color: #9ca3af; flex-shrink: 0; }
+    .prio-group.open .prio-group-arr { transform: rotate(90deg); }
+    .prio-group-body { display: none; background: #fffafa; }
+    .prio-group.open .prio-group-body { display: block; }
     .prio-row { display: flex; align-items: flex-start; gap: 10px;
-                padding: 9px 14px; border-bottom: 1px solid #fee2e2; }
+                padding: 9px 14px 9px 22px; border-bottom: 1px solid #fee2e2; }
     .prio-row:last-child { border-bottom: none; }
     .prio-row.done .prio-task-name { color: var(--t3); text-decoration: line-through; }
     .prio-prop { font-size: 10px; color: #b91c1c; font-family: var(--fm);
@@ -520,6 +554,22 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- 進捗変更シート -->
+<div class="progress-modal-bg" id="progressModal" onclick="closeProgressModal(event)">
+  <div class="progress-sheet" onclick="event.stopPropagation()">
+    <div class="progress-sheet-head">
+      <div>
+        <div class="progress-sheet-title" id="progressModalTitle">進捗を変更</div>
+        <div class="progress-sheet-sub" id="progressModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeProgressModal()">✕</button>
+    </div>
+    <div class="progress-option-list" id="progressOptionList">
+      <div class="center"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════
 //  Config
@@ -531,6 +581,9 @@ const PHASE_ORDER = [
   '遣り方検査','配筋検査','型枠検査','基礎検査','建て方','構造検査',
   '構造立会い','雨仕舞い検査','木完検査','木完立会い','竣工検査','竣工立会い','引渡し',
 ];
+
+// 進捗がこれらの値の物件は一覧から非表示にする
+const HIDDEN_PROGRESS_VALUES = ['引渡し'];
 
 // ═══════════════════════════════════════════════════════
 //  State
@@ -706,7 +759,16 @@ async function loadProperties() {
     restoreTaskCacheToUI();  // キャッシュからミニバー・優先パネルを復元
     document.getElementById('lbl-upd').textContent = '更新: ' + now();
   } catch(e) {
-    el.innerHTML = `<div class="err">物件の読み込みに失敗しました<br><small>${esc(e.message)}</small></div>`;
+    el.innerHTML = `<div class="err" style="padding:16px;line-height:1.7">
+      ⚠ 物件の読み込みに失敗しました<br>
+      <span style="font-size:11px;color:var(--t3)">${esc(e.message)}</span><br>
+      <button onclick="loadProperties()" style="margin-top:10px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;">
+        再読み込み
+      </button>
+      <br><span style="font-size:10px;color:var(--t3);margin-top:6px;display:block">
+        ※ GASを再デプロイした場合はURLが変わっていないか確認してください
+      </span>
+    </div>`;
   }
 }
 
@@ -726,10 +788,12 @@ function renderProps(props) {
     el.innerHTML = '<div class="center"><p style="font-size:13px;margin-top:8px">物件が見つかりません</p></div>';
     return;
   }
-  // 引渡し日から7日以上経過した物件は非表示
+  // 非表示条件①: 進捗が「引渡し」などの完了ステータス
+  // 非表示条件②: 引渡し日から7日以上経過
   const today = new Date(); today.setHours(0,0,0,0);
   const limit = 7 * 24 * 60 * 60 * 1000;
   const visible  = props.filter(p => {
+    if (HIDDEN_PROGRESS_VALUES.includes(p.progress)) return false;
     if (!p.handover) return true;
     return (today - new Date(p.handover)) <= limit;
   });
@@ -752,11 +816,11 @@ function renderProps(props) {
     }
   });
   el.innerHTML = sorted.map(p => propCardHTML(p)).join('');
-  // 非表示件数の表示
+  // 非表示件数の表示（進捗「引渡し」+ 引渡し日超過の合計）
   const note = document.getElementById('hidden-props-note');
   if (note) {
     note.style.display = hiddenCnt > 0 ? 'block' : 'none';
-    note.textContent   = `引渡し済み ${hiddenCnt}件を非表示中`;
+    note.textContent   = `完了・引渡し済み ${hiddenCnt}件を非表示中`;
   }
 }
 
@@ -767,7 +831,7 @@ function propCardHTML(p) {
   const handoverFmt = p.handover ? fmtDate(p.handover) : '';
   const cal = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`;
   return `
-<div class="prop-card" id="${cid}" data-prop="${esc(p.name)}" data-alldone="false">
+<div class="prop-card" id="${cid}" data-prop="${esc(p.name)}" data-alldone="false" data-notion-id="${esc(p.notionPageId||'')}" data-progress="${esc(p.progress||'')}">
   <div class="prop-hdr" onclick="toggleProp('${cid}')">
     <div class="prop-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -790,7 +854,7 @@ function propCardHTML(p) {
       </div>` : ''}
     </div>
     <div class="prop-right">
-      ${p.progress ? `<span class="prop-progress-badge">${esc(p.progress)}</span>` : ''}
+      <span class="prop-progress-badge" id="${cid}-prog">${esc(p.progress || '―')}</span>
       <button class="prop-done-phases-btn" id="${cid}-pdtbtn"
         onclick="event.stopPropagation();toggleDonePhases('${cid}')">
         <span id="${cid}-pdtlbl"></span>
@@ -971,8 +1035,7 @@ function toggleDone(phid) {
       : `✓ ${doneCount}`;
     lbl.title = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
   }
-  // 表示時は工程を展開、非表示時は折りたたむ
-  sec.classList.toggle('open', !isHidden);
+  // ※ 開閉状態は変えない（折りたたまずタスクだけ隠す/表示する）
   // 表示状態を保存
   const row = sec.querySelector('.task-row');
   const cid = row ? row.dataset.cid : null;
@@ -1226,6 +1289,7 @@ function refreshProgBar(propName, cid) {
 // ─ 優先タスク パネル ──────────────────────────────────────────
 const PRIO_CACHE_KEY = 'prioTasksCache';
 
+// prio行HTML（グループ表示用：物件名は非表示、工程タグのみ）
 function prioPanelRowHTML(t) {
   return `
 <div class="prio-row${t.done?' done':''}" id="prio-${t.id}">
@@ -1236,9 +1300,28 @@ function prioPanelRowHTML(t) {
     </svg>
   </div>
   <div class="prio-task-name">${esc(t.name)}</div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
-    <span class="prio-prop">${esc(t.propName)}</span>
-    <span class="prio-phase-tag">${esc(t.phase)}</span>
+  <span class="prio-phase-tag">${esc(t.phase)}</span>
+</div>`;
+}
+
+// 物件ごとグループHTML
+function prioPanelGroupHTML(propName, tasks) {
+  const gid   = 'pg-' + slug(propName);
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('prioGroupState') || '{}'); } catch(e) { return {}; } })();
+  const isOpen = saved[gid] !== false; // デフォルト展開
+  return `<div class="prio-group${isOpen?' open':''}" id="${gid}">
+  <div class="prio-group-hdr" onclick="togglePrioGroup('${esc(gid)}')">
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="#dc2626" stroke="none" style="flex-shrink:0">
+      <polygon points="12,2 22,12 12,22 2,12"/>
+    </svg>
+    <span class="prio-group-name">${esc(propName)}</span>
+    <span class="prio-group-cnt">${tasks.length}</span>
+    <svg class="prio-group-arr" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="9,18 15,12 9,6"/>
+    </svg>
+  </div>
+  <div class="prio-group-body">
+    ${tasks.map(prioPanelRowHTML).join('')}
   </div>
 </div>`;
 }
@@ -1249,7 +1332,7 @@ function refreshPrioPanel() {
   const cntBadge = document.getElementById('prio-cnt');
   if (!panel) return;
 
-  // taskCacheから全物件の優先タスクを集約（taskCacheはlocalStorageで永続化済み）
+  // taskCacheから全物件の優先タスクを集約
   const rows = [];
   Object.entries(taskCache).forEach(([propName, tasks]) => {
     (tasks || []).forEach(t => {
@@ -1264,7 +1347,14 @@ function refreshPrioPanel() {
   cntBadge.textContent = rows.length;
   panel.style.display  = rows.length > 0 ? '' : 'none';
   if (rows.length === 0) return;
-  body.innerHTML = rows.map(prioPanelRowHTML).join('');
+
+  // 物件ごとにグループ化
+  const groups = {};
+  rows.forEach(t => {
+    if (!groups[t.propName]) groups[t.propName] = [];
+    groups[t.propName].push(t);
+  });
+  body.innerHTML = Object.entries(groups).map(([pn, ts]) => prioPanelGroupHTML(pn, ts)).join('');
 }
 
 function restorePrioPanelFromCache() {
@@ -1276,12 +1366,31 @@ function restorePrioPanelFromCache() {
     const cntBadge = document.getElementById('prio-cnt');
     cntBadge.textContent = cached.length;
     panel.style.display  = '';
-    body.innerHTML = cached.map(prioPanelRowHTML).join('');
+    // キャッシュからもグループ表示
+    const groups = {};
+    cached.forEach(t => {
+      if (!groups[t.propName]) groups[t.propName] = [];
+      groups[t.propName].push(t);
+    });
+    body.innerHTML = Object.entries(groups).map(([pn, ts]) => prioPanelGroupHTML(pn, ts)).join('');
   } catch(e) {}
 }
 
 function togglePrioPanel() {
   document.getElementById('prio-panel').classList.toggle('open');
+}
+
+// 物件グループの開閉
+function togglePrioGroup(gid) {
+  const el = document.getElementById(gid);
+  if (!el) return;
+  el.classList.toggle('open');
+  // 状態を保存
+  try {
+    const saved = JSON.parse(localStorage.getItem('prioGroupState') || '{}');
+    saved[gid] = el.classList.contains('open');
+    localStorage.setItem('prioGroupState', JSON.stringify(saved));
+  } catch(e) {}
 }
 
 // ─ 優先トグル ─────────────────────────────────────────────────
@@ -1318,6 +1427,123 @@ async function togglePriority(id, propName, cid) {
     refreshPrioPanel();
     showToast('エラー: ' + e.message);
   }
+}
+
+// ═══════════════════════════════════════════════════════
+//  進捗変更モーダル
+// ═══════════════════════════════════════════════════════
+let _progressOptions = null; // キャッシュ
+let _progressTargetCid = null;
+
+// Notionのselectオプション色 → CSS変数にマッピング
+const NOTION_COLOR_MAP = {
+  default: '#9ca3af', gray: '#9ca3af', brown: '#92400e', orange: '#f97316',
+  yellow: '#f59e0b', green: '#16a34a', blue: '#2563eb', purple: '#7c3aed',
+  pink: '#db2777', red: '#ef4444',
+};
+
+async function openProgressModal(cid) {
+  const card = document.getElementById(cid);
+  if (!card) return;
+  const propName   = card.dataset.prop;
+  const currentProg = card.dataset.progress || '';
+  const notionId   = card.dataset.notionId;
+
+  _progressTargetCid = cid;
+  document.getElementById('progressModalTitle').textContent = '進捗を変更';
+  document.getElementById('progressModalSub').textContent   = propName;
+  document.getElementById('progressModal').classList.add('on');
+
+  const listEl = document.getElementById('progressOptionList');
+
+  // オプションをまだ取得していなければAPIへ
+  if (!_progressOptions) {
+    listEl.innerHTML = '<div class="center"><div class="spin"></div></div>';
+    try {
+      _progressOptions = await api({ mode: 'getProgressOptions' });
+    } catch(e) {
+      listEl.innerHTML = `<div class="err">選択肢の取得に失敗しました<br><small>${esc(e.message)}</small></div>`;
+      return;
+    }
+  }
+
+  listEl.innerHTML = _progressOptions.map(opt => {
+    const color = NOTION_COLOR_MAP[opt.color] || '#9ca3af';
+    const isCurrent = opt.name === currentProg;
+    return `
+<button class="progress-option${isCurrent?' current':''}"
+  onclick="selectProgress('${esc(opt.name)}')">
+  <span class="progress-option-dot" style="background:${color}"></span>
+  ${esc(opt.name)}
+  ${isCurrent ? '<span style="margin-left:auto;font-size:10px;color:var(--green)">現在</span>' : ''}
+</button>`;
+  }).join('');
+}
+
+function closeProgressModal(e) {
+  if (e && e.target !== document.getElementById('progressModal')) return;
+  document.getElementById('progressModal').classList.remove('on');
+  _progressTargetCid = null;
+}
+
+async function selectProgress(progress) {
+  const cid = _progressTargetCid;
+  if (!cid) return;
+  const card = document.getElementById(cid);
+  if (!card) return;
+
+  const notionId = card.dataset.notionId;
+  if (!notionId) { showToast('Notion IDが見つかりません'); return; }
+
+  document.getElementById('progressModal').classList.remove('on');
+
+  // バッジを即更新（楽観的UI）
+  const badge = document.getElementById(cid + '-prog');
+  const oldProgress = card.dataset.progress;
+  if (badge) badge.textContent = progress;
+  card.dataset.progress = progress;
+
+  try {
+    await api({ mode: 'updatePropertyProgress', pageId: notionId, progress });
+    showToast(`✓ 進捗を「${progress}」に変更しました`);
+
+    // 「引渡し」など非表示対象になった場合はカードをフェードアウトして除去
+    if (HIDDEN_PROGRESS_VALUES.includes(progress)) {
+      card.style.transition = 'opacity .4s, max-height .5s';
+      card.style.opacity = '0';
+      card.style.overflow = 'hidden';
+      setTimeout(() => {
+        card.style.maxHeight = '0';
+        card.style.margin = '0';
+        setTimeout(() => {
+          card.remove();
+          // propData の progress も更新
+          const pd = propData.find(p => p.name === card.dataset.prop);
+          if (pd) pd.progress = progress;
+          // 非表示件数を更新
+          const note = document.getElementById('hidden-props-note');
+          if (note) {
+            const cnt = parseInt(note.textContent) || 0;
+            note.style.display = 'block';
+            note.textContent = `引渡し済み ${hiddenProgressCount()} 件を非表示中`;
+          }
+        }, 500);
+      }, 400);
+    } else {
+      // 非表示対象でなければ propData も更新
+      const pd = propData.find(p => p.name === card.dataset.prop);
+      if (pd) pd.progress = progress;
+    }
+  } catch(e) {
+    // ロールバック
+    if (badge) badge.textContent = oldProgress || '未設定';
+    card.dataset.progress = oldProgress;
+    showToast('エラー: ' + e.message);
+  }
+}
+
+function hiddenProgressCount() {
+  return (propData || []).filter(p => HIDDEN_PROGRESS_VALUES.includes(p.progress)).length;
 }
 
 function checkAllDone(propName, cid) {
