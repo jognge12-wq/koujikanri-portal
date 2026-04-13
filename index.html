@@ -2035,7 +2035,7 @@
             .task-inner-pane { display: block !important; }
             .task-split-wrap {
                 display: grid;
-                grid-template-columns: 1fr 2fr;
+                grid-template-columns: 2fr 1fr;
                 gap: 16px;
                 align-items: start;
             }
@@ -4974,14 +4974,17 @@
             const genbaHtml = gasUrl ? renderGenbaTaskPanel() : renderGasSetupPanel();
 
             el.innerHTML = `<div class="tab-pane">
-                <!-- スマホ用内部タブ -->
+                <!-- スマホ用内部タブ（現場タスクをデフォルト表示） -->
                 <div class="task-inner-tabs">
-                    <div class="task-inner-tab active" onclick="switchTaskInnerTab('gtask',this)">Googleタスク</div>
-                    <div class="task-inner-tab" onclick="switchTaskInnerTab('genba',this)">現場タスク</div>
+                    <div class="task-inner-tab active" onclick="switchTaskInnerTab('genba',this)">現場タスク</div>
+                    <div class="task-inner-tab" onclick="switchTaskInnerTab('gtask',this)">Googleタスク</div>
                 </div>
-                <!-- PC分割 / スマホ縦積み -->
+                <!-- PC分割 / スマホ縦積み（現場タスク左・Googleタスク右） -->
                 <div class="task-split-wrap">
-                    <div class="task-inner-pane active" id="taskPane-gtask">
+                    <div class="task-inner-pane active" id="taskPane-genba">
+                        ${genbaHtml}
+                    </div>
+                    <div class="task-inner-pane" id="taskPane-gtask">
                         <div class="card">
                             <div class="card-head">
                                 <div class="card-title">Googleタスク</div>
@@ -4990,9 +4993,6 @@
                             <div style="font-size:11px;color:var(--text2);margin-bottom:10px;font-family:'DM Mono',monospace;">更新: ${googleTasksUpdatedAt}</div>
                             ${gtHtml}
                         </div>
-                    </div>
-                    <div class="task-inner-pane" id="taskPane-genba">
-                        ${genbaHtml}
                     </div>
                 </div>
             </div>`;
