@@ -786,10 +786,48 @@
             font-size: 9px;
             font-weight: 600;
             color: var(--text2);
-            padding: 1px 6px;
-            border-radius: 4px;
+            padding: 2px 7px;
+            border-radius: 6px;
             background: var(--surface2);
+            border: 1px solid var(--border);
             flex-shrink: 0;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition: background .15s;
+        }
+        .pcf-status:active { background: var(--border); }
+        /* 進捗変更シート（物件メニュー用） */
+        .prop-progress-modal-bg {
+            position: fixed; inset: 0; background: rgba(15,23,42,.45);
+            z-index: 310; display: none; align-items: flex-end; justify-content: center;
+        }
+        .prop-progress-modal-bg.on { display: flex; }
+        .prop-progress-sheet {
+            background: #fff; border-radius: 20px 20px 0 0;
+            width: 100%; max-width: 480px; padding: 0 0 env(safe-area-inset-bottom);
+            box-shadow: 0 -8px 32px rgba(0,0,0,.18);
+        }
+        .prop-progress-sheet-head {
+            padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .prop-progress-sheet-title { font-size: 14px; font-weight: 700; color: var(--text1); }
+        .prop-progress-sheet-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+        .prop-progress-option-list { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+        .prop-progress-option {
+            display: flex; align-items: center; padding: 12px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
+            background: #fff; color: var(--text1); font-family: 'Noto Sans JP', sans-serif;
+            -webkit-tap-highlight-color: transparent; transition: all .15s; gap: 10px; width: 100%;
+        }
+        .prop-progress-option:active { background: var(--surface2); }
+        .prop-progress-option.current { border-color: var(--primary); background: var(--primary-l); color: var(--primary); }
+        .prop-progress-option-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .prop-progress-close {
+            width: 28px; height: 28px; background: var(--surface2); border: none;
+            border-radius: 50%; cursor: pointer; font-size: 14px; color: var(--text2);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .pcf-location {
             font-size: 10px;
@@ -4798,6 +4836,121 @@
         }
 
         // ===== 物件タブ =====
+        // ─── 進捗変更モーダル（物件メニュー）─────────────────────────────
+        let _propProgressOptions = null;  // Notionから取得したselectオプション（キャッシュ）
+        let _propProgressTarget  = null;  // { p, cardEl } 編集対象
+
+        const NOTION_DOT_COLORS = {
+            default:'#9ca3af', gray:'#9ca3af', brown:'#92400e', orange:'#f97316',
+            yellow:'#f59e0b', green:'#16a34a', blue:'#2563eb', purple:'#7c3aed',
+            pink:'#db2777',   red:'#ef4444',
+        };
+
+        async function openPropProgressModal(propId) {
+            // properties / preconProperties からidで検索
+            const p = [...properties, ...preconProperties].find(x => x.id === propId);
+            if (!p) return;
+            const cardEl = document.querySelector(
+                `.property-card-full[data-notion-id="${p.notionId}"]`
+            );
+            _propProgressTarget = { p, cardEl };
+
+            document.getElementById('propProgressModalSub').textContent = p.name;
+            document.getElementById('propProgressModal').classList.add('on');
+
+            const listEl = document.getElementById('propProgressOptionList');
+
+            if (!_propProgressOptions) {
+                listEl.innerHTML = '<div style="text-align:center;padding:20px;"><div style="display:inline-block;width:22px;height:22px;border:2px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;"></div></div>';
+                try {
+                    const gasUrl = getGasTaskUrl();
+                    const res = await fetch(`${gasUrl}?mode=getProgressOptions`);
+                    const json = await res.json();
+                    if (!json.ok) throw new Error(json.error);
+                    _propProgressOptions = json.data;
+                } catch(e) {
+                    listEl.innerHTML = `<div style="padding:16px;color:#ef4444;font-size:12px;">選択肢の取得に失敗しました<br><small>${e.message}</small></div>`;
+                    return;
+                }
+            }
+
+            const current = p.shinchoku || '';
+            listEl.innerHTML = _propProgressOptions.map(opt => {
+                const color = NOTION_DOT_COLORS[opt.color] || '#9ca3af';
+                const isCur = opt.name === current;
+                return `<button class="prop-progress-option${isCur?' current':''}"
+                    onclick="selectPropProgress('${opt.name.replace(/'/g,"\\'")}')">
+                    <span class="prop-progress-option-dot" style="background:${color}"></span>
+                    ${opt.name}
+                    ${isCur ? '<span style="margin-left:auto;font-size:10px;">現在</span>' : ''}
+                </button>`;
+            }).join('');
+        }
+
+        function closePropProgressModal(e) {
+            if (e && e.target !== document.getElementById('propProgressModal')) return;
+            document.getElementById('propProgressModal').classList.remove('on');
+            _propProgressTarget = null;
+        }
+
+        async function selectPropProgress(progress) {
+            if (!_propProgressTarget) return;
+            const { p, cardEl } = _propProgressTarget;
+            document.getElementById('propProgressModal').classList.remove('on');
+
+            // 楽観的UI更新
+            const oldShinchoku = p.shinchoku;
+            p.shinchoku = progress;
+            if (cardEl) {
+                const badge = cardEl.querySelector('.pcf-status');
+                if (badge) badge.textContent = progress;
+                // ボーダーカラーも更新
+                const colorMap = {'工事中':'#d97706','竣工':'#9ca3af','着工前':'#3b82f6'};
+                cardEl.style.borderLeftColor = colorMap[progress] || '#9ca3af';
+            }
+
+            try {
+                const gasUrl = getGasTaskUrl();
+                const res = await fetch(`${gasUrl}?mode=updatePropertyProgress&pageId=${encodeURIComponent(p.notionId)}&progress=${encodeURIComponent(progress)}`);
+                const json = await res.json();
+                if (!json.ok) throw new Error(json.error);
+                showSyncToast(`✓ 進捗を「${progress}」に変更しました`);
+
+                // 「引渡し」になったら物件カードをリストから除去
+                if (progress === '引渡し') {
+                    const idx = properties.indexOf(p);
+                    if (idx >= 0) properties.splice(idx, 1);
+                    const idxP = preconProperties.indexOf(p);
+                    if (idxP >= 0) preconProperties.splice(idxP, 1);
+                    if (cardEl) {
+                        cardEl.style.transition = 'opacity .4s';
+                        cardEl.style.opacity = '0';
+                        setTimeout(() => cardEl.remove(), 400);
+                    }
+                }
+            } catch(e) {
+                // ロールバック
+                p.shinchoku = oldShinchoku;
+                if (cardEl) {
+                    const badge = cardEl.querySelector('.pcf-status');
+                    if (badge) badge.textContent = oldShinchoku;
+                    const colorMap = {'工事中':'#d97706','竣工':'#9ca3af','着工前':'#3b82f6'};
+                    cardEl.style.borderLeftColor = colorMap[oldShinchoku] || '#9ca3af';
+                }
+                showSyncToast('エラー: ' + e.message);
+            }
+        }
+
+        function showSyncToast(msg, duration) {
+            const el = document.getElementById('syncToast');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;z-index:500;white-space:nowrap;';
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => { el.style.cssText = ''; }, duration || 3000);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         function renderPropertiesTab() {
             const el = document.getElementById('tab-properties');
             const activeShikakari = properties.filter(p => p.shinchoku !== '引渡し');
@@ -4850,11 +5003,11 @@
                                 <span>残${prog.remaining}日</span>
                            </div>`;
 
-                    return `<div class="property-card-full" style="border-left-color:${bc};">
+                    return `<div class="property-card-full" style="border-left-color:${bc};" data-notion-id="${p.notionId}">
                         <div class="pcf-header">
                             <div class="pcf-name">${p.name}</div>
                             ${notionLink ? `<a href="https://www.notion.so/${p.notionId}" target="_blank" rel="noopener" style="font-size:10px;color:var(--primary);text-decoration:none;flex-shrink:0;" onclick="event.stopPropagation();">Notion↗</a>` : ''}
-                            <span class="pcf-status">${p.shinchoku}</span>
+                            <button class="pcf-status" onclick="event.stopPropagation();openPropProgressModal(${p.id})">${p.shinchoku}</button>
                         </div>
                         ${p.location ? `<div class="pcf-location">${p.location}</div>` : ''}
                         ${progressBlock}
@@ -6159,5 +6312,21 @@
 
     <!-- ===== 同期トースト ===== -->
     <div id="syncToast"></div>
+
+    <!-- ===== 進捗変更シート（物件メニュー） ===== -->
+    <div class="prop-progress-modal-bg" id="propProgressModal" onclick="closePropProgressModal(event)">
+        <div class="prop-progress-sheet" onclick="event.stopPropagation()">
+            <div class="prop-progress-sheet-head">
+                <div>
+                    <div class="prop-progress-sheet-title">進捗を変更</div>
+                    <div class="prop-progress-sheet-sub" id="propProgressModalSub"></div>
+                </div>
+                <button class="prop-progress-close" onclick="closePropProgressModal()">✕</button>
+            </div>
+            <div class="prop-progress-option-list" id="propProgressOptionList">
+                <div style="text-align:center;padding:20px;"><div style="display:inline-block;width:22px;height:22px;border:2px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;"></div></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
