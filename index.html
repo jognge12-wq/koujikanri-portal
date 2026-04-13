@@ -4276,7 +4276,7 @@
                     </div>
                     <div class="status-card has-list" id="deliveredCard">
                         <div class="status-card-header collapsible" id="deliveredToggle">
-                            <span class="status-card-title">引渡し済み</span>
+                            <span class="status-card-title">引渡し済</span>
                             <span style="display:flex;align-items:center;">
                                 <span class="status-card-count">${deliveredProperties.length}件</span>
                                 ${chevronSvg}
@@ -5000,6 +5000,8 @@
                 showSyncToast(`✓ 進捗を「${progress}」に変更しました`);
                 // タスクメニューに変更を通知（visibilitychange で再読み込みさせる）
                 try { localStorage.setItem('propDataInvalidatedAt', String(Date.now())); } catch(_) {}
+                // 引渡し済みタブのキャッシュを無効化（次回タブ表示時に再取得）
+                _deliveredCache = null;
 
                 // 「引渡し」になったら物件カードをリストから除去
                 if (progress === '引渡し') {
@@ -5105,9 +5107,9 @@
             el.innerHTML = `<div class="tab-pane">
                 <!-- スマホ: タブ切り替え（PC では非表示） -->
                 <div class="filter-tabs prop-mobile-tabs" id="propFilterTabs" style="display:flex;align-items:center;">
-                    <div class="filter-tab active" data-pfilter="shikakari">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
-                    <div class="filter-tab" data-pfilter="precon">着工前 <span class="tab-count">${preconProperties.length}</span></div>
-                    <div class="filter-tab" data-pfilter="delivered">引渡し済み</div>
+                    <div class="filter-tab active" data-pfilter="shikakari">仕掛り <span class="tab-count">${activeShikakari.length}件</span></div>
+                    <div class="filter-tab" data-pfilter="precon">着工前 <span class="tab-count">${preconProperties.length}件</span></div>
+                    <div class="filter-tab" data-pfilter="delivered">引渡し済</div>
                 </div>
                 <!-- スマホ: 仕掛り/着工前リスト -->
                 <div id="propTabList" class="prop-mobile-list"></div>
@@ -5119,18 +5121,18 @@
                 <!-- PC: 左右分割（スマホでは非表示） -->
                 <div class="prop-split-wrap">
                     <div class="prop-split-col">
-                        <div class="prop-split-head">仕掛り <span class="tab-count">${activeShikakari.length}</span></div>
+                        <div class="prop-split-head">仕掛り <span class="tab-count">${activeShikakari.length}件</span></div>
                         <div id="propShikakariList">${buildPropItems(sortedShikakari)}</div>
                     </div>
                     <div class="prop-split-col">
-                        <div class="prop-split-head">着工前 <span class="tab-count">${preconProperties.length}</span></div>
+                        <div class="prop-split-head">着工前 <span class="tab-count">${preconProperties.length}件</span></div>
                         <div id="propPreconList">${buildPropItems(sortedPrecon)}</div>
                     </div>
                 </div>
                 <!-- PC: 引渡し済みセクション（トグル） -->
                 <div class="prop-delivered-wrap">
                     <button class="prop-delivered-toggle" id="propDeliveredToggleBtn" onclick="toggleDeliveredSection()">
-                        <span>📦 引渡し済み物件</span>
+                        <span>📦 引渡し済物件</span>
                         <svg class="arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div id="propDeliveredPC" style="display:none">
@@ -5169,7 +5171,13 @@
         }
 
         // ===== 引渡し済み物件 機能 =====
-        let _deliveredCache = null; // { year: [{name,city,handover,notionPageId}] }
+        let _deliveredCache = null; // { 'YYYY-MM': [{name,city,handover,notionPageId}] }
+
+        // "2026-03" → "2026.3" 表示ラベルに変換
+        function ymLabel(ym) {
+            if (!ym || ym === '不明') return '不明';
+            return ym.replace(/^(\d{4})-0?(\d+)$/, '$1.$2');
+        }
 
         async function loadDeliveredProperties(view) {
             // キャッシュがあれば再利用
@@ -5189,15 +5197,15 @@
                 const json = await res.json();
                 if (!json.ok) throw new Error(json.error);
                 const delivered = (json.data || []).filter(p => p.progress === '引渡し');
-                // 年度別グループ化（新しい年から順に）
+                // 年月別グループ化（"YYYY-MM"キー）
                 const groups = {};
                 delivered.forEach(p => {
-                    const yr = p.handover ? p.handover.split('-')[0] : '年不明';
-                    if (!groups[yr]) groups[yr] = [];
-                    groups[yr].push(p);
+                    const ym = p.handover ? p.handover.substring(0, 7) : '不明'; // "2026-03"
+                    if (!groups[ym]) groups[ym] = [];
+                    groups[ym].push(p);
                 });
-                // 各年内を引渡し日の降順に並べる
-                Object.values(groups).forEach(g => g.sort((a, b) => (b.handover || '') < (a.handover || '') ? -1 : 1));
+                // 各月内を引渡し日の降順に並べる
+                Object.values(groups).forEach(g => g.sort((a, b) => (b.handover || '') > (a.handover || '') ? 1 : -1));
                 _deliveredCache = groups;
                 renderDeliveredGroups(groups, view);
             } catch(e) {
@@ -5212,18 +5220,19 @@
             const yearEl = document.getElementById(yearId);
             if (!listEl) return;
 
-            const years = Object.keys(groups).sort((a, b) => b - a); // 新しい年順
-            if (years.length === 0) { listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">引渡し済み物件はありません</div>'; return; }
+            // 新しい年月順（降順）
+            const months = Object.keys(groups).sort((a, b) => b > a ? 1 : -1);
+            if (months.length === 0) { listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">引渡し済物件はありません</div>'; return; }
 
-            // 年タブ
+            // 年月タブ（YYYY.M 形式）
             if (yearEl) {
-                yearEl.innerHTML = years.map((yr, i) => {
-                    const cnt = groups[yr].length;
-                    return `<div class="filter-tab${i===0?' active':''}" data-yr="${yr}" onclick="selectDeliveredYear('${yr}','${view}')">${yr}年 <span class="tab-count">${cnt}</span></div>`;
+                yearEl.innerHTML = months.map((ym, i) => {
+                    const cnt = groups[ym].length;
+                    return `<div class="filter-tab${i===0?' active':''}" data-yr="${ym}" onclick="selectDeliveredYear('${ym}','${view}')">${ymLabel(ym)} <span class="tab-count">${cnt}件</span></div>`;
                 }).join('');
             }
-            // 最新年を表示
-            renderDeliveredYear(groups, years[0], view);
+            // 最新月を表示
+            renderDeliveredYear(groups, months[0], view);
         }
 
         function selectDeliveredYear(yr, view) {
@@ -5240,7 +5249,7 @@
             const listEl = document.getElementById(listId);
             if (!listEl) return;
             const props = groups[yr] || [];
-            if (props.length === 0) { listEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;">' + yr + '年の引渡しはありません</div>'; return; }
+            if (props.length === 0) { listEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px;">' + ymLabel(yr) + 'の引渡しはありません</div>'; return; }
             listEl.innerHTML = props.map(p => {
                 const notionId = p.notionPageId || '';
                 const dateStr = p.handover ? p.handover.replace(/-/g, '/') : '';

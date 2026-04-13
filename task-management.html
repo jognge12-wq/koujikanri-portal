@@ -2075,6 +2075,13 @@ setSortOrder('handover');
 loadProperties();
 
 // 物件メニューで進捗が変更されたらタスクメニューの物件リストを自動で再読み込み
+// ① 同一ブラウザの別タブからの通知（storage イベント — 最も確実）
+window.addEventListener('storage', (e) => {
+  if (e.key === 'propDataInvalidatedAt') {
+    try { loadProperties(); } catch(_) {}
+  }
+});
+// ② タブ切り替え時の確認（アプリ切り替えや同一タブ遷移に対応）
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   try {
