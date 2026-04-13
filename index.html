@@ -797,6 +797,23 @@
             transition: background .15s;
         }
         .pcf-status:active { background: var(--border); }
+        /* Notion リンク（カード下部） */
+        .pcf-footer {
+            margin-top: 6px;
+            padding-top: 5px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+        }
+        .pcf-notion-link {
+            font-size: 10px;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 2px 4px;
+            border-radius: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pcf-notion-link:active { background: var(--surface2); }
         /* 進捗変更シート（物件メニュー用） */
         .prop-progress-modal-bg {
             position: fixed; inset: 0; background: rgba(15,23,42,.45);
@@ -5006,13 +5023,13 @@
                     return `<div class="property-card-full" style="border-left-color:${bc};" data-notion-id="${p.notionId}">
                         <div class="pcf-header">
                             <div class="pcf-name">${p.name}</div>
-                            ${notionLink ? `<a href="https://www.notion.so/${p.notionId}" target="_blank" rel="noopener" style="font-size:10px;color:var(--primary);text-decoration:none;flex-shrink:0;" onclick="event.stopPropagation();">Notion↗</a>` : ''}
                             <button class="pcf-status" onclick="event.stopPropagation();openPropProgressModal(${p.id})">${p.shinchoku}</button>
                         </div>
                         ${p.location ? `<div class="pcf-location">${p.location}</div>` : ''}
                         ${progressBlock}
                         ${datesHtml ? `<div class="pcf-section"><div class="pcf-dates-inline">${datesHtml}</div></div>` : ''}
                         ${checksHtml ? `<div class="pcf-section"><div class="pcf-section-title">チェックリスト</div><div class="pcf-checks-inline">${checksHtml}</div></div>` : ''}
+                        ${notionLink ? `<div class="pcf-footer"><a href="https://www.notion.so/${p.notionId}" target="_blank" rel="noopener" class="pcf-notion-link" onclick="event.stopPropagation();">Notion で開く ↗</a></div>` : ''}
                     </div>`;
                 }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">物件なし</div>';
             }
