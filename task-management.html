@@ -128,8 +128,8 @@
     /* ─ Phase section ───────────────────────────────────────── */
     .phase-sec { border-bottom: 1px solid var(--border); }
     .phase-sec:last-child { border-bottom: none; }
-    .phase-hdr { display: flex; align-items: center; padding: 13px 14px 13px 12px; cursor: pointer;
-                 gap: 7px; background: var(--bg); user-select: none;
+    .phase-hdr { display: flex; align-items: center; padding: 0 0 0 12px; cursor: pointer;
+                 gap: 6px; background: var(--bg); user-select: none;
                  -webkit-tap-highlight-color: transparent; min-height: 48px; }
     .phase-sec.open .phase-hdr { background: #f0f6f2; }
     .phase-hdr:active { background: var(--green-light); }
@@ -141,12 +141,18 @@
                  padding: 1px 7px; border-radius: 10px; }
     .phase-badge { font-size: 10px; padding: 1px 7px; background: var(--green-light);
                    color: var(--green); border-radius: 8px; font-weight: 600; }
-    .phase-arr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; flex-shrink: 0; }
+    /* 展開矢印：右端に独立したタップゾーンを設ける（誤タップ防止） */
+    .phase-expand-zone { display: flex; align-items: center; justify-content: center;
+                         width: 44px; height: 48px; flex-shrink: 0;
+                         border-left: 1px solid var(--border); margin-left: 2px; }
+    .phase-arr { width: 13px; height: 13px; color: var(--t3); transition: transform .18s; }
     .phase-sec.open .phase-arr { transform: rotate(180deg); }
+    /* 全完了/全解除ボタン：左端に配置してタップ領域を分離 */
     .phase-all-btn { background: none; border: 1px solid var(--border); border-radius: 6px;
-                     padding: 3px 9px; font-size: 10px; color: var(--t3); cursor: pointer;
+                     padding: 0 9px; font-size: 10px; color: var(--t3); cursor: pointer;
                      font-family: var(--fp); flex-shrink: 0; white-space: nowrap;
-                     -webkit-tap-highlight-color: transparent; transition: all .15s; min-height: 28px; }
+                     -webkit-tap-highlight-color: transparent; transition: all .15s;
+                     height: 28px; line-height: 28px; }
     .phase-all-btn:active { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
 
     /* ─ Task list ───────────────────────────────────────────── */
@@ -166,12 +172,15 @@
                              cursor: pointer; font-family: var(--fp); white-space: nowrap;
                              -webkit-tap-highlight-color: transparent; }
     .prop-done-phases-btn:active { background: var(--green-light); color: var(--green); border-color: var(--green-mid); }
-    /* 工程ヘッダー内：完了タスクトグルボタン */
-    .phase-done-btn { background: none; border: none; cursor: pointer; font-size: 10px;
-                      color: var(--green-mid); font-family: var(--fp); padding: 2px 4px;
-                      flex-shrink: 0; white-space: nowrap;
-                      -webkit-tap-highlight-color: transparent; }
-    .phase-done-btn:active { opacity: .7; }
+    /* 工程ヘッダー内：完了タスクトグルボタン（✓ N バッジ） */
+    .phase-done-btn { background: var(--green-light); border: 1px solid #c5dfd0; border-radius: 6px;
+                      cursor: pointer; font-size: 10px; color: var(--green);
+                      display: inline-flex; align-items: center;
+                      padding: 0 7px; height: 22px; font-family: var(--fm); font-weight: 600;
+                      flex-shrink: 0; -webkit-tap-highlight-color: transparent; transition: all .15s; }
+    .phase-done-btn:active { background: #d0e9d8; }
+    /* 非表示中: グレーアウト＋取り消し線 */
+    .phase-sec.hide-done .phase-done-btn { background: var(--bg); color: var(--t3); border-color: var(--border); }
     .chk { width: 19px; height: 19px; border: 2px solid var(--border); border-radius: 5px;
            flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex;
            align-items: center; justify-content: center; transition: all .15s;
@@ -534,19 +543,69 @@ let masterInit  = false;
 let historyInit = false;
 let propSortOrder = 'handover'; // 'handover' | 'start' | 'name'
 
-const TASK_CACHE_KEY = 'taskCacheV1';
+const TASK_CACHE_KEY   = 'taskCacheV1';
+const TASK_CACHE_TS_KEY = 'taskCacheTsV1';   // キャッシュ取得時刻 { propName: timestamp }
+const DISPLAY_STATE_KEY = 'displayStateV2';  // 表示状態 { cid: { hideDonePhases, phases:{phid:{hideDone,open}} } }
+const CACHE_TTL = 15 * 60 * 1000;           // 15分でキャッシュ期限切れ
+
+let taskCacheTs = {};   // { propName: Date.now() }
+let displayState = {};  // 表示状態（localStorage と同期）
+
 let _saveCacheTimer;
 function saveTaskCache() {
   clearTimeout(_saveCacheTimer);
   _saveCacheTimer = setTimeout(() => {
-    try { localStorage.setItem(TASK_CACHE_KEY, JSON.stringify(taskCache)); } catch(e) {}
+    try {
+      localStorage.setItem(TASK_CACHE_KEY, JSON.stringify(taskCache));
+      localStorage.setItem(TASK_CACHE_TS_KEY, JSON.stringify(taskCacheTs));
+    } catch(e) {}
   }, 600);
 }
 function restoreTaskCache() {
   try {
     const saved = JSON.parse(localStorage.getItem(TASK_CACHE_KEY) || 'null');
     if (saved && typeof saved === 'object') Object.assign(taskCache, saved);
+    const savedTs = JSON.parse(localStorage.getItem(TASK_CACHE_TS_KEY) || 'null');
+    if (savedTs && typeof savedTs === 'object') Object.assign(taskCacheTs, savedTs);
   } catch(e) {}
+}
+
+// ─ 表示状態の保存・復元 ────────────────────────────────────────
+function saveDisplayState() {
+  try { localStorage.setItem(DISPLAY_STATE_KEY, JSON.stringify(displayState)); } catch(e) {}
+}
+function loadDisplayState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DISPLAY_STATE_KEY) || '{}');
+    if (saved && typeof saved === 'object') displayState = saved;
+  } catch(e) {}
+}
+// renderPropTasks 後に呼んで非表示状態と工程の開閉状態を復元
+function restoreDisplayStateToCard(cid, propName) {
+  const state = displayState[cid];
+  if (!state) return;
+  const pw = document.getElementById(cid + '-pw');
+  if (pw && state.hideDonePhases) {
+    pw.classList.add('hide-done-phases');
+  }
+  if (state.phases) {
+    Object.entries(state.phases).forEach(([phid, ps]) => {
+      const sec = document.getElementById(phid);
+      if (!sec) return;
+      if (ps.hideDone) {
+        sec.classList.add('hide-done');
+        // 目アイコンを「非表示中」に更新
+        const dtlbl = document.getElementById(phid + '-dtlbl');
+        const dtbtn = document.getElementById(phid + '-dtbtn');
+        if (dtlbl) {
+          const doneCount = sec.querySelectorAll('.task-row.done').length;
+          dtlbl.innerHTML = `<s>✓ ${doneCount}</s>`;
+          if (dtbtn) dtbtn.title = `完了${doneCount}件を表示`;
+        }
+      }
+      if (ps.open) sec.classList.add('open');
+    });
+  }
 }
 // カード描画後にキャッシュからミニバー・完了バッジ・優先パネルを復元
 function restoreTaskCacheToUI() {
@@ -616,7 +675,8 @@ async function refreshAllTasks() {
     const cid = card.id;
     try {
       const tasks = await api({ mode: 'getTasks', property: propName });
-      taskCache[propName] = tasks;
+      taskCache[propName]   = tasks;
+      taskCacheTs[propName] = Date.now();
       // 展開中のカードは再レンダリング
       if (card.classList.contains('open')) {
         const wrap = document.getElementById(cid + '-pw');
@@ -753,10 +813,13 @@ async function toggleProp(cid) {
   if (!wasOpen) {
     const propName = card.dataset.prop;
     const wrap = document.getElementById(cid + '-pw');
-    if (taskCache[propName]) {
-      // キャッシュあり → APIを呼ばずそのままレンダリング
+    const ts  = taskCacheTs[propName];
+    const stale = !ts || (Date.now() - ts) > CACHE_TTL;
+    if (taskCache[propName] && !stale) {
+      // キャッシュあり・有効期限内 → APIを呼ばずそのままレンダリング
       renderPropTasks(propName, cid, taskCache[propName], wrap);
     } else {
+      // キャッシュなし or 期限切れ → APIから再取得（別端末の変更も反映）
       await loadPropTasks(propName, cid);
     }
   }
@@ -767,7 +830,8 @@ async function loadPropTasks(propName, cid) {
   wrap.innerHTML = '<div class="center" style="padding:20px"><div class="spin"></div></div>';
   try {
     const tasks = await api({ mode: 'getTasks', property: propName });
-    taskCache[propName] = tasks;
+    taskCache[propName]   = tasks;
+    taskCacheTs[propName] = Date.now(); // 取得時刻を記録
     renderPropTasks(propName, cid, tasks, wrap);
     saveTaskCache();
   } catch(e) {
@@ -833,6 +897,10 @@ ${phases.map(ph => phaseSecHTML(propName, cid, ph, phaseMap[ph])).join('')}`;
   // prop-hdrの完了工程ボタンを初期化
   updatePhaseDoneToggle(cid, propName);
 
+  // 前回の表示状態（非表示フィルタ・工程開閉）を復元
+  restoreDisplayStateToCard(cid, propName);
+  updatePhaseDoneToggle(cid, propName); // hide-done-phases 復元後に再計算
+
   refreshPrioPanel();
 }
 
@@ -844,20 +912,27 @@ function phaseSecHTML(propName, cid, phase, tasks) {
   return `
 <div class="phase-sec${allDone?' phase-all-done':''}" id="${phid}">
   <div class="phase-hdr" onclick="togglePhase('${phid}')">
-    <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
-    <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
-    <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
-    <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? 'display:block' : 'display:none'}"
-      onclick="event.stopPropagation();toggleDone('${phid}')">
-      <span id="${phid}-dtlbl">${done > 0 ? `完了${done}件を非表示` : ''}</span>
-    </button>
+    <!-- ① 全完了/全解除ボタン：左端に固定（展開矢印と離す） -->
     <button class="phase-all-btn" id="${phid}-allbtn"
       onclick="event.stopPropagation();checkAllPhase('${phid}','${esc(propName)}','${cid}')">
       ${allDone?'全解除':'全完了'}
     </button>
-    <svg class="phase-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="6,9 12,15 18,9"/>
-    </svg>
+    <!-- ② 工程名・カウント・完了バッジ -->
+    <span class="phase-lbl${allDone?' done':''}">${esc(phase)}</span>
+    <span class="phase-cnt" id="${phid}-cnt">${done}/${sorted.length}</span>
+    <span class="${allDone?'phase-badge':''}" id="${phid}-badge">${allDone?'完了':''}</span>
+    <!-- ③ 完了タスク表示切替（✓件数バッジ） -->
+    <button class="phase-done-btn" id="${phid}-dtbtn" style="${done > 0 ? 'display:inline-flex' : 'display:none'}"
+      onclick="event.stopPropagation();toggleDone('${phid}')"
+      title="完了タスクを非表示にする">
+      <span id="${phid}-dtlbl">✓ ${done}</span>
+    </button>
+    <!-- ④ 展開矢印：独立ゾーンに入れてタップ領域を確保 -->
+    <div class="phase-expand-zone">
+      <svg class="phase-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="6,9 12,15 18,9"/>
+      </svg>
+    </div>
   </div>
   <div class="task-list">
     ${sorted.map(t => taskRowHTML(t, propName, cid)).join('')}
@@ -866,19 +941,49 @@ function phaseSecHTML(propName, cid, phase, tasks) {
 }
 
 function togglePhase(phid) {
-  document.getElementById(phid).classList.toggle('open');
+  const sec = document.getElementById(phid);
+  sec.classList.toggle('open');
+  // 工程の開閉状態を保存（cidはphidのプレフィックスから取得）
+  const cidMatch = phid.match(/^(pc-[^-]+-[^-]+)/); // 例: pc-propertyname
+  // phidはcid + '-' + slug(phase) なので最後の-以降を除いたものがcid
+  // ただし slugに'-'が含まれうるので、prop-cardのcidを data-cidで特定する
+  const row = sec.querySelector('.task-row');
+  const cid = row ? row.dataset.cid : null;
+  if (cid) {
+    if (!displayState[cid]) displayState[cid] = {};
+    if (!displayState[cid].phases) displayState[cid].phases = {};
+    if (!displayState[cid].phases[phid]) displayState[cid].phases[phid] = {};
+    displayState[cid].phases[phid].open = sec.classList.contains('open');
+    saveDisplayState();
+  }
 }
 
 function toggleDone(phid) {
   const sec = document.getElementById(phid);
   const lbl = document.getElementById(phid + '-dtlbl');
+  const numEl = document.getElementById(phid + '-dtnum');
   const isHidden = sec.classList.toggle('hide-done');
   if (lbl) {
     const doneCount = sec.querySelectorAll('.task-row.done').length;
-    lbl.textContent = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
+    // 表示中: "✓ N"  /  非表示中: "✓ N" に取り消し線
+    lbl.innerHTML = isHidden
+      ? `<s>✓ ${doneCount}</s>`
+      : `✓ ${doneCount}`;
+    lbl.title = isHidden ? `完了${doneCount}件を表示` : `完了${doneCount}件を非表示`;
   }
   // 表示時は工程を展開、非表示時は折りたたむ
   sec.classList.toggle('open', !isHidden);
+  // 表示状態を保存
+  const row = sec.querySelector('.task-row');
+  const cid = row ? row.dataset.cid : null;
+  if (cid) {
+    if (!displayState[cid]) displayState[cid] = {};
+    if (!displayState[cid].phases) displayState[cid].phases = {};
+    if (!displayState[cid].phases[phid]) displayState[cid].phases[phid] = {};
+    displayState[cid].phases[phid].hideDone = isHidden;
+    displayState[cid].phases[phid].open     = sec.classList.contains('open');
+    saveDisplayState();
+  }
 }
 
 // キャッシュデータから完了工程数を計算（カード折りたたみ時にも対応）
@@ -975,6 +1080,10 @@ function toggleDonePhases(cid) {
   const card = document.getElementById(cid);
   const propName = card ? card.dataset.prop : undefined;
   updatePhaseDoneToggle(cid, propName);
+  // 表示状態を保存
+  if (!displayState[cid]) displayState[cid] = {};
+  displayState[cid].hideDonePhases = wrap.classList.contains('hide-done-phases');
+  saveDisplayState();
 }
 
 function taskRowHTML(task, propName, cid) {
@@ -1081,13 +1190,14 @@ function refreshPhaseHdr(row) {
   // 全完了/全解除ボタンテキストを更新
   const allBtn = document.getElementById(phid + '-allbtn');
   if (allBtn) allBtn.textContent = isAll ? '全解除' : '全完了';
-  // 完了タスクトグルボタンを更新（phase-hdr内）
+  // 完了タスクトグルボタン（目アイコン）を更新
   const dtbtn = document.getElementById(phid + '-dtbtn');
   const dtlbl = document.getElementById(phid + '-dtlbl');
-  if (dtbtn) dtbtn.style.display = done > 0 ? 'block' : 'none';
+  if (dtbtn) dtbtn.style.display = done > 0 ? 'inline-flex' : 'none';
   if (dtlbl && done > 0) {
     const isHide = sec.classList.contains('hide-done');
-    dtlbl.textContent = isHide ? `完了${done}件を表示` : `完了${done}件を非表示`;
+    dtlbl.innerHTML = isHide ? `<s>✓ ${done}</s>` : `✓ ${done}`;
+    dtbtn.title = isHide ? `完了${done}件を表示` : `完了${done}件を非表示`;
   }
   // 完了工程トグルボタン（物件レベル）を更新
   const cid = row.dataset?.cid;
@@ -1731,6 +1841,7 @@ function showToast(msg) {
 //  Init
 // ═══════════════════════════════════════════════════════
 restoreTaskCache();          // タスクキャッシュをlocalStorageから復元
+loadDisplayState();          // 表示状態（非表示フィルタ・工程開閉）を復元
 restorePrioPanelFromCache(); // 優先パネルを即時表示（物件読み込み前）
 setSortOrder('handover');
 loadProperties();
