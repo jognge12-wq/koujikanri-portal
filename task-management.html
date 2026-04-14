@@ -667,6 +667,12 @@ function restoreTaskCacheToUI() {
     const cid = 'pc-' + slug(propName);
     refreshProgBar(propName, cid);
     checkAllDone(propName, cid);
+    // ★ hide-done-phases フラグをDOMに先行反映（updatePhaseDoneToggle が正しいテキストを出すために必要）
+    const state = displayState[cid];
+    if (state && state.hideDonePhases) {
+      const pw = document.getElementById(cid + '-pw');
+      if (pw) pw.classList.add('hide-done-phases');
+    }
     updatePhaseDoneToggle(cid, propName);
   });
   refreshPrioPanel();

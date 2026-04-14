@@ -4224,7 +4224,14 @@
                     });
                     // 物件タブを次回表示時に再レンダリング
                     var _propTab = document.getElementById('tab-properties');
-                    if (_propTab) _propTab.dataset.rendered = '';
+                    if (_propTab) {
+                        _propTab.dataset.rendered = '';
+                        // 現在物件タブが表示中なら即時再レンダリング（ログイン直後の空白を防止）
+                        if (_propTab.classList.contains('active')) {
+                            renderPropertiesTab();
+                            _propTab.dataset.rendered = '1';
+                        }
+                    }
                 }
 
                 // Google Tasks更新（GASからリアルタイム取得）
