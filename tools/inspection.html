@@ -132,27 +132,25 @@ const GAS_CONFIG = {
   <!-- ===== Main View ===== -->
   <div id="main-view">
 
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, #004d29 0%, #00703d 100%);" class="text-white px-5 py-5">
-      <div class="flex items-center gap-3">
-        <!-- ハンバーガー（左上） -->
-        <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
-          <span class="block w-full h-0.5 bg-white rounded-full"></span>
-          <span class="block w-full h-0.5 bg-white rounded-full"></span>
-          <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        </button>
+    <!-- Header（payment.html / schedule.html と同一構造） -->
+    <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex items-center gap-3 flex-shrink-0">
+      <!-- ハンバーガー -->
+      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+      </button>
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
         <div>
-          <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-75">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            <h1 class="text-base font-bold tracking-wide">検査依頼</h1>
-          </div>
-          <p class="text-[11px] text-white/55 mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
+          <h1 class="text-base font-bold tracking-wide">検査依頼</h1>
+          <p class="text-[10px] text-white/65 font-medium mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
         </div>
       </div>
     </div>
