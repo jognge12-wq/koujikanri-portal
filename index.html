@@ -258,9 +258,10 @@
             align-items: center;
             z-index: 99;
             /* iPhone のホームインジケーター・角丸部分への対応 */
+            /* safe-area-insetが0でも物理的な角丸（約44pt）を避けるため最低20pxを確保 */
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            padding-left: max(env(safe-area-inset-left, 0px), 8px);
-            padding-right: max(env(safe-area-inset-right, 0px), 8px);
+            padding-left: max(env(safe-area-inset-left, 0px), 20px);
+            padding-right: max(env(safe-area-inset-right, 0px), 20px);
         }
 
         .bottom-nav-item {
@@ -2009,7 +2010,14 @@
         .tab-content.active { display: block; }
 
         /* ===== 新ボトムナビ（8タブ、アクティブインジケーター付き） ===== */
-        .bottom-nav { height: calc(60px + env(safe-area-inset-bottom, 0px)); align-items: flex-start; padding-top: 4px; }
+        .bottom-nav {
+            height: calc(60px + env(safe-area-inset-bottom, 0px));
+            align-items: flex-start;
+            padding-top: 4px;
+            /* 物理的な角丸を避けるため最低20pxを確保 */
+            padding-left: max(env(safe-area-inset-left, 0px), 20px);
+            padding-right: max(env(safe-area-inset-right, 0px), 20px);
+        }
         .main-content { margin-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
         .bottom-nav-item { position: relative; gap: 2px; }
         .bottom-nav-item.active::before {
