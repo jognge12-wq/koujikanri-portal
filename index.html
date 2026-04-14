@@ -139,7 +139,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: space-between;
             padding: 0 16px;
             z-index: 99;
         }
@@ -194,13 +194,16 @@
             left: -280px;
             top: 0;
             width: 280px;
-            height: 100vh;
+            /* 100dvh: モバイルのアドレスバー表示変化に対応 */
+            height: 100dvh;
+            height: 100vh; /* fallback */
             background-color: var(--surface);
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
             transition: left 0.2s ease;
             z-index: 98;
-            padding: 16px 0;
+            padding: 16px 0 calc(24px + env(safe-area-inset-bottom, 0px));
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
         }
@@ -2998,7 +3001,10 @@
             const input = document.getElementById('pw-input').value;
             if (input === _PW_CORRECT) {
                 sessionStorage.setItem('portal_auth', 'ok');
+                sessionStorage.removeItem('dashCurrentTab');
+                localStorage.removeItem('dashCurrentTab');
                 document.getElementById('pw-overlay').classList.add('hidden');
+                if (typeof switchTab === 'function') switchTab('home');
             } else {
                 const el = document.getElementById('pw-input');
                 el.classList.add('error');
@@ -3072,7 +3078,11 @@
                 });
                 if (assertion) {
                     sessionStorage.setItem('portal_auth', 'ok');
+                    // ホームから始める
+                    sessionStorage.removeItem('dashCurrentTab');
+                    localStorage.removeItem('dashCurrentTab');
                     document.getElementById('pw-overlay').classList.add('hidden');
+                    if (typeof switchTab === 'function') switchTab('home');
                 }
             } catch (e) {
                 btnText.textContent = 'Face ID / Touch ID でログイン';
@@ -3126,12 +3136,12 @@
     </nav>
 
     <div class="top-bar">
-        <span class="top-bar-title" id="topBarTitle" aria-hidden="true">ダッシュボード</span>
         <button class="hamburger" id="hamburger" aria-label="メニューを開く">
             <span></span>
             <span></span>
             <span></span>
         </button>
+        <span class="top-bar-title" id="topBarTitle" aria-hidden="true" style="position:absolute;left:50%;transform:translateX(-50%);font-size:14px;font-weight:600;color:var(--text1);">施工管理ポータル</span>
     </div>
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
@@ -4801,9 +4811,16 @@
                 }
             }
 
+            // _showDayEventsFn をモジュールレベル変数に登録（スワイプ時に参照）
+            _showDayEventsFn = showDayEvents;
+
             el.querySelectorAll('.week-day-cell[data-datems]').forEach(cell => {
                 cell.addEventListener('click', () => {
-                    showDayEvents(parseInt(cell.dataset.datems), cell.dataset.label);
+                    const newMs = parseInt(cell.dataset.datems);
+                    const prev  = _currentSelectedDayMs;
+                    // タップ方向を判定してアニメーション
+                    const dir = (prev === null) ? null : (newMs > prev ? 'right' : newMs < prev ? 'left' : null);
+                    showDayEvents(newMs, cell.dataset.label, dir);
                 });
             });
 
@@ -5567,13 +5584,14 @@
 
         /* ===================================================================
            週間ビュー スワイプ切り替え（左スワイプ→翌日、右スワイプ→前日）
-           ※ 週の変更は矢印ボタンで行う
+           ※ 週の変更は矢印ボタンで行う。週境界を超えると週を切り替え
         =================================================================== */
         let _weekSwipeTouchX = null;
         let _weekSwipeTouchY = null;
         let _weekSwipeEl = null;
         let _currentSelectedDayMs = null;  // 現在選択中の日付（ms）
         let _currentWeekDays = [];          // 現在の週の日付一覧（ms配列）
+        let _showDayEventsFn = null;        // showDayEvents のスコープ参照（_renderWeekViewから設定）
 
         function initWeekSwipe(el, weekDayMsList, selectedMs) {
             _currentWeekDays = weekDayMsList;
@@ -5596,40 +5614,39 @@
                 const dy = e.changedTouches[0].clientY - _weekSwipeTouchY;
                 _weekSwipeTouchX = null;
                 _weekSwipeTouchY = null;
-                // 縦スクロールより横移動が大きい場合のみ判定（閾値40px）
                 if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-                // 画面端から始まるスワイプ（ブラウザの戻る/進む）は無視
                 const startX = e.changedTouches[0].clientX - dx;
                 if (startX < 20 || startX > window.innerWidth - 20) return;
 
-                // 現在選択中の日付のインデックスを取得
                 const curIdx = _currentWeekDays.indexOf(_currentSelectedDayMs);
                 if (curIdx === -1) return;
 
+                const weeks = ['日','月','火','水','木','金','土'];
                 if (dx < 0) {
-                    // 左スワイプ → 翌日（右からスライドイン）
+                    // 左スワイプ → 翌日
                     if (curIdx < _currentWeekDays.length - 1) {
                         const nextMs = _currentWeekDays[curIdx + 1];
                         const d = new Date(nextMs);
-                        const weeks = ['日','月','火','水','木','金','土'];
                         const label = `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
-                        // アクティブセルを更新してからshowDayEventsを直接呼ぶ
-                        el.querySelectorAll('.week-day-cell').forEach(c => {
-                            c.style.outline = parseInt(c.dataset.datems) === nextMs ? '2px solid var(--primary)' : 'none';
-                        });
-                        showDayEvents(nextMs, label, 'right');
+                        _updateDayCell(el, nextMs);
+                        if (_showDayEventsFn) _showDayEventsFn(nextMs, label, 'right');
+                    } else {
+                        // 週末 → 翌週の最初の日へ
+                        schedWeekOffset++;
+                        _renderSchedTab();
                     }
                 } else {
-                    // 右スワイプ → 前日（左からスライドイン）
+                    // 右スワイプ → 前日
                     if (curIdx > 0) {
                         const prevMs = _currentWeekDays[curIdx - 1];
                         const d = new Date(prevMs);
-                        const weeks = ['日','月','火','水','木','金','土'];
                         const label = `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
-                        el.querySelectorAll('.week-day-cell').forEach(c => {
-                            c.style.outline = parseInt(c.dataset.datems) === prevMs ? '2px solid var(--primary)' : 'none';
-                        });
-                        showDayEvents(prevMs, label, 'left');
+                        _updateDayCell(el, prevMs);
+                        if (_showDayEventsFn) _showDayEventsFn(prevMs, label, 'left');
+                    } else {
+                        // 週頭 → 前週の最後の日へ
+                        schedWeekOffset--;
+                        _renderSchedTab();
                     }
                 }
             };
@@ -5638,6 +5655,17 @@
             el._swipeTouchEnd   = onEnd;
             el.addEventListener('touchstart', onStart, { passive: true });
             el.addEventListener('touchend',   onEnd,   { passive: true });
+        }
+
+        /** セルのアクティブ表示を更新 */
+        function _updateDayCell(container, ms) {
+            const el = container || _weekSwipeEl;
+            if (!el) return;
+            el.querySelectorAll('.week-day-cell').forEach(c => {
+                c.style.outline = parseInt(c.dataset.datems) === ms
+                    ? '2px solid var(--primary)' : 'none';
+                c.style.borderRadius = '6px';
+            });
         }
 
         function switchTaskInnerTab(name, btn) {
