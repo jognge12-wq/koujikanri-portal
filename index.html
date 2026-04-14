@@ -2009,28 +2009,28 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* ===== 新ボトムナビ（8タブ、アクティブインジケーター付き） ===== */
+        /* ===== 新ボトムナビ（6タブ、アクティブインジケーター付き） ===== */
         .bottom-nav {
-            height: calc(60px + env(safe-area-inset-bottom, 0px));
+            height: calc(62px + env(safe-area-inset-bottom, 0px));
             align-items: flex-start;
             padding-top: 4px;
             /* 物理的な角丸を避けるため最低20pxを確保 */
             padding-left: max(env(safe-area-inset-left, 0px), 20px);
             padding-right: max(env(safe-area-inset-right, 0px), 20px);
         }
-        .main-content { margin-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
-        .bottom-nav-item { position: relative; gap: 2px; }
+        .main-content { margin-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
+        .bottom-nav-item { position: relative; gap: 3px; }
         .bottom-nav-item.active::before {
             content: '';
             position: absolute;
             top: 0; left: 50%;
             transform: translateX(-50%);
-            width: 16px; height: 2px;
+            width: 20px; height: 2px;
             background: var(--primary);
             border-radius: 0 0 2px 2px;
         }
-        .bottom-nav-item svg { width: 18px; height: 18px; }
-        .bottom-nav-label { font-size: 9px; font-weight: 500; }
+        .bottom-nav-item svg { width: 22px; height: 22px; }
+        .bottom-nav-label { font-size: 10px; font-weight: 500; }
 
         /* ===== ver2: フォント・コントラスト改善 ===== */
         body { font-size: 15px; }
@@ -2607,6 +2607,18 @@
         .sched-nav-label {
             font-size: 15px; font-weight: 700; color: var(--text1); min-width: 56px; text-align: center;
         }
+
+        /* ── 日付スワイプ アニメーション ── */
+        @keyframes day-slide-from-right {
+            from { opacity: 0; transform: translateX(22px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes day-slide-from-left {
+            from { opacity: 0; transform: translateX(-22px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .day-anim-right { animation: day-slide-from-right 0.18s cubic-bezier(0.22,1,0.36,1) both; }
+        .day-anim-left  { animation: day-slide-from-left  0.18s cubic-bezier(0.22,1,0.36,1) both; }
         .sched-today-btn, .sched-view-btn {
             padding: 5px 11px; border-radius: 8px; font-size: 12px; font-weight: 600;
             border: 1px solid var(--border); cursor: pointer; background: var(--surface);
@@ -3128,46 +3140,50 @@
             <div class="drawer-header-title">施工管理ポータル</div>
             <div class="drawer-header-sub">masaさんの現場管理ハブ</div>
         </div>
+
+        <!-- ── メインメニュー（ボトムナビと連動） ── -->
         <div class="drawer-section-label">メイン</div>
-        <div class="drawer-item active" data-tab="home" onclick="switchTab('home')">
-            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <div class="drawer-item active" data-tab="home" onclick="closeDrawer(); switchTab('home')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span>ホーム</span>
         </div>
-        <div class="drawer-item" data-tab="properties" onclick="switchTab('properties')">
-            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span>物件ボード</span>
-        </div>
-        <div class="drawer-item" data-tab="week" onclick="switchTab('week')">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
-            <span>スケジュール</span>
-        </div>
-        <div class="drawer-item" data-tab="tasks" onclick="switchTab('tasks')">
+        <div class="drawer-item" data-tab="tasks" onclick="closeDrawer(); switchTab('tasks')">
             <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             <span>タスク</span>
         </div>
-        <div class="drawer-item" data-tab="tools" onclick="switchTab('tools')">
-            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-            <span>ツール</span>
+        <div class="drawer-item" data-tab="week" onclick="closeDrawer(); switchTab('week')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
+            <span>予定</span>
         </div>
+        <div class="drawer-item" data-tab="properties" onclick="closeDrawer(); switchTab('properties')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>物件ボード</span>
+        </div>
+
         <div class="drawer-separator"></div>
-        <div class="drawer-section-label">Cowork ツール</div>
+
+        <!-- ── ツール（ボトムナビ連動 + 追加ツール） ── -->
+        <div class="drawer-section-label">ツール</div>
         <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/inspection.html')">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <span>検査依頼</span>
-        </div>
-        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/schedule.html')">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="10" x2="12" y2="22"/></svg>
-            <span>工程作成</span>
-        </div>
-        <div class="drawer-item" onclick="closeDrawer()">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            <span>新規物件登録</span>
         </div>
         <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/payment.html')">
             <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
             <span>支払い管理</span>
         </div>
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/property.html')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>新規物件登録</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer(); navigateTo('tools/schedule.html')">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>工程作成</span>
+        </div>
+
         <div class="drawer-separator"></div>
+
+        <!-- ── 外部サービス ── -->
         <div class="drawer-section-label">外部サービス</div>
         <div class="drawer-item" onclick="window.open('https://calendar.google.com','_blank')">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>
@@ -3175,7 +3191,7 @@
             <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </div>
         <div class="drawer-item" onclick="window.open('https://notion.so','_blank')">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v2H4zm0 4h16v2H4zm0 4h10v2H4z"/></svg>
             <span>Notion</span>
             <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </div>
@@ -3184,11 +3200,7 @@
             <span>Google Tasks</span>
             <svg class="drawer-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </div>
-        <div class="drawer-separator"></div>
-        <div class="drawer-item" onclick="closeDrawer()" style="padding-bottom: 20px;">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-            <span>設定</span>
-        </div>
+        <div class="drawer-separator" style="margin-bottom:8px;"></div>
     </nav>
 
     <nav class="bottom-nav">
@@ -3205,7 +3217,7 @@
             <span class="bottom-nav-label">予定</span>
         </div>
         <div class="bottom-nav-item" data-tab="properties" onclick="switchTab('properties')">
-            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/><rect x="8" y="2" width="8" height="4" rx="1" fill="currentColor" opacity="0.3"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span class="bottom-nav-label">物件</span>
         </div>
         <div class="bottom-nav-item" onclick="navigateTo('tools/inspection.html')">
@@ -3215,14 +3227,6 @@
         <div class="bottom-nav-item" onclick="navigateTo('tools/payment.html')">
             <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             <span class="bottom-nav-label">支払い</span>
-        </div>
-        <div class="bottom-nav-item" onclick="navigateTo('tools/property.html')">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            <span class="bottom-nav-label">新規物件</span>
-        </div>
-        <div class="bottom-nav-item" onclick="navigateTo('tools/schedule.html')">
-            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <span class="bottom-nav-label">工程作成</span>
         </div>
     </nav>
 
@@ -4765,11 +4769,19 @@
             </div>`;
 
             // 指定日の予定を表示する関数
-            function showDayEvents(dMs, label) {
+            function showDayEvents(dMs, label, animDir) {
                 _currentSelectedDayMs = dMs;  // スワイプ時の参照用に更新
                 const titleEl = document.getElementById('weekDayTitle');
                 const evEl = document.getElementById('weekTodayEvents');
                 if (titleEl) titleEl.textContent = label + ' の予定';
+
+                // スワイプアニメーション: 既存クラスを除去してから付与
+                if (evEl && animDir) {
+                    evEl.classList.remove('day-anim-right', 'day-anim-left');
+                    // 一フレーム待ってから再付与（リフロー強制）
+                    void evEl.offsetWidth;
+                    evEl.classList.add(animDir === 'right' ? 'day-anim-right' : 'day-anim-left');
+                }
                 el.querySelectorAll('.week-day-cell').forEach(c => {
                     const isActive = parseInt(c.dataset.datems) === dMs;
                     c.style.outline = isActive ? '2px solid var(--primary)' : 'none';
@@ -5595,18 +5607,29 @@
                 if (curIdx === -1) return;
 
                 if (dx < 0) {
-                    // 左スワイプ → 翌日
+                    // 左スワイプ → 翌日（右からスライドイン）
                     if (curIdx < _currentWeekDays.length - 1) {
                         const nextMs = _currentWeekDays[curIdx + 1];
-                        const cell = el.querySelector(`.week-day-cell[data-datems="${nextMs}"]`);
-                        if (cell) cell.click();
+                        const d = new Date(nextMs);
+                        const weeks = ['日','月','火','水','木','金','土'];
+                        const label = `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
+                        // アクティブセルを更新してからshowDayEventsを直接呼ぶ
+                        el.querySelectorAll('.week-day-cell').forEach(c => {
+                            c.style.outline = parseInt(c.dataset.datems) === nextMs ? '2px solid var(--primary)' : 'none';
+                        });
+                        showDayEvents(nextMs, label, 'right');
                     }
                 } else {
-                    // 右スワイプ → 前日
+                    // 右スワイプ → 前日（左からスライドイン）
                     if (curIdx > 0) {
                         const prevMs = _currentWeekDays[curIdx - 1];
-                        const cell = el.querySelector(`.week-day-cell[data-datems="${prevMs}"]`);
-                        if (cell) cell.click();
+                        const d = new Date(prevMs);
+                        const weeks = ['日','月','火','水','木','金','土'];
+                        const label = `${d.getMonth()+1}/${d.getDate()}(${weeks[d.getDay()]})`;
+                        el.querySelectorAll('.week-day-cell').forEach(c => {
+                            c.style.outline = parseInt(c.dataset.datems) === prevMs ? '2px solid var(--primary)' : 'none';
+                        });
+                        showDayEvents(prevMs, label, 'left');
                     }
                 }
             };
