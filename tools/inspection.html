@@ -135,13 +135,6 @@ const GAS_CONFIG = {
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #004d29 0%, #00703d 100%);" class="text-white px-5 py-5">
       <div class="flex items-center gap-3">
-        <a onclick="goToDashboard()" style="cursor:pointer;"
-           class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 transition-colors flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-               fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </a>
         <div>
           <div class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
@@ -158,20 +151,6 @@ const GAS_CONFIG = {
       </div>
     </div>
 
-    <!-- ── タブナビ ── -->
-    <div class="flex border-b border-slate-200 bg-white">
-      <button id="tab-btn-new" onclick="switchTab('new')"
-        class="tab-nav-btn flex-1 py-3 text-[12px] font-bold text-sfc-primary border-b-2 border-sfc-primary">
-        📝 新規申込
-      </button>
-      <button id="tab-btn-list" onclick="switchTab('list')"
-        class="tab-nav-btn flex-1 py-3 text-[12px] font-bold text-slate-400 border-b-2 border-transparent">
-        📋 申込み一覧
-      </button>
-    </div>
-
-    <!-- ── 新規申込 ビュー ── -->
-    <div id="view-new">
     <div class="p-5 space-y-5">
 
       <!-- ── Step 1: 物件 ── -->
@@ -260,17 +239,6 @@ const GAS_CONFIG = {
                 編集
               </button>
             </div>
-          </div>
-
-          <!-- ── 建物場所（カレンダー登録に使用） ── -->
-          <div id="address-section" class="hidden mt-2">
-            <div class="flex items-center gap-1.5 mb-1.5 px-0.5">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">建物場所</span>
-              <span class="text-[10px] text-slate-400">（カレンダー登録に使用）</span>
-            </div>
-            <input type="text" id="inline-address-input" placeholder="例：岐阜市〇〇町1-2-3"
-              oninput="onAddressInputChange()"
-              class="w-full p-3 border-2 border-slate-200 rounded-xl outline-none focus:border-sfc-primary text-sm bg-white">
           </div>
 
         </div>
@@ -427,35 +395,7 @@ const GAS_CONFIG = {
     </div>
   </div>
 
-    </div><!-- /p-5 space-y-5 (新規申込) -->
-    </div><!-- /view-new -->
-
-    <!-- ── 申込み一覧 ビュー ── -->
-    <div id="view-list" class="hidden">
-      <div class="p-4">
-        <!-- 物件フィルター -->
-        <select id="list-filter" onchange="filterInspectionList()"
-          class="w-full p-3 border-2 border-slate-200 rounded-xl bg-white text-sm font-bold outline-none focus:border-sfc-primary mb-3">
-          <option value="">すべての物件</option>
-        </select>
-        <!-- ローディング -->
-        <div id="list-loading" class="text-center py-8 text-slate-400 text-sm hidden">
-          <div class="inline-block icon-spin mb-2">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="#e2e8f0" stroke-width="3"/>
-              <path d="M12 2a10 10 0 0 1 10 10" stroke="#006837" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <p>読み込み中...</p>
-        </div>
-        <!-- 空の場合 -->
-        <div id="list-empty" class="hidden text-center py-10 text-slate-400">
-          <p class="text-sm">申込み記録がありません</p>
-        </div>
-        <!-- 一覧 -->
-        <div id="inspections-list" class="space-y-2"></div>
-      </div>
-    </div>
+    </div><!-- /p-5 space-y-5 -->
 
   <!-- ===== ローディングオーバーレイ ===== -->
   <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -578,7 +518,7 @@ const GAS_CONFIG = {
 /* ============================================================
    定数・アイコン
 ============================================================ */
-const types = ['基礎', '躯体', '断熱', '竣工', '完了検査'];
+const types = ['基礎', '躯体', '断熱', '竣工'];
 
 const TYPE_ICONS = {
   '基礎': `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -625,11 +565,7 @@ const todayStr   = new Date().toISOString().split('T')[0];
 /* ============================================================
    ナビゲーション
 ============================================================ */
-function goToDashboard() {
-  window.location.replace('../index.html?tab=tools');
-}
-history.pushState(null, '', window.location.href);
-window.addEventListener('popstate', () => goToDashboard());
+function goToDashboard() { window.location.replace('../index.html'); }
 
 /* ============================================================
    初期化
@@ -727,71 +663,32 @@ function renderProjectList() {
 }
 
 /* ============================================================
-   検査区分ボタン描画（長押しで対象外トグル）
+   検査区分ボタン描画（削除ボタン付き・col-span-2で均等4列）
 ============================================================ */
 function renderButtons() {
   const grid = document.getElementById('inspection-grid');
+  // 基礎/躯体/断熱 → col-span-2, 竣工 → col-span-6（全幅）
   grid.innerHTML = types.map(type => {
-    const isBottom = (type === '竣工' || type === '完了検査');
-    const colClass = isBottom ? 'col-span-3' : 'col-span-2';
-    const label    = GAS_CONFIG.PROCESS_LABELS[type] || type;
+    const isShunko = type === '竣工';
+    const colClass  = isShunko ? 'col-span-6' : 'col-span-2';
+    const label     = GAS_CONFIG.PROCESS_LABELS[type] || type;
     return `
-    <button id="btn-${type}" onclick="selectType('${type}')"
-      class="type-btn w-full p-4 rounded-2xl border-2 border-slate-200 bg-white font-bold text-slate-700 transition-all flex flex-col items-center justify-center min-h-[90px] gap-2 ${colClass}">
-      <span class="type-icon opacity-60">${TYPE_ICONS[type]}</span>
-      <span class="type-label text-sm">${label}</span>
-      <span class="history-tag text-[11px] px-2.5 py-0.5 rounded-full hidden font-bold"></span>
-    </button>`;
+    <div class="relative ${colClass}">
+      <button id="btn-${type}" onclick="selectType('${type}')"
+        class="type-btn w-full p-4 rounded-2xl border-2 border-slate-200 bg-white font-bold text-slate-700 transition-all flex flex-col items-center justify-center min-h-[86px] gap-2">
+        <span class="type-icon opacity-60">${TYPE_ICONS[type]}</span>
+        <span class="type-label text-sm">${label}</span>
+        <span class="history-tag text-[11px] px-2.5 py-0.5 rounded-full hidden font-bold"></span>
+      </button>
+      <button id="del-btn-${type}" onclick="event.stopPropagation();confirmDeleteInspectionType('${type}')"
+        class="del-inspect-btn absolute top-1.5 right-1.5 hidden p-1.5 rounded-lg bg-red-50 active:bg-red-100 transition-colors z-10"
+        title="申込みを削除">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
+    </div>`;
   }).join('');
-  // 長押しで対象外トグルを設定
-  types.forEach(type => {
-    const btn = document.getElementById(`btn-${type}`);
-    let pressTimer = null;
-    const startPress = (e) => {
-      pressTimer = setTimeout(() => {
-        e.preventDefault();
-        toggleExcluded(type);
-      }, 600);
-    };
-    const clearPress = () => { clearTimeout(pressTimer); };
-    btn.addEventListener('touchstart', startPress, { passive: true });
-    btn.addEventListener('touchend', clearPress);
-    btn.addEventListener('mousedown', startPress);
-    btn.addEventListener('mouseup', clearPress);
-    btn.addEventListener('mouseleave', clearPress);
-  });
-}
-
-/** 対象外トグル */
-async function toggleExcluded(type) {
-  if (!currentProject) return;
-  if (!currentProject.excluded) currentProject.excluded = {};
-  const wasExcluded = !!currentProject.excluded[type];
-  if (wasExcluded) {
-    delete currentProject.excluded[type];
-  } else {
-    currentProject.excluded[type] = true;
-    // 対象外にした検査が選択中なら選択解除
-    if (currentType === type) {
-      currentType = null;
-      document.getElementById('kanryo-together-section').classList.add('hidden');
-      checkReady();
-    }
-  }
-  // GAS に保存
-  try {
-    await postToGAS({ action: 'updateProject', id: currentProject.id,
-      reg: currentProject.reg || '', history: currentProject.history || {},
-      delegate: currentProject.delegate || {}, times: currentProject.times || {},
-      kanryo: currentProject.kanryo || '', address: currentProject.address || '',
-      excluded: currentProject.excluded });
-  } catch(e) { console.warn('対象外保存失敗:', e); }
-  localStorage.setItem('myProjects', JSON.stringify(projects));
-  updateButtonStates();
-  const msg = wasExcluded ? `${GAS_CONFIG.PROCESS_LABELS[type] || type} の対象外設定を解除しました` : `${GAS_CONFIG.PROCESS_LABELS[type] || type} を対象外に設定しました（長押しで解除可能）`;
-  // 軽くフラッシュ表示
-  const btn = document.getElementById(`btn-${type}`);
-  if (btn) { btn.style.transition = 'opacity 0.1s'; btn.style.opacity = '0.5'; setTimeout(() => { btn.style.opacity = '1'; }, 150); }
 }
 
 /* ============================================================
@@ -938,24 +835,6 @@ function updateKanryoNumPreview() {
 }
 
 /* ============================================================
-   建物場所 インライン表示・編集
-============================================================ */
-function updateAddressDisplay() {
-  const section = document.getElementById('address-section');
-  const input   = document.getElementById('inline-address-input');
-  if (!section) return;
-  // 設計交付番号がある場合のみ表示
-  if (!currentProject?.reg) { section.classList.add('hidden'); return; }
-  section.classList.remove('hidden');
-  if (input) input.value = currentProject.address || '';
-}
-
-function onAddressInputChange() {
-  const val = document.getElementById('inline-address-input').value;
-  if (currentProject) currentProject.address = val;
-}
-
-/* ============================================================
    竣工+完了検査 同時依頼
 ============================================================ */
 function onKanryoTogetherChange() {
@@ -1054,14 +933,12 @@ function onProjectChange(id) {
     document.getElementById('project-info').classList.add('hidden');
   }
 
-  // 確認交付番号・建物場所 表示更新
+  // 確認交付番号 表示更新
   if (isSelected) {
     updateKanryoRegDisplay();
-    updateAddressDisplay();
   } else {
     document.getElementById('kanryo-reg-section').classList.add('hidden');
     document.getElementById('kanryo-has-value').classList.add('hidden');
-    document.getElementById('address-section').classList.add('hidden');
   }
 
   // 代理チェックをリセット
@@ -1109,15 +986,14 @@ function updateButtonStates() {
     tag.classList.add('hidden');
     if (icon) { icon.classList.remove('opacity-30', 'opacity-40', 'opacity-60', 'opacity-100'); icon.classList.add('opacity-60'); }
 
-    // ── 対象外（ストライク・グレー）──
-    const isExcluded = !!(currentProject.excluded?.[type]);
-    if (isExcluded) {
-      btn.classList.add('bg-slate-100', 'text-slate-300', 'border-slate-100');
-      if (icon) { icon.classList.replace('opacity-60', 'opacity-30'); }
-      tag.classList.remove('hidden');
-      tag.innerText = '対象外';
-      tag.classList.add('bg-red-100', 'text-red-400');
-      return;
+    // 削除ボタン: 申込み日程があれば表示
+    const delBtn = document.getElementById(`del-btn-${type}`);
+    if (delBtn) {
+      if (scheduledDate && !isDelegated) {
+        delBtn.classList.remove('hidden');
+      } else {
+        delBtn.classList.add('hidden');
+      }
     }
 
     const isPast     = scheduledDate && scheduledDate <= todayStr;
@@ -1831,145 +1707,66 @@ function closeResultModal() {
 }
 
 /* ============================================================
-   タブ切り替え
+   検査申込み 削除（ボタンタップから）
 ============================================================ */
-function switchTab(tab) {
-  const isNew = tab === 'new';
-  document.getElementById('view-new').classList.toggle('hidden', !isNew);
-  document.getElementById('view-list').classList.toggle('hidden', isNew);
-  const btnNew  = document.getElementById('tab-btn-new');
-  const btnList = document.getElementById('tab-btn-list');
-  btnNew.classList.toggle('text-sfc-primary', isNew);
-  btnNew.classList.toggle('border-sfc-primary', isNew);
-  btnNew.classList.toggle('text-slate-400', !isNew);
-  btnNew.classList.toggle('border-transparent', !isNew);
-  btnList.classList.toggle('text-sfc-primary', !isNew);
-  btnList.classList.toggle('border-sfc-primary', !isNew);
-  btnList.classList.toggle('text-slate-400', isNew);
-  btnList.classList.toggle('border-transparent', isNew);
-  if (!isNew) loadInspectionList();
-}
+let _pendingDeleteType = null;
 
-/* ============================================================
-   申込み一覧
-============================================================ */
-let allInspections = [];
-let pendingDeleteRow = null;
-
-async function loadInspectionList() {
-  const loadingEl = document.getElementById('list-loading');
-  const emptyEl   = document.getElementById('list-empty');
-  const listEl    = document.getElementById('inspections-list');
-  const filterEl  = document.getElementById('list-filter');
-  loadingEl.classList.remove('hidden');
-  emptyEl.classList.add('hidden');
-  listEl.innerHTML = '';
-  try {
-    const result = await fetch(`${GAS_CONFIG.GAS_URL}?action=getInspections`, { redirect: 'follow' });
-    const data = await result.json();
-    if (data.success && data.inspections) {
-      allInspections = data.inspections.filter(r => r['ステータス'] !== '削除');
-      // フィルター更新
-      const propNames = [...new Set(allInspections.map(r => r['物件名']).filter(Boolean))].sort();
-      filterEl.innerHTML = '<option value="">すべての物件</option>' +
-        propNames.map(n => `<option value="${n}">${n}</option>`).join('');
-      renderInspectionList(allInspections);
-    } else {
-      emptyEl.classList.remove('hidden');
-    }
-  } catch (e) {
-    emptyEl.classList.remove('hidden');
-    emptyEl.innerHTML = '<p class="text-sm text-red-400">読み込みエラー: ' + e.message + '</p>';
-  }
-  loadingEl.classList.add('hidden');
-}
-
-function filterInspectionList() {
-  const filter = document.getElementById('list-filter').value;
-  const filtered = filter ? allInspections.filter(r => r['物件名'] === filter) : allInspections;
-  renderInspectionList(filtered);
-}
-
-function renderInspectionList(rows) {
-  const listEl  = document.getElementById('inspections-list');
-  const emptyEl = document.getElementById('list-empty');
-  if (!rows || !rows.length) { listEl.innerHTML = ''; emptyEl.classList.remove('hidden'); return; }
-  emptyEl.classList.add('hidden');
-  const dayNames = ['日','月','火','水','木','金','土'];
-  listEl.innerHTML = [...rows].reverse().map((r, i) => {
-    const rowId   = r['行ID'] || '';
-    const name    = r['物件名'] || '';
-    const process = r['工程'] || '';
-    const dateStr = r['検査日'] || '';
-    let dateLabel = dateStr;
-    if (dateStr) {
-      try {
-        const d = new Date(dateStr + 'T00:00:00');
-        dateLabel = `${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
-      } catch(e) {}
-    }
-    const status  = r['ステータス'] || '';
-    const kanryo  = r['完了検査日'] || '';
-    let kanryoLabel = '';
-    if (kanryo) {
-      try {
-        const d = new Date(kanryo + 'T00:00:00');
-        kanryoLabel = `+完了${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
-      } catch(e) {}
-    }
-    const statusColor = status === '完了' ? 'text-green-600 bg-green-50' :
-                        status === '変更' ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50';
-    return `
-    <div class="bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-bold text-slate-800 truncate">${name}</p>
-          <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <span class="text-[11px] font-bold text-sfc-primary">${process}</span>
-            ${dateLabel ? `<span class="text-[11px] text-slate-500">${dateLabel}</span>` : ''}
-            ${kanryoLabel ? `<span class="text-[11px] text-purple-500">${kanryoLabel}</span>` : ''}
-          </div>
-        </div>
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${status}</span>
-          ${rowId ? `<button onclick="confirmDeleteInspection('${rowId}', '${name}', '${process}', '${dateLabel}')"
-            class="p-2 rounded-xl text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-            </svg>
-          </button>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function confirmDeleteInspection(rowId, name, process, dateLabel) {
-  pendingDeleteRow = { rowId, name, process, dateLabel };
+function confirmDeleteInspectionType(type) {
+  if (!currentProject) return;
+  const scheduledDate = currentProject.history?.[type];
+  if (!scheduledDate) return;
+  _pendingDeleteType = type;
+  const label = GAS_CONFIG.PROCESS_LABELS[type] || type;
+  const [, mm, dd] = scheduledDate.split('-');
+  const dayChar = ['日','月','火','水','木','金','土'][new Date(scheduledDate).getDay()];
   const txt = document.getElementById('delete-confirm-text');
-  if (txt) txt.textContent = `${name} / ${process} / ${dateLabel}`;
+  if (txt) txt.textContent = `${currentProject.name}\n${label}：${parseInt(mm)}/${parseInt(dd)}(${dayChar})`;
   document.getElementById('delete-confirm-modal').classList.remove('hidden');
 }
 
 function closeDeleteConfirm() {
-  pendingDeleteRow = null;
+  _pendingDeleteType = null;
   document.getElementById('delete-confirm-modal').classList.add('hidden');
 }
 
 async function executeDeleteInspection() {
-  if (!pendingDeleteRow) return;
+  if (!_pendingDeleteType || !currentProject) return;
+  const type = _pendingDeleteType;
+  const scheduledDate = currentProject.history?.[type];
   closeDeleteConfirm();
   setLoading(true, '削除中...');
   try {
-    await postToGAS({ action: 'deleteInspection', rowId: pendingDeleteRow.rowId });
-    allInspections = allInspections.filter(r => r['行ID'] !== pendingDeleteRow.rowId);
-    renderInspectionList(allInspections);
-    showResultModal('success', '削除完了', `${pendingDeleteRow.name} / ${pendingDeleteRow.process} を削除しました。\nGoogleカレンダーの予定も削除されます。`);
+    // GASでスプレッドシート+カレンダーを削除
+    await postToGAS({
+      action: 'deleteInspectionByRef',
+      propertyName: currentProject.name,
+      process: GAS_CONFIG.PROCESS_LABELS[type] || type,
+      inspectionDate: scheduledDate
+    });
+    // ローカルのhistory/timesをクリア
+    if (currentProject.history) delete currentProject.history[type];
+    if (currentProject.times)   delete currentProject.times[type];
+    if (currentProject.delegate) delete currentProject.delegate[type];
+    try {
+      await postToGAS({ action: 'updateProject', id: currentProject.id,
+        reg: currentProject.reg || '', history: currentProject.history || {},
+        delegate: currentProject.delegate || {}, times: currentProject.times || {},
+        kanryo: currentProject.kanryo || '', excluded: currentProject.excluded || {} });
+    } catch(e) {}
+    localStorage.setItem('myProjects', JSON.stringify(projects));
+    setLoading(false);
+    updateButtonStates();
+    if (currentType === type) {
+      currentType = null;
+      document.getElementById('kanryo-together-section').classList.add('hidden');
+      checkReady();
+    }
+    showResultModal('success', '削除完了',
+      `${GAS_CONFIG.PROCESS_LABELS[type] || type} の申込みを削除しました。\nGoogleカレンダーの予定も削除されます。`);
   } catch (e) {
-    showResultModal('error', '削除エラー', e.message);
+    setLoading(false);
+    showResultModal('error', '削除エラー', e.message || '不明なエラー');
   }
-  setLoading(false);
-  pendingDeleteRow = null;
 }
 
 /* ============================================================
@@ -1978,5 +1775,23 @@ async function executeDeleteInspection() {
 init();
 </script>
 
+<!-- ===== ボトムナビ ===== -->
+<style>
+  .tool-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e8eaed;display:flex;justify-content:space-around;align-items:flex-start;padding-top:5px;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(env(safe-area-inset-left,0px),4px);padding-right:max(env(safe-area-inset-right,0px),4px);z-index:99;font-family:'Noto Sans JP',sans-serif;}
+  .tni{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;cursor:pointer;color:#9ca3af;transition:color .12s;text-decoration:none;}
+  .tni.active{color:#006837;}.tni svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}.tni-lbl{font-size:9px;font-weight:500;}
+  /* ボトムナビ分のマージン確保 */
+  #app { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+</style>
+<nav class="tool-bottom-nav">
+  <a class="tni" href="../index.html"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tni-lbl">ホーム</span></a>
+  <a class="tni" href="../index.html?tab=tasks"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span class="tni-lbl">タスク</span></a>
+  <a class="tni" href="../index.html?tab=week"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg><span class="tni-lbl">予定</span></a>
+  <a class="tni" href="../index.html?tab=properties"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tni-lbl">物件</span></a>
+  <a class="tni active" href="./inspection.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="tni-lbl">検査依頼</span></a>
+  <a class="tni" href="./payment.html"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span class="tni-lbl">支払い</span></a>
+  <a class="tni" href="./property.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="tni-lbl">新規物件</span></a>
+  <a class="tni" href="./schedule.html"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="tni-lbl">工程作成</span></a>
+</nav>
 </body>
 </html>
