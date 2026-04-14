@@ -986,10 +986,10 @@ function updateButtonStates() {
     tag.classList.add('hidden');
     if (icon) { icon.classList.remove('opacity-30', 'opacity-40', 'opacity-60', 'opacity-100'); icon.classList.add('opacity-60'); }
 
-    // 削除ボタン: 申込み日程があれば表示
+    // 削除ボタン: 申込み日程があれば表示（代理人申込みも含む）
     const delBtn = document.getElementById(`del-btn-${type}`);
     if (delBtn) {
-      if (scheduledDate && !isDelegated) {
+      if (scheduledDate) {
         delBtn.classList.remove('hidden');
       } else {
         delBtn.classList.add('hidden');
