@@ -54,29 +54,25 @@
      style="height: calc(100vh - 32px);"
      data-responsive-height>
 
-  <!-- ヘッダー（payment.html と同一構造） -->
+  <!-- ヘッダー：アイコン+タイトル左・設定+ハンバーガー右で全ツール統一 -->
   <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-      </button>
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <div>
-          <h1 class="text-base font-bold tracking-wide">工程作成</h1>
-          <p class="text-[10px] text-white/65 font-medium mt-0.5">Googleカレンダー 工程一括登録</p>
-        </div>
+    <!-- 左: アイコン + タイトル -->
+    <div class="flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div>
+        <h1 class="text-base font-bold tracking-wide">工程作成</h1>
+        <p class="text-[10px] text-white/65 font-medium mt-0.5">Googleカレンダー 工程一括登録</p>
       </div>
     </div>
-    <button id="settingsBtn" onclick="openChangePanel()"
+    <!-- 右: 設定ボタン + ハンバーガー -->
+    <div class="flex items-center gap-1">
+      <button id="settingsBtn" onclick="openChangePanel()"
             class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors opacity-0 pointer-events-none"
             title="URL設定を変更">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -85,6 +81,13 @@
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
+      <!-- ハンバーガー（右側） -->
+      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+      </button>
+    </div>
   </div>
 
   <!-- コンテンツエリア -->

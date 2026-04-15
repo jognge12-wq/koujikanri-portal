@@ -78,27 +78,11 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
-
-<script>
-/* レスポンシブ: コンテナ幅をデバイスに合わせて調整（DOMContentLoaded後に実行） */
-document.addEventListener('DOMContentLoaded', function(){
-  var app = document.getElementById('app');
-  if (!app) return;
-  function setWidth(){
-    var w = window.innerWidth;
-    if(w >= 1024){
-      app.style.maxWidth = '900px';
-    } else if(w >= 768){
-      app.style.maxWidth = '640px';
-    } else {
-      app.style.maxWidth = '448px';
-    }
-  }
-  setWidth();
-  window.addEventListener('resize', setWidth);
-});
-</script>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 lg:p-12 font-sans text-slate-900">
+<style>
+  @media (min-width: 768px) { [data-responsive-height] { height: calc(100vh - 64px) !important; } }
+  @media (min-width: 1024px) { [data-responsive-height] { height: calc(100vh - 96px) !important; } }
+</style>
 
 <script>
 const GAS_CONFIG = {
@@ -126,20 +110,16 @@ const GAS_CONFIG = {
 };
 </script>
 
-<div class="py-4 px-3 md:py-8 md:px-8 lg:py-12 lg:px-12">
-<div id="app" class="max-w-md mx-auto bg-white shadow-xl rounded-3xl overflow-hidden border border-slate-100">
+<div id="app"
+     class="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
+     style="height: calc(100vh - 32px);"
+     data-responsive-height>
 
-  <!-- ===== Main View ===== -->
-  <div id="main-view">
+  <!-- ===== Main View（スクロール領域） ===== -->
+  <div id="main-view" class="flex-1 overflow-y-auto min-h-0">
 
-    <!-- Header（payment.html / schedule.html と同一構造） -->
-    <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex items-center gap-3 flex-shrink-0">
-      <!-- ハンバーガー -->
-      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-      </button>
+    <!-- Header：アイコン+タイトル左・ハンバーガー右で全ツール統一 -->
+    <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
       <div class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
              fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -153,6 +133,12 @@ const GAS_CONFIG = {
           <p class="text-[10px] text-white/65 font-medium mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
         </div>
       </div>
+      <!-- ハンバーガー（右側） -->
+      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+        <span class="block w-full h-0.5 bg-white rounded-full"></span>
+      </button>
     </div>
 
     <div class="p-5 space-y-5">
@@ -515,7 +501,6 @@ const GAS_CONFIG = {
     </div>
   </div>
 
-</div>
 </div>
 
 <script>
