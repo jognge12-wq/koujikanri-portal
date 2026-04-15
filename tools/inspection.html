@@ -1819,15 +1819,15 @@ function closeToolDrawer() {
 }
 </script>
 
-<!-- ===== ボトムナビ ===== -->
+<!-- ===== ボトムナビ（index.html と完全統一） ===== -->
 <style>
-  .tool-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid #e8eaed;display:flex;justify-content:space-around;align-items:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(env(safe-area-inset-left,0px),20px);padding-right:max(env(safe-area-inset-right,0px),20px);z-index:99;font-family:'Noto Sans JP',sans-serif;}
-  .tni{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;cursor:pointer;color:#9ca3af;transition:color .12s;text-decoration:none;}
+  .tool-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(62px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e8eaed;display:flex;justify-content:space-around;align-items:flex-start;padding-top:4px;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(env(safe-area-inset-left,0px),20px);padding-right:max(env(safe-area-inset-right,0px),20px);z-index:99;font-family:'Noto Sans JP',sans-serif;}
+  .tni{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;cursor:pointer;color:#9ca3af;transition:color .12s;text-decoration:none;position:relative;}
   .tni.active{color:#006837;}
-  .tni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .tni.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:#006837;border-radius:0 0 2px 2px;}
+  .tni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .tni-lbl{font-size:10px;font-weight:500;}
-  /* ボトムナビ分のマージン確保 */
-  #app { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  #app { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 </style>
 <nav class="tool-bottom-nav">
   <a class="tni" href="../index.html"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tni-lbl">ホーム</span></a>
