@@ -39,23 +39,30 @@
     .setup-input:focus { border-color:#004d29; }
     .setup-input::placeholder { color:#94a3b8; font-family:'Noto Sans JP',sans-serif; }
     /* レスポンシブ高さ調整 */
-    @media (min-width: 768px) {
-      [data-responsive-height] { height: calc(100vh - 64px) !important; }
-    }
-    @media (min-width: 1024px) {
-      [data-responsive-height] { height: calc(100vh - 96px) !important; }
-    }
+    .tool-top-bar{position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid #e8eaed;display:flex;align-items:center;padding:0 16px;z-index:100;}
+    .tool-top-bar>button{width:24px;height:24px;display:flex;flex-direction:column;justify-content:space-around;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+    .tool-top-bar>button span{width:100%;height:2px;background:#1f2937;display:block;border-radius:1px;}
+    body{padding-top:68px!important;}
+    @media(min-width:768px){body{padding-top:84px!important;}[data-responsive-height]{height:calc(100vh - 116px)!important;}}
+    @media(min-width:1024px){body{padding-top:100px!important;}[data-responsive-height]{height:calc(100vh - 148px)!important;}}
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 lg:p-12 font-sans text-slate-900">
 
-<!-- ===== アプリカード（schedule.html / inspection.html と同一構造） ===== -->
+<!-- ===== トップバー ===== -->
+<div class="tool-top-bar">
+  <button onclick="openToolDrawer()" aria-label="メニューを開く">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- ===== アプリカード ===== -->
 <div id="app"
      class="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
-     style="height: calc(100vh - 32px);"
+     style="height: calc(100vh - 84px);"
      data-responsive-height>
 
-  <!-- ヘッダー：アイコン+タイトル左・設定+ハンバーガー右で全ツール統一 -->
+  <!-- ヘッダー -->
   <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
     <!-- 左: アイコン + タイトル -->
     <div class="flex items-center gap-2">
@@ -68,24 +75,16 @@
         <p class="text-[10px] text-white/65 font-medium mt-0.5">個人専用 支払い台帳</p>
       </div>
     </div>
-    <!-- 右: 設定ボタン + ハンバーガー -->
-    <div class="flex items-center gap-1">
-      <button id="settingsBtn" onclick="openChangePanel()"
-              class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors opacity-0 pointer-events-none"
-              title="URL設定を変更">
+    <!-- 右: 設定ボタンのみ（ハンバーガーはトップバーに移動） -->
+    <button id="settingsBtn" onclick="openChangePanel()"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 transition-colors opacity-0 pointer-events-none"
+            title="URL設定を変更">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
            fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
-      <!-- ハンバーガー（右側） -->
-      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-      </button>
-    </div>
   </div>
 
   <!-- コンテンツエリア -->

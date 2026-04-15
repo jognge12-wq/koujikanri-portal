@@ -80,8 +80,13 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 lg:p-12 font-sans text-slate-900">
 <style>
-  @media (min-width: 768px) { [data-responsive-height] { height: calc(100vh - 64px) !important; } }
-  @media (min-width: 1024px) { [data-responsive-height] { height: calc(100vh - 96px) !important; } }
+  /* トップバー */
+  .tool-top-bar{position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid #e8eaed;display:flex;align-items:center;padding:0 16px;z-index:100;}
+  .tool-top-bar>button{width:24px;height:24px;display:flex;flex-direction:column;justify-content:space-around;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .tool-top-bar>button span{width:100%;height:2px;background:#1f2937;display:block;border-radius:1px;}
+  body{padding-top:68px!important;}
+  @media(min-width:768px){body{padding-top:84px!important;}[data-responsive-height]{height:calc(100vh - 116px)!important;}}
+  @media(min-width:1024px){body{padding-top:100px!important;}[data-responsive-height]{height:calc(100vh - 148px)!important;}}
 </style>
 
 <script>
@@ -110,35 +115,34 @@ const GAS_CONFIG = {
 };
 </script>
 
+<!-- ===== トップバー（index.html と同一スタイル） ===== -->
+<div class="tool-top-bar">
+  <button onclick="openToolDrawer()" aria-label="メニューを開く">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
 <div id="app"
      class="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 flex flex-col"
-     style="height: calc(100vh - 32px);"
+     style="height: calc(100vh - 84px);"
      data-responsive-height>
 
   <!-- ===== Main View（スクロール領域） ===== -->
   <div id="main-view" class="flex-1 overflow-y-auto min-h-0">
 
-    <!-- Header：アイコン+タイトル左・ハンバーガー右で全ツール統一 -->
-    <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex justify-between items-center flex-shrink-0">
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <div>
-          <h1 class="text-base font-bold tracking-wide">検査依頼</h1>
-          <p class="text-[10px] text-white/65 font-medium mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
-        </div>
+    <!-- Header -->
+    <div class="bg-sfc-dark text-white px-5 py-4 rounded-b-xl shadow-md flex items-center gap-2 flex-shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <div>
+        <h1 class="text-base font-bold tracking-wide">検査依頼</h1>
+        <p class="text-[10px] text-white/65 font-medium mt-0.5">性能評価検査依頼 → メール送信 ＆ カレンダー登録</p>
       </div>
-      <!-- ハンバーガー（右側） -->
-      <button onclick="openToolDrawer()" class="flex flex-col justify-around w-8 h-8 rounded-xl bg-white/15 active:bg-white/30 transition-colors flex-shrink-0 p-1.5">
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-        <span class="block w-full h-0.5 bg-white rounded-full"></span>
-      </button>
     </div>
 
     <div class="p-5 space-y-5">
