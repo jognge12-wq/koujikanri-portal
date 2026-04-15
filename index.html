@@ -191,9 +191,9 @@
 
         .drawer {
             position: fixed;
-            left: -280px;
+            left: -260px;
             top: 0;
-            width: 280px;
+            width: 260px;
             /* 100dvh: モバイルのアドレスバー表示変化に対応 */
             height: 100dvh;
             height: 100vh; /* fallback */
@@ -201,7 +201,7 @@
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
             transition: left 0.2s ease;
             z-index: 98;
-            padding: 16px 0 calc(24px + env(safe-area-inset-bottom, 0px));
+            padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             display: flex;
@@ -213,7 +213,7 @@
         }
 
         .drawer-item {
-            padding: 12px 16px;
+            padding: 12px 18px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -221,6 +221,9 @@
             transition: background-color 0.12s ease;
             color: var(--text1);
             text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Noto Sans JP', sans-serif;
         }
 
         .drawer-item:hover {
@@ -233,8 +236,8 @@
         }
 
         .drawer-item svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             stroke: currentColor;
             fill: none;
             stroke-width: 2;
@@ -2457,7 +2460,7 @@
             padding: 1px 6px; border-radius: 8px; margin-left: auto;
         }
         .drawer-ext {
-            width: 12px; height: 12px;
+            width: 13px !important; height: 13px !important;
             stroke: currentColor; fill: none; stroke-width: 2;
             stroke-linecap: round; stroke-linejoin: round;
             opacity: 0.35; margin-left: auto; flex-shrink: 0;
