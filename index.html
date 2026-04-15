@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    <title>施工管理ポータル</title>
+    <title>m's hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
@@ -2898,7 +2898,7 @@
         <div style="width:52px;height:52px;background:#006837;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
-        <p style="font-size:15px;font-weight:600;color:#111827;margin-bottom:4px;">施工管理ポータル</p>
+        <p style="font-size:15px;font-weight:600;color:#111827;margin-bottom:4px;">m's hub</p>
         <p style="font-size:11px;color:#9ca3af;margin-bottom:24px;">パスワードを入力してください</p>
         <input id="pwInput" type="password" placeholder="パスワード" autocomplete="off"
             style="width:100%;padding:11px 14px;border:1.5px solid #e8eaed;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans JP',sans-serif;transition:border-color 0.2s;"
@@ -2965,7 +2965,7 @@
             <div class="pw-logo">
                 <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             </div>
-            <div class="pw-title">施工管理ポータル</div>
+            <div class="pw-title">m's hub</div>
             <div class="pw-sub" id="pw-sub-text">パスワードを入力してください</div>
 
             <!-- 生体認証ボタン（Face ID / Touch ID）-->
@@ -3051,7 +3051,7 @@
                 const credential = await navigator.credentials.create({
                     publicKey: {
                         challenge,
-                        rp: { name: '施工管理ポータル', id: window.location.hostname || 'localhost' },
+                        rp: { name: "m's hub", id: window.location.hostname || 'localhost' },
                         user: { id: userId, name: 'masa', displayName: '城岸 政行' },
                         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
                         authenticatorSelection: {
@@ -3168,14 +3168,13 @@
             <span></span>
             <span></span>
         </button>
-        <span class="top-bar-title" id="topBarTitle" aria-hidden="true" style="position:absolute;left:50%;transform:translateX(-50%);font-size:14px;font-weight:600;color:var(--text1);">施工管理ポータル</span>
+        <span class="top-bar-title" id="topBarTitle" aria-hidden="true" style="position:absolute;left:50%;transform:translateX(-50%);font-size:14px;font-weight:600;color:var(--text1);">m's hub</span>
     </div>
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
     <nav class="drawer" id="drawer">
         <div class="drawer-header">
-            <div class="drawer-header-title">施工管理ポータル</div>
-            <div class="drawer-header-sub">masaさんの現場管理ハブ</div>
+            <div class="drawer-header-title">m's hub</div>
         </div>
 
         <!-- ── メインメニュー（ボトムナビと連動） ── -->
