@@ -2610,6 +2610,29 @@
         .sched-nav-label {
             font-size: 15px; font-weight: 700; color: var(--text1); min-width: 56px; text-align: center;
         }
+        /* 週間予定スライドアニメーション */
+        #tab-week { overflow: hidden; position: relative; }
+        .week-slide-pane { will-change: transform; }
+        @keyframes weekSlideInRight {
+            from { transform: translateX(100%); }
+            to   { transform: translateX(0); }
+        }
+        @keyframes weekSlideInLeft {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(0); }
+        }
+        @keyframes weekSlideOutLeft {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-100%); }
+        }
+        @keyframes weekSlideOutRight {
+            from { transform: translateX(0); }
+            to   { transform: translateX(100%); }
+        }
+        .week-anim-enter-next { animation: weekSlideInRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .week-anim-enter-prev { animation: weekSlideInLeft  0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .week-anim-exit-next  { animation: weekSlideOutLeft  0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; pointer-events: none; }
+        .week-anim-exit-prev  { animation: weekSlideOutRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; pointer-events: none; }
 
         /* ── 日付スワイプ アニメーション ── */
         @keyframes day-slide-from-right {
@@ -4654,6 +4677,257 @@
         // スケジュールタブ: 週オフセット（0=今週, -1=先週, 1=翌週...）
         let schedWeekOffset = 0;
         let schedViewMode = 'week'; // 'week' | 'month'
+        let schedSliding = false;
+
+        // アニメーション付きで週を変更（← → ボタン用）
+        function changeSchedWeek(delta) {
+            if (schedSliding) return;
+            const el = document.getElementById('tab-week');
+            const oldPane = el.firstElementChild;
+            const dir = delta > 0 ? 'next' : 'prev';
+
+            if (!oldPane || schedViewMode !== 'week') {
+                schedWeekOffset += delta;
+                _renderSchedTab();
+                return;
+            }
+
+            schedSliding = true;
+
+            // 1. 旧パネルを絶対配置＋終了アニメーションクラス付与
+            //    （DOMから切り離しても JS 参照とスタイルは維持される）
+            oldPane.style.cssText = 'position:absolute;top:0;left:0;width:100%;';
+            oldPane.classList.add('week-slide-pane', `week-anim-exit-${dir}`);
+
+            // 2. 新しいオフセットで描画（el.innerHTML が差し替わり oldPane はデタッチ）
+            schedWeekOffset += delta;
+            _renderSchedTab();
+
+            // 3. 新パネル（now el.firstElementChild）に入場アニメーションクラス付与
+            const newPane = el.firstElementChild;
+            if (newPane) {
+                newPane.classList.add('week-slide-pane', `week-anim-enter-${dir}`);
+            }
+
+            // 4. 旧パネルを再挿入（絶対配置なのでレイアウトに影響しない）
+            el.appendChild(oldPane);
+
+            // 5. アニメーション完了後にクリーンアップ
+            const ANIM_DUR = 310;
+            setTimeout(() => {
+                oldPane.remove();
+                if (newPane) {
+                    newPane.classList.remove('week-slide-pane', `week-anim-enter-${dir}`);
+                }
+                schedSliding = false;
+            }, ANIM_DUR);
+        }
+
+        // ========= 週間予定 スワイプジェスチャー（指追従・スナップ） =========
+        (function() {
+            var THRESH_RATIO = 0.28; // 幅の28%以上でページ送り
+            var THRESH_PX    = 44;   // 最低でも44px以上でページ送り
+            var ANIM_MS      = 280;  // スナップアニメーション時間
+            var EASE         = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+
+            var touchId = null, startX = 0, startY = 0;
+            var decided = false, isHoriz = false;
+            var ready   = false;   // prepare()完了フラグ
+            var swDir   = null;    // 'next' | 'prev'
+            var curPane = null;    // 現在のパネル（絶対配置に変更済み）
+            var nxtPane = null;    // 先読みパネル（絶対配置）
+            var elW     = 0;
+            var snapping = false;
+
+            function getEl() { return document.getElementById('tab-week'); }
+
+            function reset() {
+                touchId = null; decided = false; isHoriz = false;
+                ready = false; swDir = null; curPane = null; nxtPane = null; elW = 0;
+            }
+
+            function prepare(el, dx) {
+                if (ready) return;
+                swDir   = dx < 0 ? 'next' : 'prev';
+                curPane = el.firstElementChild;
+                if (!curPane) { reset(); return; }
+
+                elW = el.offsetWidth;
+                var h = curPane.offsetHeight;
+
+                // コンテナ高さを固定（パネルが全部絶対配置になるため）
+                el.style.height = h + 'px';
+
+                // 現パネルを絶対配置に変換
+                curPane.style.cssText = 'position:absolute;top:0;left:0;width:100%;will-change:transform;transform:translateX(0px)';
+
+                // 次/前の週をレンダリング（el.innerHTMLが書き換わりcurPaneはデタッチ）
+                var saved = schedWeekOffset;
+                schedWeekOffset += (swDir === 'next' ? 1 : -1);
+                var now = new Date();
+                var todayMs = +new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                _renderWeekView(el, now, todayMs);
+                schedWeekOffset = saved; // 完了時に再度更新する
+
+                // 先読みパネルを取得して絶対配置
+                nxtPane = el.firstElementChild;
+                var nxtX = swDir === 'next' ? elW : -elW;
+                nxtPane.style.cssText = 'position:absolute;top:0;left:0;width:100%;will-change:transform;transform:translateX(' + nxtX + 'px)';
+
+                // 現パネルをコンテナに再挿入
+                el.appendChild(curPane);
+                ready = true;
+            }
+
+            function applyDelta(dx) {
+                if (!ready || !curPane || !nxtPane) return;
+                var nxtStart = swDir === 'next' ? elW : -elW;
+                curPane.style.transform = 'translateX(' + dx + 'px)';
+                nxtPane.style.transform = 'translateX(' + (nxtStart + dx) + 'px)';
+            }
+
+            function snapComplete(el) {
+                snapping = true;
+                schedWeekOffset += (swDir === 'next' ? 1 : -1);
+                var exitX = swDir === 'next' ? -elW : elW;
+                var tr = 'transform ' + ANIM_MS + 'ms ' + EASE;
+                curPane.style.transition = tr;
+                nxtPane.style.transition = tr;
+                curPane.style.transform = 'translateX(' + exitX + 'px)';
+                nxtPane.style.transform = 'translateX(0px)';
+                var sc = curPane, sn = nxtPane, se = el;
+                curPane = null; nxtPane = null;
+                setTimeout(function() {
+                    sc.remove();
+                    sn.style.cssText = '';
+                    se.style.height = '';
+                    snapping = false;
+                    schedSliding = false;
+                    _renderSchedTab(); // 新しい週で正式再描画＆自動取得
+                }, ANIM_MS + 20);
+            }
+
+            function snapBack(el) {
+                snapping = true;
+                var dur = Math.round(ANIM_MS * 0.55);
+                var tr = 'transform ' + dur + 'ms ' + EASE;
+                var nxtStart = swDir === 'next' ? elW : -elW;
+                curPane.style.transition = tr;
+                nxtPane.style.transition = tr;
+                curPane.style.transform = 'translateX(0px)';
+                nxtPane.style.transform = 'translateX(' + nxtStart + 'px)';
+                var sc = curPane, sn = nxtPane, se = el;
+                curPane = null; nxtPane = null;
+                setTimeout(function() {
+                    sn.remove();
+                    sc.style.cssText = '';
+                    se.style.height = '';
+                    snapping = false;
+                }, dur + 20);
+            }
+
+            function onStart(e) {
+                if (snapping || schedSliding || schedViewMode !== 'week') return;
+                if (touchId !== null) return;
+                var t = e.changedTouches[0];
+                // 日付ストリップへのタッチは既存の日ナビゲーションに任せる
+                if (e.target && e.target.closest && e.target.closest('.week-day-strip')) return;
+                touchId = t.identifier;
+                startX = t.clientX; startY = t.clientY;
+                decided = false; isHoriz = false;
+                ready = false; swDir = null; curPane = null; nxtPane = null;
+            }
+
+            function getTouch(e) {
+                for (var i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) return e.changedTouches[i];
+                }
+                return null;
+            }
+
+            function onMove(e) {
+                if (touchId === null || snapping) return;
+                var t = getTouch(e);
+                if (!t) return;
+                var dx = t.clientX - startX;
+                var dy = t.clientY - startY;
+
+                // 水平 vs 垂直スクロールの判定
+                if (!decided) {
+                    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                    if (Math.abs(dy) > Math.abs(dx) * 1.1) { touchId = null; return; } // 垂直スクロール優先
+                    decided = true;
+                    isHoriz = true;
+                }
+                if (!isHoriz) return;
+
+                e.preventDefault(); // 横スワイプ中はページスクロールを抑制
+
+                var el = getEl();
+                if (!el) return;
+
+                if (!ready) {
+                    prepare(el, dx);
+                    if (!ready) return;
+                    schedSliding = true; // 描画中はボタンアニメーション禁止
+                }
+
+                // 方向と逆にドラッグしても0でクランプ（ラバーバンドなし）
+                var clampedDx = swDir === 'next' ? Math.min(0, dx) : Math.max(0, dx);
+                applyDelta(clampedDx);
+            }
+
+            function onEnd(e) {
+                if (touchId === null) return;
+                var t = getTouch(e);
+                if (!t) { touchId = null; return; }
+                touchId = null;
+
+                var dx = t.clientX - startX;
+                var el = getEl();
+
+                if (!ready || !curPane || !nxtPane || !el) {
+                    schedSliding = false;
+                    reset();
+                    return;
+                }
+
+                var thresh = Math.max(THRESH_PX, elW * THRESH_RATIO);
+                var triggered = (swDir === 'next' && dx <= -thresh) || (swDir === 'prev' && dx >= thresh);
+
+                if (triggered) {
+                    snapComplete(el);
+                } else {
+                    snapBack(el);
+                    schedSliding = false;
+                }
+                reset();
+            }
+
+            function onCancel(e) {
+                if (touchId === null) return;
+                touchId = null;
+                var el = getEl();
+                if (ready && curPane && nxtPane && el) {
+                    snapBack(el);
+                } else if (el) {
+                    el.style.height = '';
+                }
+                schedSliding = false;
+                reset();
+            }
+
+            // #tab-week はDOM固定なのでDOMContentLoaded後に1回だけリスナー登録
+            document.addEventListener('DOMContentLoaded', function() {
+                var el = getEl();
+                if (!el) return;
+                el.addEventListener('touchstart',  onStart,  { passive: true });
+                el.addEventListener('touchmove',   onMove,   { passive: false });
+                el.addEventListener('touchend',    onEnd,    { passive: true });
+                el.addEventListener('touchcancel', onCancel, { passive: true });
+            });
+        })();
+        // ========= スワイプジェスチャーここまで =========
 
         function renderWeekTab() {
             schedWeekOffset = 0;
@@ -4751,13 +5025,13 @@
             el.innerHTML = `<div class="tab-pane">
                 <!-- ナビゲーションバー（←ラベル→の両端配置） -->
                 <div class="sched-nav-bar">
-                    <button class="sched-nav-btn" onclick="schedWeekOffset--;_renderSchedTab()">
+                    <button class="sched-nav-btn" onclick="changeSchedWeek(-1)">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                     <div class="sched-nav-center">
                         <span class="sched-nav-label">${weekLabel}</span>
                     </div>
-                    <button class="sched-nav-btn" onclick="schedWeekOffset++;_renderSchedTab()">
+                    <button class="sched-nav-btn" onclick="changeSchedWeek(1)">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
