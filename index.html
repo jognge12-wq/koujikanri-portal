@@ -194,18 +194,15 @@
             left: -260px;
             top: 0;
             width: 260px;
-            /* 100dvh: モバイルのアドレスバー表示変化に対応 */
-            height: 100dvh;
-            height: 100vh; /* fallback */
-            background-color: var(--surface);
+            /* ツールページの tdrawer と統一 */
+            height: 100vh;
+            background: #fff;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
-            transition: left 0.2s ease;
-            z-index: 98;
+            transition: left 0.22s cubic-bezier(0.22,1,0.36,1);
+            z-index: 201;
             padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            display: flex;
-            flex-direction: column;
         }
 
         .drawer.open {
@@ -226,13 +223,14 @@
             font-family: 'Noto Sans JP', sans-serif;
         }
 
-        .drawer-item:hover {
-            background-color: var(--surface2);
+        .drawer-item:hover,
+        .drawer-item:active {
+            background: #f3f4f6;
         }
 
         .drawer-item.active {
-            background-color: var(--primary-l);
-            color: var(--primary);
+            color: #006837;
+            font-weight: 600;
         }
 
         .drawer-item svg {
@@ -247,8 +245,8 @@
 
         .drawer-separator {
             height: 1px;
-            background-color: var(--border);
-            margin: 8px 0;
+            background-color: #e8eaed;
+            margin: 6px 0;
         }
 
         .bottom-nav {
@@ -2439,20 +2437,24 @@
 
         /* ===== 新ドロワー構造 ===== */
         .drawer { z-index: 98; }
+        /* ツールページの tdrawer と統一 */
         .drawer-header {
-            padding: 20px 16px 14px;
-            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, #004d29 0%, #00703d 100%);
+            color: white;
+            padding: 20px 18px 16px;
         }
         .drawer-header-title {
-            font-size: 13px; font-weight: 700; color: var(--primary);
+            font-size: 15px; font-weight: 700; color: white;
+            font-family: 'Noto Sans JP', sans-serif;
         }
         .drawer-header-sub {
-            font-size: 11px; color: var(--text3); margin-top: 2px;
+            font-size: 11px; color: white; opacity: 0.65; margin-top: 2px;
+            font-family: 'Noto Sans JP', sans-serif;
         }
         .drawer-section-label {
-            font-size: 10px; font-weight: 700; color: var(--text3);
+            font-size: 11px; font-weight: 700; color: #9ca3af;
             text-transform: uppercase; letter-spacing: 0.06em;
-            padding: 14px 16px 6px;
+            padding: 14px 18px 4px;
         }
         .drawer-badge {
             font-size: 9px; font-family: 'DM Mono', monospace;
